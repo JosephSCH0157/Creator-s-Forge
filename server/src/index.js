@@ -21,6 +21,14 @@ app.get("/api/hello", (_req, res) => {
   res.json({ message: "Hello from Creator’s Forge backend 👋" });
 });
 
+app.get("/api/version", (_req, res) => {
+  res.json({
+    app: "Creator’s Forge",
+    version: "v0.1.1-dev",
+    note: "Second demo route is live 🚀"
+  });
+});
+
 // Fallback to index.html
 app.get("*", (_req, res) => {
   res.sendFile(path.join(publicDir, "index.html"));
@@ -28,4 +36,12 @@ app.get("*", (_req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Creator’s Forge running at http://localhost:${PORT}`);
+});
+// Demo: return current app version
+app.get("/api/version", (_req, res) => {
+  res.json({
+    app: "Creator’s Forge",
+    version: "v0.1.1-dev",
+    note: "Second demo route is live 🚀"
+  });
 });

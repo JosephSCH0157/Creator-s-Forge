@@ -31,6 +31,8 @@
     <div style="margin:1rem 0;">
       <button id="helloBtn">Call /api/hello</button>
       <button id="healthBtn">Call /api/health</button>
+      <button id="versionBtn">Call /api/version</button>
+
     </div>
 
     <pre id="out" class="mono">Click a button to hit the API…</pre>
@@ -54,6 +56,11 @@
       const res = await fetch('/api/health');
       show(await res.json());
     };
+    document.getElementById('versionBtn').onclick = async () => {
+  const res = await fetch('/api/version');
+  show(await res.json());
+};
+
   </script>
 </body>
 </html>
