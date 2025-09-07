@@ -43,5 +43,17 @@ Creator-s-Forge/
 │ ├── expansion.md
 │ └── legal/
 │ └── README.md
-
+├── server/ # Backend code (APIs, adapters, webhooks)
+│ ├── src/
+│ │ ├── adapters/
+│ │ ├── routes/
+│ │ └── lib/
+│ └── test/
+└── web/ # Frontend code (UI for modules)
+├── public/
+└── src/
+├── components/
+├── pages/
+├── lib/
+└── styles/
 
