@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Testing Terms (Read First)
+    url: https://github.com/<YOUR_ORG>/<YOUR_REPO>/blob/main/TESTING.md
+    about: Understand evaluation-only terms before filing issues.
+  - name: 📝 Contributor License Agreement (CLA)
+    url: https://github.com/<YOUR_ORG>/<YOUR_REPO>/blob/main/CONTRIBUTOR_LICENSE_AGREEMENT.md
+    about: You must agree to the CLA before any code can be merged.
