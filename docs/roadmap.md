@@ -19,7 +19,7 @@ This roadmap outlines the planned development stages for Creator’s Forge. It i
   - Testing agreement
   - CLA
   - Contributing guide
-- [ ] Repo scaffolding and documentation
+- [x] Repo scaffolding and documentation
 
 ---
 
