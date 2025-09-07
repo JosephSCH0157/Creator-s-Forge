@@ -1,3 +1,10 @@
+# Creator’s Forge  
+
+[![Roadmap Phase](https://img.shields.io/badge/Roadmap-MVP-4caf50?style=for-the-badge)](docs/roadmap.md)
+
+Creator’s Forge is a modular suite of tools built to streamline the entire creative workflow for podcasters, musicians, and independent content creators...
+
+
 # Creator’s Forge Documentation
 
 This folder contains design documents, specifications, and notes for Creator’s Forge.
