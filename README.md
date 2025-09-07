@@ -28,4 +28,20 @@ This is more than a toolkit—it’s a workbench for the modern creator.
 - **Contributions:** Contributions are welcome, but only if submitted under the [Contributor License Agreement](CONTRIBUTOR_LICENSE_AGREEMENT.md). By submitting code, you agree that the project owner retains all commercial rights.
 
 ---
+## Repository Structure
+
+Creator-s-Forge/
+├── .gitignore
+├── README.md
+├── TESTING.md
+├── CONTRIBUTOR_LICENSE_AGREEMENT.md
+├── docs/
+│ ├── README.md
+│ ├── overview.md
+│ ├── teleprompter.md
+│ ├── uploader.md
+│ ├── expansion.md
+│ └── legal/
+│ └── README.md
+
 
