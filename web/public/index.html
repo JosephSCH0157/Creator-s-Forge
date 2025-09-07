@@ -60,6 +60,17 @@
   </div>
 
   <script>
+
+  document.getElementById('pingBtn').onclick = async () => {
+    try {
+      const res = await fetch('/api/ping');
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      show(await res.json());
+    } catch (e) {
+      show({ error: String(e), path: '/api/ping' });
+    }
+  };
+
     const out = document.getElementById('out');
     const show = (data) => out.textContent = JSON.stringify(data, null, 2);
 
