@@ -19,3 +19,13 @@ Most tools on the market are either too bloated for solo creators or too fragmen
 The project is open, extensible, and intended to evolve with its user base. Whether you’re a podcaster recording weekly shows, a musician releasing tracks, or a video creator uploading to multiple platforms, Creator’s Forge provides the missing infrastructure you’ve always needed.
 
 This is more than a toolkit—it’s a workbench for the modern creator.
+
+---
+
+## Legal Notices
+
+- **Testing:** This project is proprietary. Testers are permitted to run Creator’s Forge for evaluation only. See [TESTING.md](TESTING.md) for details.  
+- **Contributions:** Contributions are welcome, but only if submitted under the [Contributor License Agreement](CONTRIBUTOR_LICENSE_AGREEMENT.md). By submitting code, you agree that the project owner retains all commercial rights.
+
+---
+
