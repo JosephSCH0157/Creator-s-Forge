@@ -42,6 +42,19 @@ app.get("/api/version", (_req, res) => {
     note: "Second demo route is live 🚀"
   });
 });
+app.get("/api/ping", (req, res) => {
+  const start = Date.now();
+  // Simulate minimal processing
+  const latency = Date.now() - start;
+
+  res.json({
+    app: "Creator’s Forge",
+    endpoint: "/api/ping",
+    timestamp: new Date().toISOString(),
+    latencyMs: latency
+  });
+});
+
 
 // Fallback to index.html
 app.get("*", (_req, res) => {
