@@ -1,6 +1,8 @@
+
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import { readFileSync } from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,10 +23,22 @@ app.get("/api/hello", (_req, res) => {
   res.json({ message: "Hello from Creator’s Forge backend 👋" });
 });
 
+
+// Helper: read version from server/package.json
+function getAppVersion() {
+  try {
+    const pkgPath = path.resolve(__dirname, "../package.json"); // ../ from /src
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
+    return pkg.version || "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+}
+
 app.get("/api/version", (_req, res) => {
   res.json({
     app: "Creator’s Forge",
-    version: "v0.1.1-dev",
+    version: getAppVersion(),
     note: "Second demo route is live 🚀"
   });
 });
@@ -37,11 +51,4 @@ app.get("*", (_req, res) => {
 app.listen(PORT, () => {
   console.log(`Creator’s Forge running at http://localhost:${PORT}`);
 });
-// Demo: return current app version
-app.get("/api/version", (_req, res) => {
-  res.json({
-    app: "Creator’s Forge",
-    version: "v0.1.1-dev",
-    note: "Second demo route is live 🚀"
-  });
-});
+
