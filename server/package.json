@@ -1,7 +1,8 @@
 {
   "name": "creators-forge-server",
-  "version": "0.1.0",
-  "private": true,
+ "version": "0.1.1",
+
+  "private": true, 
   "type": "module",
   "scripts": {
     "dev": "node --watch ./src/index.js",

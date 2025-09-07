@@ -20,6 +20,7 @@
 </head>
 <body>
   <div class="card">
+    <p id="ver" style="opacity:.8;margin:.5rem 0;"></p>
     <div class="row">
       <h1>Creator’s Forge</h1>
       <span class="pill">MVP</span>
@@ -61,6 +62,11 @@
   show(await res.json());
 };
 
+    // Fetch version on load
+    fetch('/api/version').then(r => r.json()).then(j => {
+      const el = document.getElementById('ver');
+      if (el) el.textContent = `Version: ${j.version}`;
+    });
   </script>
 </body>
 </html>
