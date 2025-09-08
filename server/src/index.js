@@ -1,3 +1,4 @@
+import 'dotenv/config';
 
 import express from "express";
 import path from "path";
@@ -8,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 5173;
+const PORT = process.env.PORT || 5175;
 
 // Static frontend (../web/public)
 const publicDir = path.resolve(__dirname, "../../web/public");
