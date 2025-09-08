@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --watch ./src/index.js",
-    "start": "node ./src/index.js"
+    "dev:server": "cd server && PORT=5177 npm run dev",
+    "dev:web": "cd web && npm run dev -- --host 127.0.0.1 --port 5173",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:web\""
   },
   "dependencies": {
     "dotenv": "^17.2.2",
