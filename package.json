@@ -1,0 +1,16 @@
+﻿{
+  "name": "creator-s-forge-root",
+  "private": true,
+  "scripts": {
+    "setup": "npm --prefix server install && npm --prefix web install",
+    "dev:server": "cross-env PORT=5177 npm --prefix server run dev",
+    "dev:web": "npm --prefix web run dev -- --host 127.0.0.1 --port 5173",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:web\"",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3"
+  }
+}
