@@ -16,9 +16,7 @@ const publicDir = path.resolve(__dirname, "../../web/public");
 app.use(express.static(publicDir));
 
 // Simple API routes
-app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", service: "Creator's Forge", time: new Date().toISOString() });
-});
+app.get('/api/health', (_req, res) => res.send('ok'));
 
 app.get("/api/hello", (_req, res) => {
   res.json({ message: "Hello from Creator’s Forge backend 👋" });
