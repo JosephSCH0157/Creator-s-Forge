@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --watch ./src/index.js",
-    "start": "node ./src/index.js"
+  "dev": "node --watch ./src/index.js",
+  "build": "echo \"(optional) add build step if needed\"",
+  "start": "node ./src/index.js"
   },
   "dependencies": {
     "creator-s-forge-root": "file:..",
