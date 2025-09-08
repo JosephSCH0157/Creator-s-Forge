@@ -1,17 +1,25 @@
 ﻿{
-  "name": "creator-s-forge-root",
+  "name": "creators-forge",
   "private": true,
+  "workspaces": ["web", "server"],
   "scripts": {
-    "setup": "npm --prefix server install && npm --prefix web install",
-    "dev:server": "cross-env PORT=5177 npm --prefix server run dev",
-    "dev:web": "npm --prefix web run dev -- --host 127.0.0.1 --port 5173",
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:web\"",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down"
+    "dev": "npm run -ws --if-present dev",
+    "start": "npm run dev",
+    "build": "npm run -ws --if-present build",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "lint": "eslint .",
+    "setup": "npm ci"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "cross-env": "^7.0.3"
+    "eslint": "^9.9.0",
+    "@eslint/js": "^9.9.0",
+    "eslint-plugin-react": "^7.35.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-unused-imports": "^4.0.0",
+    "typescript-eslint": "^8.0.1",
+    "prettier": "^3.3.3"
   }
 }
 

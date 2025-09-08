@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev:server": "cd server && PORT=5177 npm run dev",
-    "dev:web": "cd web && npm run dev -- --host 127.0.0.1 --port 5173",
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:web\""
+    "dev": "node --watch ./src/index.js",
+    "start": "node ./src/index.js"
   },
   "dependencies": {
+    "creator-s-forge-root": "file:..",
     "dotenv": "^17.2.2",
     "express": "^4.19.2",
     "pg": "^8.16.3"
