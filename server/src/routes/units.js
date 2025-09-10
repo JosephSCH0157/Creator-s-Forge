@@ -109,5 +109,58 @@ r.post('/:id/assets', async (req, res) => {
     res.status(400).json({ error: 'AssetCreateFailed', message: e.message });
   }
 });
+// ===== Uploads (list + create) =====
+const platforms = new Set(['youtube', 'rumble', 'spotify']);
+const uploadStatuses = new Set(['pending','in_progress','succeeded','failed','canceled']);
+
+// List uploads for a unit
+r.get('/:id/uploads', async (req, res) => {
+  try {
+    const { rows } = await query(
+      'select * from uploads where content_unit_id = $1 order by created_at desc',
+      [req.params.id]
+    );
+    res.json(rows);
+  } catch (e) {
+    res.status(400).json({ error: 'UploadsListFailed', message: e.message });
+  }
+});
+
+// Create an upload attempt (records your request payload)
+r.post('/:id/uploads', async (req, res) => {
+  const { platform, status = 'pending', request = {}, scheduled_at = null } = req.body;
+
+  if (!platforms.has(platform)) {
+    return res.status(400).json({ error: 'BadPlatform', message: `platform must be one of: ${[...platforms].join(', ')}` });
+  }
+  if (!uploadStatuses.has(status)) {
+    return res.status(400).json({ error: 'BadStatus', message: `status must be one of: ${[...uploadStatuses].join(', ')}` });
+  }
+
+  try {
+    // ensure unit exists
+    const { rows: u } = await query('select id from content_units where id=$1', [req.params.id]);
+    if (!u[0]) return res.status(404).json({ error: 'NotFound', message: 'content unit not found' });
+
+    const { rows } = await query(
+      `insert into uploads (content_unit_id, platform, status, request, scheduled_at)
+       values ($1, $2, $3, $4::jsonb, $5)
+       returning *`,
+      [req.params.id, platform, status, JSON.stringify(request), scheduled_at]
+    );
+
+    // log event
+    await query(
+      `insert into content_events (content_unit_id, type, payload)
+       values ($1, 'upload.created', $2::jsonb)`,
+      [req.params.id, JSON.stringify({ upload_id: rows[0].id, platform, status })]
+    );
+
+    res.status(201).json(rows[0]);
+  } catch (e) {
+    res.status(400).json({ error: 'UploadCreateFailed', message: e.message });
+  }
+});
+
 
 export default r;
