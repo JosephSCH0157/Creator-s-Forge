@@ -223,5 +223,41 @@ r.get('/:id/events', async (req, res) => {
     res.status(400).json({ error: 'EventsListFailed', message: e.message });
   }
 });
+// ===== Upload status update =====
+const uploadStatuses = new Set(['pending','in_progress','succeeded','failed','canceled']); // ensure this exists once
+
+r.patch('/:id/uploads/:uploadId', async (req, res) => {
+  const { status, response = {}, published_at = null } = req.body;
+  if (!uploadStatuses.has(status)) {
+    return res.status(400).json({ error: 'BadStatus', message: `status must be one of: ${[...uploadStatuses].join(', ')}` });
+  }
+
+  try {
+    // ensure upload belongs to the unit
+    const { rows: u } = await query(
+      'select id from uploads where id=$1 and content_unit_id=$2',
+      [req.params.uploadId, req.params.id]
+    );
+    if (!u[0]) return res.status(404).json({ error: 'NotFound', message: 'upload not found for this unit' });
+
+    const { rows } = await query(
+      `update uploads
+         set status=$1, response=$2::jsonb, published_at=$3, updated_at=now()
+       where id=$4
+       returning *`,
+      [status, JSON.stringify(response), published_at, req.params.uploadId]
+    );
+
+    await query(
+      `insert into content_events (content_unit_id, type, payload)
+       values ($1, 'upload.status', $2::jsonb)`,
+      [req.params.id, JSON.stringify({ upload_id: rows[0].id, status })]
+    );
+
+    res.json(rows[0]);
+  } catch (e) {
+    res.status(400).json({ error: 'UploadUpdateFailed', message: e.message });
+  }
+});
 
 export default r;
