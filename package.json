@@ -1,7 +1,10 @@
-﻿{
+{
   "name": "creators-forge",
   "private": true,
-  "workspaces": ["web", "server"],
+  "workspaces": [
+    "web",
+    "server"
+  ],
   "scripts": {
     "dev": "npm run -ws --if-present dev",
     "start": "npm run dev",
@@ -12,14 +15,14 @@
     "setup": "npm ci"
   },
   "devDependencies": {
-    "eslint": "^9.9.0",
     "@eslint/js": "^9.9.0",
+    "eslint": "^9.9.0",
+    "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-react-hooks": "^5.1.0",
-    "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-unused-imports": "^4.0.0",
-    "typescript-eslint": "^8.0.1",
-    "prettier": "^3.3.3"
+    "globals": "^16.4.0",
+    "prettier": "^3.3.3",
+    "typescript-eslint": "^8.0.1"
   }
 }
-
