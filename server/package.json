@@ -4,14 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-  "dev": "node --watch ./src/index.js",
-  "build": "echo \"(optional) add build step if needed\"",
-  "start": "node ./src/index.js"
+    "dev": "node --watch ./src/index.js",
+    "build": "echo \"(optional) add build step if needed\"",
+    "start": "node ./src/index.js"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "creator-s-forge-root": "file:..",
     "dotenv": "^17.2.2",
-    "express": "^4.19.2",
+    "express": "^4.21.2",
     "pg": "^8.16.3"
   }
 }
