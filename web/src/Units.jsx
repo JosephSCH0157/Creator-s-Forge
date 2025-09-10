@@ -100,7 +100,13 @@ export default function Units() {
         <tbody>
           {units.map((u) => (
             <tr key={u.id} style={{ borderTop: "1px solid #e5e7eb" }}>
-              <td>{u.title}</td>
+              // replace <td>{u.title}</td> with:
+<td>
+  <a href={`/units/${u.id}`} style={{ textDecoration: "none" }}>
+    {u.title}
+  </a>
+</td>
+
               <td>{u.status}</td>
               <td>{u.kind}</td>
               <td>{new Date(u.updated_at).toLocaleString()}</td>
