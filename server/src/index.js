@@ -1,31 +1,16 @@
-import { Router } from 'express';
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import unitsRouter from './routes/units.js';
 
-import { query } from '../db.js';
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-const r = Router();
+app.get('/health', (_req, res) => res.json({ ok: true }));
+app.use('/units', unitsRouter);
 
-// Create one unit (keeps defaults simple)
-r.post('/', async (req, res) => {
-  const { title, slug, kind } = req.body;
-  if (!title || !slug || !kind) {
-    return res.status(400).json({ error: 'BadRequest', message: 'title, slug, kind are required' });
-  }
-  try {
-    const sql = `
-      insert into content_units (title, slug, kind, status)
-      values ($1, $2, $3, 'idea')
-      returning *`;
-    const { rows } = await query(sql, [title, slug, kind]);
-    res.status(201).json(rows[0]);
-  } catch (e) {
-    res.status(400).json({ error: 'CreateFailed', message: e.message });
-  }
+const port = process.env.PORT || 5177;
+app.listen(port, () => {
+  console.log(`Creator’s Forge running on http://127.0.0.1:${port}`);
 });
-
-// List units (newest first)
-r.get('/', async (_req, res) => {
-  const { rows } = await query('select * from content_units order by created_at desc');
-  res.json(rows);
-});
-
-export default r;
