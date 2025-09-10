@@ -27,8 +27,6 @@ r.get('/', async (_req, res) => {
   res.json(rows);
 });
 
-export default r;
-
 // Allowed state machine (simple for now)
 const allowed = [
   'idea','script','recording','edit','packaging',
@@ -60,3 +58,5 @@ r.post('/:id/transition', async (req, res) => {
     res.status(400).json({ error: 'TransitionFailed', message: e.message });
   }
 });
+
+export default r;
