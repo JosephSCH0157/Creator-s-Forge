@@ -58,5 +58,56 @@ r.post('/:id/transition', async (req, res) => {
     res.status(400).json({ error: 'TransitionFailed', message: e.message });
   }
 });
+// ===== Assets (list + create) =====
+const assetRoles = new Set([
+  'raw_video','raw_audio','mixdown','render','thumbnail','transcript','image','document'
+]);
+
+// List assets for a unit
+r.get('/:id/assets', async (req, res) => {
+  try {
+    const { rows } = await query(
+      'select * from assets where content_unit_id = $1 order by created_at desc',
+      [req.params.id]
+    );
+    res.json(rows);
+  } catch (e) {
+    res.status(400).json({ error: 'AssetsListFailed', message: e.message });
+  }
+});
+
+// Create an asset record (URI-based, no file upload yet)
+r.post('/:id/assets', async (req, res) => {
+  const { role, storage_uri, meta = {} } = req.body;
+  if (!role || !assetRoles.has(role)) {
+    return res.status(400).json({ error: 'BadRole', message: `role must be one of: ${[...assetRoles].join(', ')}` });
+  }
+  if (!storage_uri) {
+    return res.status(400).json({ error: 'BadRequest', message: 'storage_uri is required' });
+  }
+  try {
+    // ensure unit exists
+    const { rows: u } = await query('select id from content_units where id=$1', [req.params.id]);
+    if (!u[0]) return res.status(404).json({ error: 'NotFound', message: 'content unit not found' });
+
+    const { rows } = await query(
+      `insert into assets (content_unit_id, role, storage_uri, meta)
+       values ($1, $2, $3, $4::jsonb)
+       returning *`,
+      [req.params.id, role, storage_uri, JSON.stringify(meta)]
+    );
+
+    // log event
+    await query(
+      `insert into content_events (content_unit_id, type, payload)
+       values ($1, 'asset.added', $2::jsonb)`,
+      [req.params.id, JSON.stringify({ asset_id: rows[0].id, role })]
+    );
+
+    res.status(201).json(rows[0]);
+  } catch (e) {
+    res.status(400).json({ error: 'AssetCreateFailed', message: e.message });
+  }
+});
 
 export default r;
