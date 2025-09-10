@@ -1,66 +1,31 @@
-import 'dotenv/config';
+import { Router } from 'express';
 
-import express from "express";
-import path from "path";
-import { fileURLToPath } from "url";
-import { readFileSync } from "fs";
+import { query } from '../db.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const r = Router();
 
-const app = express();
-const PORT = process.env.PORT || 5175;
-
-// Static frontend (../web/public)
-const publicDir = path.resolve(__dirname, "../../web/public");
-app.use(express.static(publicDir));
-
-// Simple API routes
-app.get('/api/health', (_req, res) => res.send('ok'));
-
-app.get("/api/hello", (_req, res) => {
-  res.json({ message: "Hello from Creator’s Forge backend 👋" });
-});
-
-
-// Helper: read version from server/package.json
-function getAppVersion() {
-  try {
-    const pkgPath = path.resolve(__dirname, "../package.json"); // ../ from /src
-    const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
-    return pkg.version || "0.0.0";
-  } catch {
-    return "0.0.0";
+// Create one unit (keeps defaults simple)
+r.post('/', async (req, res) => {
+  const { title, slug, kind } = req.body;
+  if (!title || !slug || !kind) {
+    return res.status(400).json({ error: 'BadRequest', message: 'title, slug, kind are required' });
   }
-}
-
-app.get("/api/version", (_req, res) => {
-  res.json({
-    app: "Creator’s Forge",
-    version: getAppVersion(),
-    note: "Second demo route is live 🚀"
-  });
-});
-app.get("/api/ping", (req, res) => {
-  const start = Date.now();
-  // Simulate minimal processing
-  const latency = Date.now() - start;
-
-  res.json({
-    app: "Creator’s Forge",
-    endpoint: "/api/ping",
-    timestamp: new Date().toISOString(),
-    latencyMs: latency
-  });
+  try {
+    const sql = `
+      insert into content_units (title, slug, kind, status)
+      values ($1, $2, $3, 'idea')
+      returning *`;
+    const { rows } = await query(sql, [title, slug, kind]);
+    res.status(201).json(rows[0]);
+  } catch (e) {
+    res.status(400).json({ error: 'CreateFailed', message: e.message });
+  }
 });
 
-
-// Fallback to index.html
-app.get("*", (_req, res) => {
-  res.sendFile(path.join(publicDir, "index.html"));
+// List units (newest first)
+r.get('/', async (_req, res) => {
+  const { rows } = await query('select * from content_units order by created_at desc');
+  res.json(rows);
 });
 
-app.listen(PORT, () => {
-  console.log(`Creator’s Forge running at http://localhost:${PORT}`);
-});
-
+export default r;
