@@ -211,5 +211,17 @@ r.post('/:id/scripts', async (req, res) => {
     res.status(400).json({ error: 'ScriptCreateFailed', message: e.message });
   }
 });
+// ===== Events (list) =====
+r.get('/:id/events', async (req, res) => {
+  try {
+    const { rows } = await query(
+      'select * from content_events where content_unit_id=$1 order by created_at desc',
+      [req.params.id]
+    );
+    res.json(rows);
+  } catch (e) {
+    res.status(400).json({ error: 'EventsListFailed', message: e.message });
+  }
+});
 
 export default r;
