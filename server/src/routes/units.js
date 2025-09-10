@@ -224,7 +224,6 @@ r.get('/:id/events', async (req, res) => {
   }
 });
 // ===== Upload status update =====
-const uploadStatuses = new Set(['pending','in_progress','succeeded','failed','canceled']); // ensure this exists once
 
 r.patch('/:id/uploads/:uploadId', async (req, res) => {
   const { status, response = {}, published_at = null } = req.body;
