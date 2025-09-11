@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import forgeImg from "../assets/forge.png";
 import "./Splash.css"; // optional external CSS
 
 
@@ -14,7 +13,7 @@ export default function Splash() {
       }}
     >
       <img
-        src={forgeImg}
+        src="/forge.png"
         alt="Forge"
         style={{
           width: "100%",
