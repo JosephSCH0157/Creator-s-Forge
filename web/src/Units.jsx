@@ -1,3 +1,5 @@
+
+import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 
 const API = "http://127.0.0.1:5177";
@@ -101,10 +103,11 @@ export default function Units() {
           {units.map((u) => (
             <tr key={u.id} style={{ borderTop: "1px solid #e5e7eb" }}>
               // replace <td>{u.title}</td> with:
+
 <td>
-  <a href={`/units/${u.id}`} style={{ textDecoration: "none" }}>
+  <Link to={`/units/${u.id}`} style={{ textDecoration: "none" }}>
     {u.title}
-  </a>
+  </Link>
 </td>
 
               <td>{u.status}</td>
