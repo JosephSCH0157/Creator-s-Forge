@@ -2,22 +2,21 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import Layout from "./routes/Layout.jsx";
-import Splash from "./routes/Splash.tsx";
-import Units from "./Units.jsx";
-import UnitDetail from "./UnitDetail.jsx";
-import Forge from "./routes/Forge.jsx";
-import Anvil from "./routes/Anvil.jsx";
-import Hammer from "./routes/Hammer.jsx";
-import Quench from "./routes/Quench.jsx";
-import Ledger from "./routes/Ledger.jsx";
-import Stock from "./routes/Stock.jsx";
+import Splash from "./routes/Splash";        // Splash.tsx
+import Units from "./Units.jsx";             // ok as .jsx
+import UnitDetail from "./UnitDetail.jsx";   // ok as .jsx
+
+import Forge from "./routes/Forge";
+import Anvil from "./routes/Anvil";
+import Hammer from "./routes/Hammer";
+import Quench from "./routes/Quench";
+import Ledger from "./routes/Ledger";
+import Stock from "./routes/Stock";
+
 import "./index.css";
 
-const NotFound = () => <div style={{ padding: 24 }}>Not Found</div>;
-
 const router = createBrowserRouter([
-  { path: "/", element: <App /> },
+  { path: "/", element: <Splash /> },          // HOME = Splash
   { path: "/tools/tongs", element: <Units /> },
   { path: "/units/:id", element: <UnitDetail /> },
   { path: "/tools/forge", element: <Forge /> },
@@ -26,7 +25,6 @@ const router = createBrowserRouter([
   { path: "/tools/quench", element: <Quench /> },
   { path: "/tools/ledger", element: <Ledger /> },
   { path: "/tools/stock", element: <Stock /> },
-  { path: "*", element: <NotFound /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
