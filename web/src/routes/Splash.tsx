@@ -19,13 +19,13 @@ export default function Splash() {
       <Link to="/tools/tongs" className="hotspot" style={{ top: "50%", left: "10%" }}>
         Tongs
       </Link>
-      <Link to="/tools/quench" className="hotspot" style={{ top: "70%", left: "75%" }}>
+      <Link to="/tools/quench" className="hotspot" style={{ top: "70%", left: "80%" }}>
         Quench
       </Link>
       <Link to="/tools/ledger" className="hotspot" style={{ top: "80%", left: "65%" }}>
         Ledger
       </Link>
-      <Link to="/tools/stock" className="hotspot" style={{ top: "65%", left: "30%" }}>
+      <Link to="/tools/stock" className="hotspot" style={{ top: "75%", left: "30%" }}>
         Bar Stock
       </Link>
 
