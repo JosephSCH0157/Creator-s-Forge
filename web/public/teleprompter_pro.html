@@ -1174,16 +1174,33 @@ function beginCountdownThen(fn){
   </script>
   <style id="speakerStyle"></style>
   <!-- Pre-roll overlay (main window) -->
+</style>
+<!-- Pre-roll overlay (main window) -->
 <script>
-/* ==== Forge Bus (Teleprompter side) ===================================== */
 (function () {
   const CH = "creators-forge";
+  const QK = "__forge_bus_queue__";
   const bus = ("BroadcastChannel" in window) ? new BroadcastChannel(CH) : null;
 
-  function lsSend(msg){ localStorage.setItem("__forge_bus__", JSON.stringify({ ...msg, ts: Date.now() })); }
-  function send(msg){ bus ? bus.postMessage(msg) : lsSend(msg); }
+  // --- queue helpers ---
+  function readQueue(){
+    try { return JSON.parse(localStorage.getItem(QK) || "[]"); } catch { return []; }
+  }
+  function writeQueue(arr){ localStorage.setItem(QK, JSON.stringify(arr)); }
+  function enqueue(msg){
+    const q = readQueue();
+    q.push({ ...msg, ts: Date.now() });
+    writeQueue(q);
+  }
 
-  // Deliver storage-fallback messages to our handler
+  // live send (if someone’s listening) + always enqueue for durability
+  function send(msg){
+    try { bus && bus.postMessage(msg); } catch {}
+    enqueue(msg);                 // <— make it durable
+    // also poke storage so already-open Tongs gets a 'storage' event
+    try { localStorage.setItem("__forge_bus__", JSON.stringify({ ...msg, ts: Date.now() })); } catch {}
+  }
+
   window.addEventListener("storage", (e) => {
     if (e.key === "__forge_bus__" && e.newValue) {
       try { onMessage(JSON.parse(e.newValue)); } catch {}
@@ -1191,7 +1208,6 @@ function beginCountdownThen(fn){
   });
   if (bus) bus.onmessage = (e) => onMessage(e.data);
 
-  // Expose request helpers for the rest of the file
   window.ForgeBus = {
     requestIndex(){ send({ type: "REQUEST_SCRIPT_INDEX", filter: { phase: "script" } }); },
     requestScript(id){ send({ type: "REQUEST_SCRIPT", id }); },
@@ -1201,16 +1217,12 @@ function beginCountdownThen(fn){
 
   function onMessage(msg){
     if(!msg || !msg.type) return;
-
-    // Populate dropdown with SCRIPT docs
     if (msg.type === "SCRIPT_INDEX" && Array.isArray(msg.items)) {
       const sel = document.getElementById("scriptSelect");
       const loadBtn = document.getElementById("loadBtn");
       const deleteBtn = document.getElementById("deleteBtn");
       if (!sel) return;
-
       sel.innerHTML = "";
-      // items: [{id, name, updated}]
       msg.items.forEach(item => {
         const opt = document.createElement("option");
         opt.value = item.id;
@@ -1221,37 +1233,30 @@ function beginCountdownThen(fn){
       if (loadBtn) loadBtn.disabled = !has;
       if (deleteBtn) deleteBtn.disabled = !has;
     }
-
-    // Drop a script into the editor and render
     if (msg.type === "SCRIPT_READY" && msg.payload) {
-      try {
-        const { title, content } = msg.payload;
-        const editor = document.getElementById("editor");
-        if (typeof title === "string" && title.trim()) { document.title = "TP • " + title; }
-        if (editor && typeof content === "string") {
-          editor.value = content;
-          if (typeof renderScript === "function") renderScript(editor.value);
-        }
-        // Select the loaded id in dropdown if provided
-        if (msg.id) {
-          const sel = document.getElementById("scriptSelect");
-          if (sel) sel.value = msg.id;
-        }
-      } catch(e){ console.error("Failed to apply SCRIPT_READY", e); }
+      const { title, content } = msg.payload;
+      const editor = document.getElementById("editor");
+      if (title?.trim()) document.title = "TP • " + title;
+      if (editor && typeof content === "string") {
+        editor.value = content;
+        if (typeof renderScript === "function") renderScript(editor.value);
+      }
+      if (msg.id) {
+        const sel = document.getElementById("scriptSelect");
+        if (sel) sel.value = msg.id;
+      }
     }
-
-    // Optional: show small status acks
     if (msg.type === "OP_RESULT") {
       const s = document.getElementById("status");
       if (s) s.textContent = msg.ok ? (msg.message || "OK") : (msg.message || "Operation failed");
-      // After a save/delete, ask for fresh index
-      if (msg.refreshIndex) window.ForgeBus.requestIndex();
+      if (msg.refreshIndex && window.ForgeBus) window.ForgeBus.requestIndex();
     }
   }
 
-  // Announce presence (useful for Tongs to enable “Send to Teleprompter”)
+  // Let Tongs know we’re around
   send({ type: "ACK", for: "READY:TELEPROMPTER" });
 })();
+</script>
 </script>
 </body>
 </html>
