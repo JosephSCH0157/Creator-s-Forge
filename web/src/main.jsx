@@ -6,7 +6,7 @@ import Layout from "./routes/Layout.jsx";
 import Splash from "./routes/Splash.tsx";
 import Units from "./Units.jsx";
 import UnitDetail from "./UnitDetail.jsx";
-import Forge from "./routes/Forge.png";
+import Forge from "./routes/forge.png";
 import Anvil from "./routes/Anvil.jsx";
 import Hammer from "./routes/Hammer.jsx";
 import Quench from "./routes/Quench.jsx";
