@@ -810,48 +810,32 @@ function openDisplay(){
       // Scripts manager (multi)
       const SCRIPT_LIST_KEY = 'teleprompter:scripts:index';
       const SCRIPT_ITEM_KEY = (id) => `teleprompter:script:${id}`;
-      function getScriptIndex(){
-        try { return JSON.parse(localStorage.getItem(SCRIPT_LIST_KEY) || '[]'); }
-        catch { return []; }
-      }
-      function setScriptIndex(list){ localStorage.setItem(SCRIPT_LIST_KEY, JSON.stringify(list)); }
+      // Now using ForgeBus for script management
       function refreshScriptDropdown(){
-        const list = getScriptIndex();
-        scriptSelect.innerHTML = '';
-        for (const s of list){
-          const opt = document.createElement('option'); opt.value = s.id; opt.textContent = s.name; scriptSelect.appendChild(opt);
-        }
-        loadBtn.disabled = deleteBtn.disabled = list.length === 0;
+        // Ask Tongs for the latest list of docs in phase=script
+        if (window.ForgeBus) window.ForgeBus.requestIndex();
       }
+
       function saveCurrentAs(){
+        const editor = document.getElementById('editor');
         const name = prompt('Save script as…', (editor.value||'').trim().split(/\s+/).slice(0,6).join(' ')) || '';
         if (!name.trim()) return;
-        const id = Date.now().toString(36);
-        const list = getScriptIndex();
-        list.unshift({ id, name });
-        setScriptIndex(list.slice(0, 200)); // cap
-        localStorage.setItem(SCRIPT_ITEM_KEY(id), editor.value || '');
-        refreshScriptDropdown();
-        scriptSelect.value = id;
-        setStatus('Saved as "'+name+'".');
+        if (window.ForgeBus) window.ForgeBus.saveScript(name.trim(), editor.value || '');
       }
+
       function loadSelectedScript(){
-        const id = scriptSelect.value;
-        if(!id) return;
-        const data = localStorage.getItem(SCRIPT_ITEM_KEY(id));
-        if (data==null){ setStatus('No data for selected script.'); return; }
-        editor.value = data; renderScript(editor.value); setStatus('Loaded "'+(getScriptIndex().find(s=>s.id===id)?.name||id)+'".');
+        const sel = document.getElementById('scriptSelect');
+        const id = sel && sel.value;
+        if (!id) return;
+        if (window.ForgeBus) window.ForgeBus.requestScript(id);
       }
+
       function deleteSelectedScript(){
-        const id = scriptSelect.value;
-        if(!id) return;
-        const list = getScriptIndex();
-        const item = list.find(s=>s.id===id);
-        if (!confirm('Delete "'+(item?.name||id)+'"?')) return;
-        localStorage.removeItem(SCRIPT_ITEM_KEY(id));
-        setScriptIndex(list.filter(s=>s.id!==id));
-        refreshScriptDropdown();
-        setStatus('Deleted.');
+        const sel = document.getElementById('scriptSelect');
+        const id = sel && sel.value;
+        if (!id) return;
+        if (!confirm('Delete this script from Tongs?')) return;
+        if (window.ForgeBus) window.ForgeBus.deleteScript(id);
       }
 
       // Local draft save/load
@@ -1190,5 +1174,84 @@ function beginCountdownThen(fn){
   </script>
   <style id="speakerStyle"></style>
   <!-- Pre-roll overlay (main window) -->
+<script>
+/* ==== Forge Bus (Teleprompter side) ===================================== */
+(function () {
+  const CH = "creators-forge";
+  const bus = ("BroadcastChannel" in window) ? new BroadcastChannel(CH) : null;
+
+  function lsSend(msg){ localStorage.setItem("__forge_bus__", JSON.stringify({ ...msg, ts: Date.now() })); }
+  function send(msg){ bus ? bus.postMessage(msg) : lsSend(msg); }
+
+  // Deliver storage-fallback messages to our handler
+  window.addEventListener("storage", (e) => {
+    if (e.key === "__forge_bus__" && e.newValue) {
+      try { onMessage(JSON.parse(e.newValue)); } catch {}
+    }
+  });
+  if (bus) bus.onmessage = (e) => onMessage(e.data);
+
+  // Expose request helpers for the rest of the file
+  window.ForgeBus = {
+    requestIndex(){ send({ type: "REQUEST_SCRIPT_INDEX", filter: { phase: "script" } }); },
+    requestScript(id){ send({ type: "REQUEST_SCRIPT", id }); },
+    saveScript(name, content){ send({ type: "SAVE_SCRIPT", payload: { name, content, phase: "script" } }); },
+    deleteScript(id){ send({ type: "DELETE_SCRIPT", id }); },
+  };
+
+  function onMessage(msg){
+    if(!msg || !msg.type) return;
+
+    // Populate dropdown with SCRIPT docs
+    if (msg.type === "SCRIPT_INDEX" && Array.isArray(msg.items)) {
+      const sel = document.getElementById("scriptSelect");
+      const loadBtn = document.getElementById("loadBtn");
+      const deleteBtn = document.getElementById("deleteBtn");
+      if (!sel) return;
+
+      sel.innerHTML = "";
+      // items: [{id, name, updated}]
+      msg.items.forEach(item => {
+        const opt = document.createElement("option");
+        opt.value = item.id;
+        opt.textContent = item.name || item.id;
+        sel.appendChild(opt);
+      });
+      const has = msg.items.length > 0;
+      if (loadBtn) loadBtn.disabled = !has;
+      if (deleteBtn) deleteBtn.disabled = !has;
+    }
+
+    // Drop a script into the editor and render
+    if (msg.type === "SCRIPT_READY" && msg.payload) {
+      try {
+        const { title, content } = msg.payload;
+        const editor = document.getElementById("editor");
+        if (typeof title === "string" && title.trim()) { document.title = "TP • " + title; }
+        if (editor && typeof content === "string") {
+          editor.value = content;
+          if (typeof renderScript === "function") renderScript(editor.value);
+        }
+        // Select the loaded id in dropdown if provided
+        if (msg.id) {
+          const sel = document.getElementById("scriptSelect");
+          if (sel) sel.value = msg.id;
+        }
+      } catch(e){ console.error("Failed to apply SCRIPT_READY", e); }
+    }
+
+    // Optional: show small status acks
+    if (msg.type === "OP_RESULT") {
+      const s = document.getElementById("status");
+      if (s) s.textContent = msg.ok ? (msg.message || "OK") : (msg.message || "Operation failed");
+      // After a save/delete, ask for fresh index
+      if (msg.refreshIndex) window.ForgeBus.requestIndex();
+    }
+  }
+
+  // Announce presence (useful for Tongs to enable “Send to Teleprompter”)
+  send({ type: "ACK", for: "READY:TELEPROMPTER" });
+})();
+</script>
 </body>
 </html>
