@@ -17,21 +17,16 @@ import "./index.css";
 const NotFound = () => <div style={{ padding: 24 }}>Not Found</div>;
 
 const router = createBrowserRouter([
-  {
-    element: <Layout />,
-    children: [
-      { index: true, element: <Splash /> },
-      { path: "tools/tongs", element: <Units /> },
-      { path: "units/:id", element: <UnitDetail /> },
-      { path: "tools/forge", element: <Forge /> },
-      { path: "tools/anvil", element: <Anvil /> },
-      { path: "tools/hammer", element: <Hammer /> },
-      { path: "tools/quench", element: <Quench /> },
-      { path: "tools/ledger", element: <Ledger /> },
-      { path: "tools/stock", element: <Stock /> },
-      { path: "*", element: <NotFound /> },
-    ],
-  },
+  { path: "/", element: <App /> },
+  { path: "/tools/tongs", element: <Units /> },
+  { path: "/units/:id", element: <UnitDetail /> },
+  { path: "/tools/forge", element: <Forge /> },
+  { path: "/tools/anvil", element: <Anvil /> },
+  { path: "/tools/hammer", element: <Hammer /> },
+  { path: "/tools/quench", element: <Quench /> },
+  { path: "/tools/ledger", element: <Ledger /> },
+  { path: "/tools/stock", element: <Stock /> },
+  { path: "*", element: <NotFound /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
