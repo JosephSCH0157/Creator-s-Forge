@@ -1,8 +1,18 @@
 // web/src/App.jsx
-import Splash from "./routes/Splash.tsx";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Splash from "./routes/Splash";
+import Anvil from "./routes/Anvil";
+import Tongs from "./Tongs";
 import { useForgeBus } from "./forgeBus";
 
 export default function App() {
-  useForgeBus(); // boots the message handler
-  return <Splash />;
+  useForgeBus();
+  return (
+    <Routes>
+      <Route path="/" element={<Splash />} />
+      <Route path="/tools/anvil" element={<Anvil />} />
+      <Route path="/tools/tongs" element={<Tongs />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
