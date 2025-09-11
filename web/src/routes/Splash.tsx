@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import forgeImg from "../assets/forge.png";
 import "./Splash.css"; // optional external CSS
 
 
@@ -12,7 +13,16 @@ export default function Splash() {
         overflow: "hidden",
       }}
     >
-      <img src="/forge.png" alt="Forge" />
+      <img
+        src={forgeImg}
+        alt="Forge"
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "contain",   // fit inside window without cropping
+          display: "block",
+        }}
+      />
 
       {/* Hotspots */}
       <Link
