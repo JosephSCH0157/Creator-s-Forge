@@ -1,6 +1,7 @@
+
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 
 import Splash from "./routes/Splash";        // Splash.tsx
 import Units from "./Units.jsx";             // ok as .jsx
@@ -25,6 +26,7 @@ const router = createBrowserRouter([
   { path: "/tools/quench", element: <Quench /> },
   { path: "/tools/ledger", element: <Ledger /> },
   { path: "/tools/stock", element: <Stock /> },
+  { path: "/teleprompter", element: <Navigate to="/teleprompter_pro.html" replace /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
