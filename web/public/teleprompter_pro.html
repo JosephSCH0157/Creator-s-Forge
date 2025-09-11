@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Teleprompter — FULL (fix1)</title>
+  <link rel="icon" href="data:,">
+  <style>
+      textarea, input, [contenteditable="true"] {
+        -webkit-user-select: text;
+        user-select: text;
+      }
+      /* Collapsible (Speakers) */
+      .collapsible {
+        border:1px solid var(--edge);
+        border-radius:12px;
+        background:#0e141b;
+        padding:0;
+        margin-top:8px;
+      }
+      .collapsible > summary {
+        list-style:none;
+        cursor:pointer;
+        padding:10px 12px;
+        font-weight:600;
+        color:#c9d2db;
+        border-radius:12px;
+        outline:none;
+      .collapsible > summary {
+  list-style:none;
+  cursor:pointer;
+  padding:10px 12px;
+  font-weight:600;
+  color:#c9d2db;
+  border-radius:12px;
+  outline:none;
+
+  /* selection control — add prefixes for Safari/iOS */
+  -webkit-user-select: none; /* Safari/iOS */
+  -ms-user-select: none;     /* old Edge */
+  user-select: none;         /* modern browsers */
+}
+
+      }
+      .collapsible[open] > summary { border-bottom:1px solid var(--edge); }
+
+      /* nice chevron */
+      .collapsible > summary::-webkit-details-marker { display:none; }
+      .collapsible > summary::after {
+        content: '▸';
+        float:right;
+        transform: translateY(1px);
+        transition: transform .15s ease;
+      }
+      .collapsible[open] > summary::after { transform: rotate(90deg); }
+
+      /* inner padding */
+      .collapsible > *:not(summary) { padding:10px 12px; }
+      .collapsible .roles { border:none; padding:0; background:transparent; }
+    /* Minimal speaker colors */
+    .script .sp.s1{ color:#60a5fa; }  /* Speaker 1 */
+    .script .sp.s2{ color:#facc15; }  /* Speaker 2 */
+    .script .sp.g1{ color:#34d399; }  /* Guest 1 */
+    .script .sp.g2{ color:#f472b6; }  /* Guest 2 */
+    :root{ --bg:#0b0d10; --fg:#e7ebf0; --muted:#96a0aa; --accent:#7cc4ff; --card:#151a20; --edge:#22303d; }
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";min-height:100svh;min-height:100dvh;display:flex;flex-direction:column}
+    .topbar{display:flex;align-items:center;gap:8px;position:sticky;top:0;background:linear-gradient(var(--bg),rgba(0,0,0,0));padding:8px 16px;border-bottom:1px solid var(--edge);z-index:10}
+    .chip{font-size:12px;color:var(--muted)}
+    .topbar .spacer{flex:1 1 auto}
+    .db{width:100px;height:10px;border:1px solid var(--edge);border-radius:999px;overflow:hidden;background:#0e141b}
+    .db > .bar{height:100%;width:0;background:#2dd4bf;transition:width .08s linear}
+    .app{display:grid;grid-template-columns:360px 1fr;flex:1 1 auto;min-height:0}
+    .panel{padding:16px;border-right:1px solid var(--edge);overflow:auto;background:var(--card);min-height:0}
+    .panel h2{margin:16px 0 8px;font-size:16px;color:#c9d2db}
+    .row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+    button,select,input[type="number"],input[type="color"],input[type="text"]{background:#0e141b;color:var(--fg);border:1px solid var(--edge);padding:8px 10px;border-radius:10px;cursor:pointer}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    textarea{width:100%;min-height:180px;background:#0e141b;color:var(--fg);border:1px solid var(--edge);border-radius:12px;padding:12px}
+    .status{font-size:12px;color:var(--muted)}
+    .timer{font-variant-numeric:tabular-nums;font-size:28px;margin:8px 0}
+    .viewer{position:relative;overflow:auto;min-height:0}
+    .script{max-width:1000px;margin:0 auto;padding:40px}
+    .script p{font-size:36px;line-height:1.35;margin:0 0 28px; white-space: pre-wrap;}
+    .marker{position:sticky;top:40%;height:2px;background:var(--accent);box-shadow:0 0 6px var(--accent)}
+    body.listening .script p{ color:#cfe8ff; }
+    body.listening .marker{ background:#9bd2ff; box-shadow:0 0 10px #9bd2ff; }
+    body.listening .topbar{ box-shadow:0 2px 0 rgba(124,196,255,.35) inset; }
+    .script .note{ color: var(--muted); font-style: italic; }
+    .script strong{ font-weight:700; }
+    @supports(height: 100dvh){ body{ min-height:100dvh; } }
+    .legend{display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 2px 0;}
+    .legend .tag{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); background:#0e141b; border:1px solid var(--edge); padding:4px 8px; border-radius:999px}
+    .legend .dot{width:10px; height:10px; border-radius:999px; display:inline-block}
+    /* Camera overlay */
+    .camWrap{position:absolute;right:16px;bottom:16px;width:300px;aspect-ratio:16/9;border:1px solid var(--edge);border-radius:12px;overflow:hidden;box-shadow:0 6px 22px rgba(0,0,0,.45);background:#000;opacity:1;z-index:20;display:none;}
+    .camWrap.mirrored video{ transform: scaleX(-1); }
+    .camWrap video{ width:100%; height:100%; object-fit:cover; display:block; }
+    /* Roles editor (sidebar) */
+    .roles{border:1px solid var(--edge);border-radius:12px;padding:10px;background:#0e141b}
+    .role-row{display:grid;grid-template-columns:56px 1fr 80px;gap:8px;align-items:center;margin:6px 0}
+    .role-row .slot{justify-self:center;color:var(--muted);font-variant-numeric:tabular-nums}
+  </style>
+  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+</head>
+<body>
+  <div class="topbar">
+    <strong>Teleprompter_Pro</strong>
+    <span class="chip" id="permChip">Mic: unknown</span>
+    <span class="chip" id="displayChip">Display: closed</span>
+    <span class="chip" id="recChip">Speech: idle</span>
+    <div class="db" title="Input level"><div id="dbBar" class="bar"></div></div>
+    <span class="chip" id="wpmChip">Pace: — wpm</span>
+    <span class="chip" id="etaChip">ETA: —:—</span>
+    <button id="presentBtn" class="chip" title="Open/Close display window">Present</button>
+    <span class="spacer"></span>
+  </div>
+
+
+  <div class="app">
+    <aside class="panel">
+      <div class="row">
+        <button id="openDisplayBtn">Open display window</button>
+        <button id="closeDisplayBtn" disabled>Close display window</button>
+      </div>
+      <div class="row">
+        <button id="micBtn">Request mic</button>
+        <button id="recBtn" disabled>Start speech sync</button>
+        <button id="resetScript">Reset script</button>
+        <button id="clearText">Clear</button>
+      </div>
+
+      
+      <h2>Microphone</h2>
+      <div class="row">
+        <label>Input
+          <select id="micDevice" style="min-width:220px"></select>
+        </label>
+        <button id="micRefresh">Refresh</button>
+      </div>
+
+      <h2>Typography</h2>
+      <div class="row">
+        <label>Font size <input id="fontSize" type="number" value="36" min="16" max="96" step="2"></label>
+        <label>Line height <input id="lineHeight" type="number" value="1.35" min="1.1" max="2" step="0.05"></label>
+      </div>
+
+      <h2>Auto-scroll & Timer</h2>
+      <div class="row">
+        <label>Auto-scroll (px/s) <input id="autoSpeed" type="number" value="0" min="0" max="300" step="5"></label>
+        <button id="autoToggle">Auto-scroll: Off</button>
+      </div>
+      <div class="row">
+        <label>Pre-roll (sec)
+          <input id="preroll" type="number" value="3" min="0" max="10" step="1">
+        </label>
+        <button id="resetBtn">Reset timer</button>
+        <div class="timer" id="timer">00:00.0</div>
+      </div>
+
+      <h2>Camera overlay</h2>
+      <div class="row">
+        <button id="startCam">Start camera</button>
+        <button id="stopCam" disabled>Stop camera</button>
+      </div>
+      <div class="row">
+        <label>Device
+          <select id="camDevice" style="min-width:220px"></select>
+        </label>
+      </div>
+      <div class="row">
+        <label>Size (%) <input id="camSize" type="number" value="30" min="15" max="60" step="1"></label>
+        <label>Opacity <input id="camOpacity" type="number" value="100" min="20" max="100" step="5"></label>
+        <label><input id="camMirror" type="checkbox" checked> Mirror</label>
+        <button id="camPiP">Picture-in-Picture</button>
+      </div>
+
+ <details id="speakersPanel" class="collapsible" data-key="teleprompter:speakers:open">
+  <summary>Speakers</summary>
+  <div class="roles" id="rolesBox"></div>
+  <div class="legend" id="legend"></div>
+  <div class="row">
+    <button id="colorAssignBtn" title="Convert lines like 'Joe: ...' to [s1]/[s2] and apply colors">
+      Color Assign
+    </button>
+  </div>
+</details>
+
+      <h2>Scripts</h2>
+      <div class="row">
+        <label>Saved
+          <select id="scriptSelect" style="min-width:220px"></select>
+        </label>
+        <button id="saveAsBtn">Save As</button>
+        <button id="loadBtn">Load</button>
+        <button id="deleteBtn">Delete</button>
+      </div>
+
+      <h2>Storage</h2>
+
+      <h2>File</h2>
+      <div class="row">
+        <button id="downloadFile">Download .txt</button>
+        <button id="uploadFileBtn">Upload file</button>
+        <input id="uploadFile" type="file" accept=".txt,.md,.rtf,.text,.docx" style="display:none" />
+        <button id="loadSample">Load sample</button>
+      </div>
+
+      <p class="status" id="status"></p>
+      <h2>Script</h2>
+      <textarea id="editor" placeholder="Paste or import your script…"></textarea>
+    </aside>
+
+    <main class="viewer" id="viewer">
+      <div class="marker"></div>
+      <div class="script" id="script"></div>
+
+      <!-- Camera overlay -->
+      <div class="camWrap" id="camWrap"><video id="camVideo" autoplay playsinline muted></video></div>
+    </main>
+  </div>
+
+  <div id="countOverlay" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:9999">
+    <div style="background:#0e141b;border:1px solid var(--edge);padding:24px 32px;border-radius:16px;text-align:center">
+      <div style="font-size:14px;color:#96a0aa">Begin speaking in</div>
+      <div id="countNum" style="font-variant-numeric:tabular-nums;font-size:64px;line-height:1;margin-top:6px">3</div>
+    </div>
+  </div>
+
+
+  <script>
+  (function(){
+    const show = (msg) => {
+      try {
+        const s = document.getElementById('status') || document.body.appendChild(Object.assign(document.createElement('p'), {id:'status'}));
+        s.textContent = msg; console.log('[TP-Pro]', msg);
+      } catch(_) { console.log('[TP-Pro]', msg); }
+    };
+    window.addEventListener('error', (e) => show('Boot error: ' + (e?.message || e)));
+    window.addEventListener('unhandledrejection', (e) => show('Promise rejection: ' + (e?.reason?.message || e?.reason || e)));
+  })();
+
+  // ---- Roles / Speakers (sidebar) ----
+  const ROLE_KEYS = ['s1','s2','g1','g2'];
+  const ROLE_DEFAULTS = {
+    s1: { name: 'Speaker 1', color: '#60a5fa' },
+    s2: { name: 'Speaker 2', color: '#facc15' },
+    g1: { name: 'Guest 1',   color: '#34d399' },
+    g2: { name: 'Guest 2',   color: '#f472b6' },
+  };
+  const ROLES_KEY = 'teleprompter:roles:v1';
+  function loadRoles(){
+    try { return Object.assign({}, ROLE_DEFAULTS, JSON.parse(localStorage.getItem(ROLES_KEY)||'{}')); }
+    catch { return { ...ROLE_DEFAULTS }; }
+  }
+  function saveRoles(map){ localStorage.setItem(ROLES_KEY, JSON.stringify(map)); }
+  let ROLES = loadRoles();
+
+  function renderRolesSidebar(){
+    const box = document.getElementById('rolesBox');
+    box.innerHTML = ROLE_KEYS.map((k,idx)=>{
+      const r = ROLES[k] || ROLE_DEFAULTS[k];
+      return '<div class="role-row" data-slot="'+k+'">'
+           +   '<div class="slot">'+k.toUpperCase()+'</div>'
+           +   '<input type="text" class="role-name" data-slot="'+k+'" placeholder="Name for '+k.toUpperCase()+'" value="'+(r.name||'')+'">'
+           +   '<input type="color" class="role-color" data-slot="'+k+'" value="'+(r.color||'#cccccc')+'">'
+           + '</div>';
+    }).join('');
+    // Bind
+    box.querySelectorAll('.role-name').forEach(inp=>{
+      inp.oninput = () => { ROLES[inp.dataset.slot].name = inp.value || ROLE_DEFAULTS[inp.dataset.slot].name; saveRoles(ROLES); updateLegend(); applyRoleStyles(); };
+    });
+    box.querySelectorAll('.role-color').forEach(inp=>{
+      inp.onchange = () => { ROLES[inp.dataset.slot].color = inp.value || ROLE_DEFAULTS[inp.dataset.slot].color; saveRoles(ROLES); updateLegend(); applyRoleStyles(); };
+    });
+  }
+  function updateLegend(){
+    const legendEl = document.getElementById('legend');
+    if (!legendEl) return;
+    legendEl.innerHTML = '';
+    for (const key of ROLE_KEYS){
+      const item = ROLES[key];
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.innerHTML = '<span class="dot" style="background:'+item.color+'"></span>'+item.name;
+      legendEl.appendChild(tag);
+    }
+  }
+  function applyRoleStyles(){
+    const css = Object.entries(ROLES)
+      .map(([k, r]) => '.script .sp.'+k+'{ color:'+r.color+' }')
+      .join('\\n');
+    let tag = document.getElementById('speakerStyle');
+    if (!tag) { tag = document.createElement('style'); tag.id = 'speakerStyle'; document.head.appendChild(tag); }
+    tag.textContent = css;
+    // push to display window
+    if (window._sendToDisplay) window._sendToDisplay({ type:'speakerStyles', css });
+  }
+
+  // ---- WPM/ETA ----
+  const wpmChip = document.getElementById('wpmChip');
+  const etaChip = document.getElementById('etaChip');
+  let wpmEMA = null; const WPM_ALPHA = 0.25, WPM_MIN = 40, WPM_MAX = 300;
+  function _setWpmChips(w='—', e='—:—'){ if(wpmChip) wpmChip.textContent='Pace: '+w+' wpm'; if(etaChip) etaChip.textContent='ETA: '+e; }
+  function _fmtMMSS(mins){ if(!isFinite(mins)||mins<0) return '—:—'; const m=Math.floor(mins); const s=Math.round((mins-m)*60); return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+
+  // ---- MAIN ----
+  (() => {
+    try {
+      const statusEl = document.getElementById('status');
+
+      // DOM
+      const editor = document.getElementById('editor');
+      const scriptEl = document.getElementById('script');
+      const viewer = document.getElementById('viewer');
+      const micBtn = document.getElementById('micBtn');
+      const micDeviceSel = document.getElementById('micDevice');
+      const micRefreshBtn = document.getElementById('micRefresh');
+      const recBtn = document.getElementById('recBtn');
+      const openDisplayBtn = document.getElementById('openDisplayBtn');
+      const presentBtn = document.getElementById('presentBtn');
+      const closeDisplayBtn = document.getElementById('closeDisplayBtn');
+      const permChip = document.getElementById('permChip');
+      const displayChip = document.getElementById('displayChip');
+      const recChip = document.getElementById('recChip');
+      const fontSizeInput = document.getElementById('fontSize');
+      const lineHeightInput = document.getElementById('lineHeight');
+      const autoToggle = document.getElementById('autoToggle');
+      const autoSpeed = document.getElementById('autoSpeed');
+      const resetScriptBtn = document.getElementById('resetScript');
+      const timerEl = document.getElementById('timer');
+      const resetBtn = document.getElementById('resetBtn');
+      const loadSample = document.getElementById('loadSample');
+      const clearText = document.getElementById('clearText');
+      const prerollInput = document.getElementById('preroll');
+      const countOverlay = document.getElementById('countOverlay');
+      const countNum = document.getElementById('countNum');
+      const saveLocalBtn   = document.getElementById('saveLocal');
+      const loadLocalBtn   = document.getElementById('loadLocal');
+
+    const colorAssignBtn = document.getElementById('colorAssignBtn');
+      // Persist <details> open state for Speakers (default: closed)
+      (function(){
+        const det = document.getElementById('speakersPanel');
+        if (!det) return;
+        const key = det.getAttribute('data-key') || 'teleprompter:speakers:open';
+        try {
+          const saved = localStorage.getItem(key);
+          det.open = (saved === '1');           // closed by default if key is missing
+        } catch {}
+        det.addEventListener('toggle', () => {
+          try { localStorage.setItem(key, det.open ? '1' : '0'); } catch {}
+        });
+      })();
+      const downloadFileBtn= document.getElementById('downloadFile');
+      const uploadFileBtn  = document.getElementById('uploadFileBtn');
+      const uploadFileInput= document.getElementById('uploadFile');
+      // Enable Start speech sync if SpeechRecognition API is available (even if mic hasn't been granted yet).
+      const SR_AVAIL = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+      if (SR_AVAIL) {
+        try { recBtn.disabled = false; } catch(_) {}
+      }
+
+
+      // Camera controls
+      const startCamBtn = document.getElementById('startCam');
+      const stopCamBtn  = document.getElementById('stopCam');
+      const camDeviceSel= document.getElementById('camDevice');
+      const camSizeInp  = document.getElementById('camSize');
+      const camOpacityInp = document.getElementById('camOpacity');
+      const camMirrorChk  = document.getElementById('camMirror');
+      const camPiPBtn   = document.getElementById('camPiP');
+      const camWrap     = document.getElementById('camWrap');
+      const camVideo    = document.getElementById('camVideo');
+      const dbBar = document.getElementById('dbBar');
+
+      // Script management controls
+      const scriptSelect = document.getElementById('scriptSelect');
+      const saveAsBtn    = document.getElementById('saveAsBtn');
+      const loadBtn      = document.getElementById('loadBtn');
+      const deleteBtn    = document.getElementById('deleteBtn');
+
+      // State
+      let displayWin = null;
+      let startedAt = null; let timerId = null;
+      let autoId = null;
+      let recognition = null; let recognizing = false; let wantListening = false;
+      let scriptWords = []; let currentIndex = 0;
+      let lastHeardAt = 0;
+      const TALKING_RECENT_MS = 1200;
+      let lastSpeechMatch = performance.now();
+
+      // dB meter state
+      let meterCtx = null, meterAnalyser = null, meterSource = null, meterId = null, meterStream = null;
+
+      // mic selection state
+      const MIC_KEY = 'teleprompter:micDeviceId';
+      let selectedMicId = localStorage.getItem(MIC_KEY) || '';
+
+      function setStatus(msg){ if (statusEl) statusEl.textContent = msg; }
+      function esc(s){ return String(s).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+
+      // Inline markup renderer (nested-safe)
+      function formatInlineMarkup(text, alreadyEscaped){
+        let t = alreadyEscaped ? String(text) : esc(String(text));
+        const nameMap = { r:'#ef4444', red:'#ef4444', g:'#22c55e', green:'#22c55e', y:'#facc15', yellow:'#facc15', b:'#60a5fa', blue:'#60a5fa' };
+
+        t = t.replace(/\[b\]([\s\S]*?)\[\/b\]/gi, function(_, inner){
+          return '<strong>' + formatInlineMarkup(inner, true) + '</strong>';
+        });
+        t = t.replace(/\[(r|g|y|b|red|green|yellow|blue)\]([\s\S]*?)\[\/\1\]/gi, function(_, name, inner){
+          const col = nameMap[name.toLowerCase()] || '#e7ebf0';
+          return '<span style="color:'+col+'">' + formatInlineMarkup(inner, true) + '</span>';
+        });
+        t = t.replace(/\[color=([^\]\s]+)\]([\s\S]*?)\[\/color\]/gi, function(_, col, inner){
+          return '<span style="color:'+esc(col)+'">' + formatInlineMarkup(inner, true) + '</span>';
+        });
+        t = t.replace(/\[bg=([^\]\s]+)\]([\s\S]*?)\[\/bg\]/gi, function(_, bg, inner){
+          return '<span style="background:'+esc(bg)+';padding:0 .15em;border-radius:.25em">' + formatInlineMarkup(inner, true) + '</span>';
+        });
+        t = t.replace(/\[note\]([\s\S]*?)\[\/note\]/gi, function(_, inner){
+          return '<span class="note">' + formatInlineMarkup(inner, true) + '</span>';
+        });
+        t = t.replace(/\[((?:s|g)[1-8])\]([\s\S]*?)\[\/\1\]/gi, function(_, who, inner){
+          return '<span class="sp '+who.toLowerCase()+'">' + formatInlineMarkup(inner, true) + '</span>';
+        });
+        // escape stray literal brackets
+        return t.replace(/\[|\]/g, function(m){ return m === '[' ? '&#91;' : '&#93;'; });
+      }
+      function stripSmartTags(text){
+        return text
+          .replace(/\[color=[^\]]+\]|\[bg=[^\]]+\]|\[\/color\]|\[\/bg\]/gi, '')
+          .replace(/\[(?:s|g)\d\]|\[\/(?:s|g)\d\]/gi, '')
+          .replace(/\[note\]|\[\/note\]/gi, '')
+          .replace(/\[b\]|\[\/b\]/gi, '')
+          .replace(/\[(?:r|g|y|b|red|green|yellow|blue)\]|\[\/(?:r|g|y|b|red|green|yellow|blue)\]/gi, '');
+      }
+
+      // Parse "Name: text" / "Name -- text"
+        // Assign first 4 distinct names we see to s1, s2, g1, g2 (in that order)
+        function parseLinesNameColon(s){
+          const re = /^\s*([^:()\n]+?)(?:\s*\((off[-\s]?script)\))?\s*(?::|--|—|–)\s*(.+)$/i;
+          const out = [];
+          for (const raw of s.split('\n')){
+            const line = raw.trimEnd();
+            const m = line.match(re);
+            if (m) {
+              const name = m[1].trim();
+              const body = m[3];
+              const role = Object.entries(ROLES).find(([k,v]) =>
+                (v.name||'').trim().toLowerCase() === name.toLowerCase()
+              )?.[0];
+              if (role) out.push('['+role+']'+body+'[/'+role+']');
+              else out.push(line);
+            } else {
+              out.push(line);
+            }
+          }
+          return out.join('\n');
+        }
+
+      // Mammoth HTML -> teleprompter markup
+      function htmlToTeleprompter(html){
+        const div = document.createElement('div');
+        div.innerHTML = String(html || '');
+
+        function toHex(v){ v = Math.max(0, Math.min(255, v|0)); return v.toString(16).padStart(2,'0'); }
+        function cleanColor(val){
+          if(!val) return null;
+          val = String(val).trim();
+          const m = val.match(/rgb\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)/i);
+          if(m) return '#'+toHex(+m[1])+toHex(+m[2])+toHex(+m[3]);
+          return val;
+        }
+        function hasBoldStyle(style){
+          const fw = style.getPropertyValue('font-weight') || '';
+          return /bold/i.test(fw) || parseInt(fw,10) >= 600;
+        }
+        function walk(node){
+          if (node.nodeType === 3){ return node.nodeValue; }
+          if (node.nodeType !== 1){ return ''; }
+          const tag = node.tagName.toUpperCase();
+          let inner = '';
+          for (let i=0;i<node.childNodes.length;i++){ inner += walk(node.childNodes[i]); }
+          if (tag === 'BR') return '\n';
+          if (tag === 'P' || tag === 'DIV') return inner + '\n\n';
+          if (tag === 'STRONG' || tag === 'B' || hasBoldStyle(node.style)){ return '[b]' + inner + '[/b]'; }
+          if (tag === 'SPAN'){
+            const color = cleanColor(node.style.color);
+            if (color){ return '[color='+color+']' + inner + '[/color]'; }
+          }
+          return inner;
+        }
+        let out = walk(div);
+        out = out.replace(/\r/g,'').replace(/\n{3,}/g,'\n\n').trim();
+        return out;
+      }
+
+      function recomputeWords(){
+        const plain = stripSmartTags((editor.value||'')).replace(/[.,!?;:()\[\]"'`]/g,'');
+        return plain.trim().split(/\s+/).filter(Boolean);
+      }
+
+      function applyTypography(){
+        scriptEl.querySelectorAll('p').forEach(function(p){
+          p.style.fontSize = fontSizeInput.value + 'px';
+          p.style.lineHeight = lineHeightInput.value;
+        });
+        if (window._sendToDisplay) window._sendToDisplay({type:'typography', fontSize: fontSizeInput.value, lineHeight: lineHeightInput.value});
+      }
+
+
+      function renderScript(text){
+          const paragraphs = text.split(/\n\n+/)
+            .map(p => `<p>${formatInlineMarkup(p)}</p>`)
+            .join('');
+          scriptEl.innerHTML = paragraphs || '<p><em>Paste text in the editor to begin…</em></p>';
+        applyTypography();
+        scriptWords = recomputeWords();
+        currentIndex = 0; _setWpmChips();
+        if (window._sendToDisplay) {
+          window._sendToDisplay({type:'render', html: scriptEl.innerHTML, fontSize: fontSizeInput.value, lineHeight: lineHeightInput.value});
+          window._sendToDisplay({type:'scroll', top: 0});
+        }
+      }
+
+      // Timer & WPM
+      function updateWpm(){
+        if (!startedAt || !scriptWords.length){ _setWpmChips(); return; }
+        const elapsedSec = (performance.now() - startedAt)/1000;
+        if (elapsedSec < 2){ _setWpmChips(); return; }
+        const wordsSpoken = Math.max(0, currentIndex);
+        const raw = (wordsSpoken/Math.max(1,elapsedSec))*60;
+        wpmEMA = (wpmEMA==null) ? raw : (0.25*raw + 0.75*(wpmEMA||0));
+        const w = Math.max(WPM_MIN, Math.min(WPM_MAX, wpmEMA||0));
+        const remain = Math.max(0, (scriptWords.length||0) - wordsSpoken);
+        _setWpmChips(String(Math.round(w)), _fmtMMSS(w>0 ? (remain/w) : Infinity));
+      }
+      function startTimer(){
+        startedAt = performance.now();
+        if (timerId) cancelAnimationFrame(timerId);
+        const tick = () => {
+          const t = performance.now() - startedAt; const cs = Math.floor(t/100);
+          const m = Math.floor(cs/600); const s = Math.floor((cs%600)/10); const d = cs%10;
+          timerEl.textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+d;
+          updateWpm();
+          timerId = requestAnimationFrame(tick);
+        };
+        tick();
+      }
+      function resetTimer(){ startedAt = null; if (timerId) cancelAnimationFrame(timerId); timerId = null; timerEl.textContent = '00:00.0'; _setWpmChips(); }
+
+      // dB meter
+      async function startDbMeter(){
+        try{
+          if (meterId) return; // already running
+          if (!meterCtx) meterCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const constraints = selectedMicId ? { audio: { deviceId: { exact: selectedMicId } }, video: false } : { audio: true, video: false };
+          meterStream = await navigator.mediaDevices.getUserMedia(constraints);
+          meterSource = meterCtx.createMediaStreamSource(meterStream);
+          meterAnalyser = meterCtx.createAnalyser();
+          meterAnalyser.fftSize = 1024;
+          meterSource.connect(meterAnalyser);
+          const buf = new Uint8Array(meterAnalyser.fftSize);
+          const step = () => {
+            meterAnalyser.getByteTimeDomainData(buf);
+            let sum = 0;
+            for (let i=0;i<buf.length;i++){ const v = (buf[i]-128)/128; sum += v*v; }
+            const rms = Math.sqrt(sum / buf.length);
+            const pct = Math.min(100, Math.max(0, Math.round(rms * 140)));
+            if (dbBar) dbBar.style.width = pct + '%';
+            meterId = requestAnimationFrame(step);
+          };
+          step();
+          permChip.textContent = 'Mic: granted';
+        }catch(e){
+          permChip.textContent = 'Mic: denied';
+        }
+      }
+      function stopDbMeter(){
+        if (meterId) cancelAnimationFrame(meterId); meterId = null;
+        try{ meterStream?.getTracks().forEach(t=>t.stop()); }catch{}
+        meterStream = null;
+        if (dbBar) dbBar.style.width = '0%';
+      }
+
+      // Auto-scroll
+      function startAutoScroll(){
+        stopAutoScroll();
+        const speed = Number(autoSpeed.value)||0; if(!speed) return;
+        let last = performance.now();
+        const step = () => {
+          const now = performance.now(); const dt = (now - last)/1000; last = now;
+          viewer.scrollTop += speed * dt;
+          if (window._sendToDisplay) window._sendToDisplay({type:'scroll', top: viewer.scrollTop});
+          autoId = requestAnimationFrame(step);
+        };
+        autoId = requestAnimationFrame(step);
+        autoToggle.textContent = 'Auto-scroll: On';
+      }
+      function stopAutoScroll(){ if(autoId) cancelAnimationFrame(autoId); autoId = null; autoToggle.textContent = 'Auto-scroll: Off'; }
+
+      // Display window
+      
+      function displayHtml(){
+  const css = `:root{--bg:#000;--fg:#e7ebf0;--edge:#1e2936}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+.wrap{height:100%;overflow:auto}
+.script{max-width:1200px;margin:0 auto;padding:40px}
+.script p{font-size:48px;line-height:1.35;margin:0 0 32px;white-space:pre-wrap}
+.marker{position:sticky;top:40%;height:2px;background:#7cc4ff;box-shadow:0 0 6px #7cc4ff}
+.hud{position:fixed;right:12px;bottom:12px;font:12px/1.2 system-ui;color:#9ba7b2;opacity:.7}
+.btn{cursor:pointer;border:1px solid #334155;background:#0e141b;color:#e7ebf0;padding:4px 8px;border-radius:8px}
+#countOverlayD{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:9999}
+#countOverlayD .card{background:#0e141b;border:1px solid #1e2936;padding:24px 32px;border-radius:16px;text-align:center}
+#countOverlayD .card .title{font-size:14px;color:#9ba7b2}
+#countOverlayD .card .num{font-variant-numeric:tabular-nums;font-size:64px;line-height:1;margin-top:6px}`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Display</title>
+<style>${css}</style><style id="speakerStyle"></style></head><body>
+<div class="wrap" id="wrap"><div class="marker"></div><div class="script" id="script"></div></div>
+<div id="countOverlayD"><div class="card"><div class="title">Begin speaking in</div><div id="countNumD" class="num">3</div></div></div>
+<div class="hud">Display <button class="btn" id="flip">Flip</button> <button class="btn" id="invert">Invert</button></div>
+<script>
+const scriptEl=document.getElementById("script");const wrap=document.getElementById("wrap");const styleTag=document.getElementById("speakerStyle");
+const o=document.getElementById("countOverlayD");const num=document.getElementById("countNumD");
+function apply(f,l){scriptEl.querySelectorAll("p").forEach(p=>{p.style.fontSize=f+"px";p.style.lineHeight=l;});}
+window.addEventListener("message",ev=>{
+  const d=ev.data||{};
+  if(d.type==="render"){scriptEl.innerHTML=d.html||"";if(d.fontSize&&d.lineHeight)apply(d.fontSize,d.lineHeight);}
+  if(d.type==="typography"){if(d.fontSize&&d.lineHeight)apply(d.fontSize,d.lineHeight);}
+  if(d.type==="scroll"){wrap.scrollTop=d.top||0;}
+  if(d.type==="speakerStyles"&&styleTag){styleTag.textContent=d.css||"";}
+  if(d.type==="preroll"){
+    if(d.show){o.style.display="flex"; if(typeof d.n!=="undefined") num.textContent=String(d.n);}
+    else {o.style.display="none";}
+  }
+});
+document.getElementById("flip").onclick=()=>{document.body.style.transform=document.body.style.transform?"":"scaleX(-1)";};
+document.getElementById("invert").onclick=()=>{
+  if(!document.body.dataset.inv){document.body.dataset.inv=1;document.body.style.background="#f4f7fb";document.body.style.color="#0b0d10";}
+  else{delete document.body.dataset.inv;document.body.style.background="#000";document.body.style.color="#e7ebf0";}
+};
+<\/script></body></html>`;
+}
+function openDisplay(){
+
+        try{
+          displayWin = window.open('', 'TeleprompterDisplay', 'width=1100,height=800');
+          if(!displayWin){
+            setStatus('Pop-up blocked. Allow pop-ups for this site and try again.');
+            displayChip.textContent = 'Display: blocked';
+            return;
+          }
+          displayWin.document.open();
+          displayWin.document.write(displayHtml());
+          displayWin.document.close();
+          displayChip.textContent = 'Display: open';
+          updatePresentUI();
+          closeDisplayBtn.disabled = false;
+          if (window._sendToDisplay) window._sendToDisplay({type:'render', html: scriptEl.innerHTML, fontSize: fontSizeInput.value, lineHeight: lineHeightInput.value});
+          if (window._sendToDisplay) window._sendToDisplay({type:'scroll', top: viewer.scrollTop});
+          applyRoleStyles();
+        }catch(e){
+          setStatus('Unable to open display window: '+e.message);
+        }
+      }
+      function closeDisplay(){
+        if(displayWin && !displayWin.closed) displayWin.close();
+        displayWin = null; closeDisplayBtn.disabled = true;
+        displayChip.textContent = 'Display: closed';
+        updatePresentUI();
+      }
+      function sendToDisplay(payload){
+        if(displayWin && !displayWin.closed){ displayWin.postMessage(payload, '*'); }
+      }
+      window._sendToDisplay = sendToDisplay;
+      // Present button UI sync
+      function updatePresentUI(){
+        if (!presentBtn) return;
+        const open = !!(displayWin && !displayWin.closed);
+        presentBtn.textContent = open ? 'Stop Presenting' : 'Present';
+        presentBtn.setAttribute('aria-pressed', open ? 'true' : 'false');
+        displayChip.textContent = 'Display: ' + (open ? 'open' : 'closed');
+        closeDisplayBtn.disabled = !open;
+      }
+      // Poll in case user manually closes the popup
+      setInterval(() => { if (presentBtn) updatePresentUI(); }, 800);
+
+
+      // Permissions & mic
+      function checkPermissions(){
+        if(!navigator.mediaDevices?.getUserMedia){ permChip.textContent = 'Mic: unsupported'; return; }
+        if(navigator.permissions && navigator.permissions.query){
+          navigator.permissions.query({name:'microphone'}).then(function(res){
+            permChip.textContent = 'Mic: '+res.state;
+            res.onchange = function(){ permChip.textContent = 'Mic: '+res.state; };
+          }).catch(function(){});
+        }
+        if(navigator.mediaDevices?.enumerateDevices){
+          navigator.mediaDevices.enumerateDevices().then((ds)=>{ updateCamDevices(ds); updateMicDevices(ds); }).catch(function(){});
+          navigator.mediaDevices.addEventListener?.('devicechange', function(){
+            navigator.mediaDevices.enumerateDevices().then((ds)=>{ updateCamDevices(ds); updateMicDevices(ds); }).catch(function(){});
+          });
+        }
+      }
+      async function requestMic(){
+        await startDbMeter();
+        try{
+          const constraints = selectedMicId ? { audio: { deviceId: { exact: selectedMicId } } } : { audio: true };
+          const st = await navigator.mediaDevices.getUserMedia(constraints);
+          st.getTracks().forEach(t=>t.stop());
+          recBtn.disabled = false;
+          setStatus("Microphone access granted. You can start speech sync.");
+        }catch(e){
+          setStatus("Microphone denied. Grant permission and reload. Mic requires HTTPS or localhost.");
+        }
+      }
+
+      // Speech recognition (robust alignment windowed + Levenshtein)
+      function setupRecognition(){
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if(!SR){
+          setStatus("Speech recognition isn't available in this browser. Use Chrome/Edge for voice-sync, or enable Auto-scroll.");
+          recBtn.disabled = true; recChip.textContent = 'Speech: unavailable'; return null;
+        }
+        const r = new SR(); r.lang = 'en-US'; r.continuous = true; r.interimResults = true; r.maxAlternatives = 1;
+
+        const windowBack = 25, windowAhead = 140, strictForward = 0.80;
+        const spokenTail = 7, matchIntervalMs = 140;
+        let pendingFinalText = ''; let lastMatchTs = 0;
+
+        r.onstart = () => {
+          recognizing = true;
+          recChip.textContent = 'Speech: listening';
+          document.body.classList.add('listening');
+          startTimer();
+          stopAutoScroll();
+          lastHeardAt = 0;
+          currentIndex = 0;
+          viewer.scrollTop = 0;
+          if (window._sendToDisplay) window._sendToDisplay({type:'scroll', top: 0});
+          startDbMeter();
+        };
+        r.onerror = (ev) => { setStatus('Speech error: '+ev.error); };
+        r.onend = () => {
+          recognizing = false;
+          recChip.textContent = 'Speech: stopped';
+          document.body.classList.remove('listening');
+          lastHeardAt = 0;
+          stopDbMeter();
+          if(wantListening){ try{ r.start(); } catch{} }
+        };
+        r.onresult = (ev) => {
+          let interimText = '';
+          for (let i = ev.resultIndex; i < ev.results.length; i++) {
+            const res = ev.results[i];
+            if (res.isFinal) pendingFinalText += res[0].transcript + ' ';
+            else interimText += res[0].transcript + ' ';
+          }
+          const now = performance.now();
+          if (pendingFinalText && (now - lastMatchTs) > matchIntervalMs) {
+            lastMatchTs = now;
+            const spokenWords = pendingFinalText.trim().toLowerCase().replace(/[.,!?;:()\[\]"'`]/g,'').split(/\s+/).slice(-7);
+            pendingFinalText = '';
+            if (!spokenWords.length || !scriptWords.length) return;
+            const start = Math.max(0, currentIndex - windowBack);
+            const end   = Math.min(scriptWords.length, currentIndex + windowAhead);
+            let bestIndex = currentIndex; let bestScore = -Infinity;
+
+            const lastSpoken = spokenWords[spokenWords.length-1];
+            for (let i = start; i < end - spokenWords.length; i++) {
+              const win = scriptWords.slice(i, i + spokenWords.length).map(w => w.toLowerCase());
+              if (!win.includes(lastSpoken)) continue;
+              // Levenshtein distance (words)
+              const m=spokenWords.length,n=win.length,dp=Array.from({length:m+1},()=>Array(n+1).fill(0));
+              for(let a=0;a<=m;a++)dp[a][0]=a;for(let b=0;b<=n;b++)dp[0][b]=b;
+              for(let a=1;a<=m;a++){for(let b=1;b<=n;b++){const cost=spokenWords[a-1]===win[b-1]?0:1;dp[a][b]=Math.min(dp[a-1][b]+1,dp[a][b-1]+1,dp[a-1][b-1]+cost);}}
+              const dist = dp[m][n];
+              const score = 1 - dist/Math.max(m,n);
+              if (score > bestScore){ bestScore = score; bestIndex = i; }
+            }
+
+            if (bestScore > 0.60) {
+              currentIndex = bestIndex;
+              const maxTop  = Math.max(0, scriptEl.scrollHeight - viewer.clientHeight);
+              const pct     = Math.max(0, Math.min(1, currentIndex / Math.max(1, scriptWords.length-1)));
+              const markerTop = viewer.clientHeight * 0.50;
+              const desiredTop = Math.max(0, Math.min(maxTop, (scriptEl.scrollHeight - viewer.clientHeight) * pct - markerTop));
+              viewer.scrollTop = desiredTop;
+              if (window._sendToDisplay) window._sendToDisplay({type:'scroll', top: desiredTop});
+              lastSpeechMatch = now;
+            }
+          }
+          if (interimText || pendingFinalText) { lastHeardAt = performance.now(); }
+        };
+        return r;
+      }
+
+      // Scripts manager (multi)
+      const SCRIPT_LIST_KEY = 'teleprompter:scripts:index';
+      const SCRIPT_ITEM_KEY = (id) => `teleprompter:script:${id}`;
+      function getScriptIndex(){
+        try { return JSON.parse(localStorage.getItem(SCRIPT_LIST_KEY) || '[]'); }
+        catch { return []; }
+      }
+      function setScriptIndex(list){ localStorage.setItem(SCRIPT_LIST_KEY, JSON.stringify(list)); }
+      function refreshScriptDropdown(){
+        const list = getScriptIndex();
+        scriptSelect.innerHTML = '';
+        for (const s of list){
+          const opt = document.createElement('option'); opt.value = s.id; opt.textContent = s.name; scriptSelect.appendChild(opt);
+        }
+        loadBtn.disabled = deleteBtn.disabled = list.length === 0;
+      }
+      function saveCurrentAs(){
+        const name = prompt('Save script as…', (editor.value||'').trim().split(/\s+/).slice(0,6).join(' ')) || '';
+        if (!name.trim()) return;
+        const id = Date.now().toString(36);
+        const list = getScriptIndex();
+        list.unshift({ id, name });
+        setScriptIndex(list.slice(0, 200)); // cap
+        localStorage.setItem(SCRIPT_ITEM_KEY(id), editor.value || '');
+        refreshScriptDropdown();
+        scriptSelect.value = id;
+        setStatus('Saved as "'+name+'".');
+      }
+      function loadSelectedScript(){
+        const id = scriptSelect.value;
+        if(!id) return;
+        const data = localStorage.getItem(SCRIPT_ITEM_KEY(id));
+        if (data==null){ setStatus('No data for selected script.'); return; }
+        editor.value = data; renderScript(editor.value); setStatus('Loaded "'+(getScriptIndex().find(s=>s.id===id)?.name||id)+'".');
+      }
+      function deleteSelectedScript(){
+        const id = scriptSelect.value;
+        if(!id) return;
+        const list = getScriptIndex();
+        const item = list.find(s=>s.id===id);
+        if (!confirm('Delete "'+(item?.name||id)+'"?')) return;
+        localStorage.removeItem(SCRIPT_ITEM_KEY(id));
+        setScriptIndex(list.filter(s=>s.id!==id));
+        refreshScriptDropdown();
+        setStatus('Deleted.');
+      }
+
+      // Local draft save/load
+      const DRAFT_KEY = 'teleprompter:script:v1';
+      function saveToLocal(){ try{ localStorage.setItem(DRAFT_KEY, editor.value); setStatus('Saved to browser storage.'); }catch(e){ setStatus('Save failed (storage full or disabled).'); } }
+      function loadFromLocal(){ try{ const data = localStorage.getItem(DRAFT_KEY); if (data != null){ editor.value = data; renderScript(editor.value); setStatus('Loaded from browser storage.'); } else { setStatus('Nothing saved yet.'); } }catch(e){ setStatus('Load failed (storage disabled?).'); } }
+      let autosaveTimer = null; function scheduleAutosave(){ clearTimeout(autosaveTimer); autosaveTimer = setTimeout(saveToLocal, 600); }
+
+      function downloadAsFile(){
+        const text = editor.value || '';
+        const firstWords = text.trim().split(/\s+/).slice(0,6).join('_').replace(/[^\w\-]+/g,'').toLowerCase();
+        const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+        const name = (firstWords || 'script') + '__' + stamp + '.txt';
+        const blob = new Blob([text], {type: 'text/plain;charset=utf-8'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = name;
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+      }
+
+      async function uploadFromDocx(file){
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const out = await mammoth.convertToHtml({ arrayBuffer });
+          let tele = htmlToTeleprompter(out.value || '');
+          tele = parseLinesNameColon(tele);
+          editor.value = tele;
+          renderScript(editor.value);
+          setStatus('Loaded “'+file.name+'” (.docx).');
+        } catch (e) {
+          try {
+            const out2 = await mammoth.extractRawText({ arrayBuffer });
+            let rawText = out2.value || '';
+            let normalized = parseLinesNameColon(rawText).replace(/\r/g,'').replace(/\n{3,}/g,'\n\n').trim();
+            editor.value = normalized;
+            renderScript(editor.value);
+            setStatus('Loaded “'+file.name+'” (.docx, raw).');
+          } catch(e2){
+            setStatus('Failed to read .docx: ' + (e2.message || e2));
+          }
+        }
+      }
+      function uploadFromTextFile(file){
+        const reader = new FileReader();
+        reader.onload = () => {
+          const txt = reader.result || '';
+          editor.value = typeof txt === 'string' ? txt : '';
+          renderScript(editor.value);
+          setStatus('Loaded “'+file.name+'”.');
+        };
+        reader.onerror = () => setStatus('Failed to read file.');
+        reader.readAsText(file, 'utf-8');
+      }
+
+// Camera
+let camStream = null;
+function updateCamDevices(devices){
+  const cams = (devices || []).filter(d => d.kind === 'videoinput');
+  const prev = camDeviceSel.value;
+  camDeviceSel.innerHTML = '';
+  cams.forEach((d,i)=>{
+    const opt = document.createElement('option');
+    opt.value = d.deviceId;
+    opt.textContent = d.label || ('Camera ' + (i+1));
+    camDeviceSel.appendChild(opt);
+  });
+  // keep previous selection if possible
+  const chosen = cams.find(d => d.deviceId === prev) || cams[0];
+  if (chosen) camDeviceSel.value = chosen.deviceId;
+  try { startCamBtn.disabled = cams.length === 0; } catch(_) {}
+}
+
+     function updateMicDevices(devices){
+  const mics = (devices || []).filter(d => d.kind === 'audioinput');
+  const cams = (devices || []).filter(d => d.kind === 'videoinput'); // add this
+  const prev = micDeviceSel.value;
+  micDeviceSel.innerHTML = '';
+  mics.forEach((d, i) => {
+    const opt = document.createElement('option');
+    opt.value = d.deviceId;
+    opt.textContent = d.label || ('Microphone ' + (i + 1));
+    micDeviceSel.appendChild(opt);
+  });
+  const chosen = mics.find(d => d.deviceId === selectedMicId)
+               || mics.find(d => d.deviceId === prev)
+               || mics[0];
+  if (chosen){
+    micDeviceSel.value = chosen.deviceId;
+    selectedMicId = chosen.deviceId;
+    localStorage.setItem(MIC_KEY, selectedMicId);
+  }
+
+  // camera-related UI state can be inferred from cams here safely
+  if (cams.length){
+    const prevCam = camDeviceSel.value;
+    camDeviceSel.value = cams.find(d=>d.deviceId===prevCam)?.deviceId || cams[0].deviceId;
+  }
+  startCamBtn.disabled = cams.length === 0 && !camStream;
+}
+
+      async function startCamera(){
+        try{
+          if(camStream) await stopCamera();
+          const devId = camDeviceSel.value || undefined;
+          const constraints = devId ? { video: { deviceId:{ exact:devId }, width:{ ideal:1280 }, height:{ ideal:720 } }, audio:false }
+                                    : { video: { facingMode:'user', width:{ ideal:1280 }, height:{ ideal:720 } }, audio:false };
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          camStream = stream; camVideo.srcObject = stream; camWrap.style.display = 'block';
+          applyCamSizing(); applyCamOpacity(); applyCamMirror();
+          startCamBtn.disabled = true; stopCamBtn.disabled = false;
+          setStatus('Camera started.');
+        }catch(e){ setStatus('Camera error: ' + e.message); }
+      }
+      async function stopCamera(){
+        try{ camStream?.getTracks().forEach(t=>t.stop()); }catch{}
+        camStream = null; camVideo.srcObject = null; camWrap.style.display = 'none';
+        startCamBtn.disabled = false; stopCamBtn.disabled = true;
+        setStatus('Camera stopped.');
+      }
+      function applyCamSizing(){
+        const pct = Math.max(15, Math.min(60, Number(camSizeInp.value)||30));
+        camWrap.style.width = (viewer.clientWidth * pct / 100) + 'px';
+      }
+      function applyCamOpacity(){
+        const o = Math.max(20, Math.min(100, Number(camOpacityInp.value)||100))/100;
+        camWrap.style.opacity = String(o);
+      }
+      function applyCamMirror(){ camWrap.classList.toggle('mirrored', !!camMirrorChk.checked); }
+      async function togglePiP(){
+        try{
+          if(document.pictureInPictureElement){ await document.exitPictureInPicture(); }
+          else { await camVideo.requestPictureInPicture(); }
+        }catch(e){ setStatus('PiP error: ' + e.message); }
+      }
+
+      // Event wiring
+      editor.addEventListener('input', () => { renderScript(editor.value); scheduleAutosave(); });
+      fontSizeInput.addEventListener('change', applyTypography);
+      lineHeightInput.addEventListener('change', applyTypography);
+      document.addEventListener('visibilitychange', () => {
+        if(document.hidden && recognition && recognizing){
+          recognition.stop(); recBtn.textContent='Start speech sync'; wantListening=false; document.body.classList.remove('listening');
+        }
+      });
+      openDisplayBtn.onclick = openDisplay;
+      closeDisplayBtn.onclick = closeDisplay;
+      micBtn.onclick = requestMic;
+      autoToggle.onclick = () => { if(autoId) stopAutoScroll(); else startAutoScroll(); };
+      autoSpeed.onchange = () => { if(autoId) startAutoScroll(); };
+      resetBtn.onclick = resetTimer;
+      resetScriptBtn.onclick = () => { renderScript(editor.value); setStatus('Script re-rendered.'); };
+      loadSample.onclick = () => {
+        editor.value = 'This is a sample teleprompter script to confirm that the display window, microphone access, timer, and auto-scroll are working as expected.\n\nSpeak along and watch the marker stay near the middle while the text scrolls. You can paste your own script on the left.';
+        renderScript(editor.value);
+      };
+      clearText.onclick = () => {
+        editor.value='';
+        renderScript(editor.value);
+        if (recognizing) { try { recognition.stop(); } catch {} }
+        resetTimer();
+        wpmEMA = null; _setWpmChips();
+        if (window._sendToDisplay) window._sendToDisplay({type:'render', html:'', fontSize: fontSizeInput.value, lineHeight: lineHeightInput.value});
+      };
+
+  if (saveLocalBtn) saveLocalBtn.onclick = saveToLocal;
+  if (loadLocalBtn) loadLocalBtn.onclick = loadFromLocal;
+
+    if (colorAssignBtn){
+      colorAssignBtn.onclick = () => {
+        editor.value = parseLinesNameColon(editor.value || '');
+        renderScript(editor.value);
+        // typography already applied by renderScript -> applyTypography()
+        // status helper already exists:
+        (typeof setStatus==='function' ? setStatus : console.log)('Color Assign applied.');
+      };
+    }
+
+      downloadFileBtn.onclick = downloadAsFile;
+      uploadFileBtn.onclick = () => uploadFileInput.click();
+      
+      // Mic device selection
+      if (micDeviceSel){
+        micDeviceSel.onchange = () => {
+          selectedMicId = micDeviceSel.value || '';
+          localStorage.setItem(MIC_KEY, selectedMicId);
+          // restart dB meter on new device
+          stopDbMeter();
+          startDbMeter();
+          setStatus('Selected mic updated.');
+        };
+      }
+      if (micRefreshBtn){
+        micRefreshBtn.onclick = async () => {
+          try{
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach(t=>t.stop());
+          }catch(_){}
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          updateMicDevices(devices);
+          setStatus('Device list refreshed.');
+        };
+      }
+
+      uploadFileInput.onchange = (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        const name = (f.name || '').toLowerCase();
+        const type = (f.type || '').toLowerCase();
+        const isDocx = type.includes('officedocument.wordprocessingml.document') || name.endsWith('.docx');
+        if (isDocx) uploadFromDocx(f); else uploadFromTextFile(f);
+        uploadFileInput.value = '';
+      };
+
+      startCamBtn.onclick = startCamera;
+      stopCamBtn.onclick  = stopCamera;
+      camDeviceSel.onchange = () => { if(camStream) startCamera(); };
+      camSizeInp.onchange = applyCamSizing;
+      camOpacityInp.onchange = applyCamOpacity;
+      camMirrorChk.onchange = applyCamMirror;
+      camPiPBtn.onclick = togglePiP;
+      window.addEventListener('resize', applyCamSizing);
+
+      // Scripts
+      saveAsBtn.onclick = saveCurrentAs;
+      loadBtn.onclick = loadSelectedScript;
+      deleteBtn.onclick = deleteSelectedScript;
+      refreshScriptDropdown();
+
+      // Speech button
+function beginCountdownThen(fn){
+  const secs = Math.max(0, Number(prerollInput && prerollInput.value || 0) || 0);
+  if(!secs){ fn(); return; }
+
+  // Ensure overlay exists in main window
+  let overlay = document.getElementById('countOverlay');
+  let num = document.getElementById('countNum');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'countOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:9999';
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#0e141b;border:1px solid #22303d;padding:24px 32px;border-radius:16px;text-align:center';
+    const t = document.createElement('div');
+    t.textContent = 'Begin speaking in';
+    t.style.cssText = 'font-size:14px;color:#96a0aa';
+    num = document.createElement('div');
+    num.id = 'countNum';
+    num.style.cssText = 'font-variant-numeric:tabular-nums;font-size:64px;line-height:1;margin-top:6px';
+    num.textContent = String(secs);
+    card.appendChild(t); card.appendChild(num); overlay.appendChild(card); document.body.appendChild(overlay);
+  }
+
+  overlay.style.display = 'flex';
+  if (num) num.textContent = String(secs);
+
+  // Mirror to display window (if open)
+  try { if (window._sendToDisplay) window._sendToDisplay({ type:'preroll', show:true, n: secs }); } catch(_){}
+
+  let n = secs;
+  const id = setInterval(() => {
+    n -= 1;
+    if (n <= 0) {
+      clearInterval(id);
+      overlay.style.display = 'none';
+      try { if (window._sendToDisplay) window._sendToDisplay({ type:'preroll', show:false }); } catch(_){}
+      fn();
+    } else {
+      if (num) num.textContent = String(n);
+      try { if (window._sendToDisplay) window._sendToDisplay({ type:'preroll', show:true, n }); } catch(_){}
+    }
+  }, 1000);
+}
+
+      function toggleRec(){
+        if(!recognition){ recognition = setupRecognition(); if(!recognition) return; }
+        if(recognizing || wantListening){
+          wantListening = false; try{ recognition.stop(); }catch{};
+          recBtn.textContent = 'Start speech sync'; return;
+        }
+        beginCountdownThen(()=>{
+          wantListening = true;
+          try { 
+            recognition.start(); 
+          } catch (e) {
+            setTimeout(()=>{
+              try { 
+                recognition.start(); 
+              } catch (e2) {
+                setStatus('Unable to start recognition (no mic or permissions). You can still use Auto-scroll.');
+              }
+            }, 500);
+          }
+          recBtn.textContent = 'Stop speech sync';
+        });
+      }
+      recBtn.onclick = toggleRec;
+      function togglePresent(){
+        const isOpen = !!(displayWin && !displayWin.closed);
+        if (isOpen) { closeDisplay(); }
+        else { openDisplay(); if (displayWin) { try { displayWin.focus(); } catch(_){} } }
+        updatePresentUI();
+      }
+      if (presentBtn) presentBtn.onclick = togglePresent;
+
+      // Keyboard: "P" toggles Present
+      document.addEventListener('keydown', (e) => {
+        if (e.target && /input|textarea|select/i.test(e.target.tagName)) return;
+        if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === 'p'){
+          e.preventDefault();
+          if (presentBtn) presentBtn.click();
+        }
+      });
+
+
+      // Display & role CSS on load
+      renderScript('');
+      const draft = localStorage.getItem('teleprompter:script:v1');
+      if (!editor.value.trim() && draft) { editor.value = draft; renderScript(editor.value); setStatus('Restored saved draft.'); }
+      renderRolesSidebar();
+      updateLegend();
+      applyRoleStyles();
+      checkPermissions();
+
+      // Keyboard shortcut: Ctrl/Cmd+S to save draft
+      document.addEventListener('keydown', (e) => {
+        const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
+        if ((isMac ? e.metaKey : e.ctrlKey) && e.key.toLowerCase() === 's'){ e.preventDefault(); saveToLocal(); }
+      });
+
+    } catch (e) {
+      const s = document.getElementById('status');
+      if (s) s.textContent = 'Init crashed: ' + e.message;
+      console.error('Init crashed', e);
+    }
+  })();
+  </script>
+  <style id="speakerStyle"></style>
+  <!-- Pre-roll overlay (main window) -->
+</body>
+</html>
