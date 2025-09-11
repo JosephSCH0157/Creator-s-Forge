@@ -6,14 +6,8 @@ import Splash from "./routes/Splash";
 import App from "./App.jsx";           // optional, if you use it as a layout
 import Units from "./Units.jsx";       // Tongs
 import UnitDetail from "./UnitDetail.jsx";
+import Placeholder from "./routes/Placeholder.jsx";
 import "./index.css";
-
-const Placeholder = ({ name }) => (
-  <div style={{ padding: 24, fontFamily: "system-ui" }}>
-    <h1>{name}</h1>
-    <p>This is the {name} module — coming soon.</p>
-  </div>
-);
 
 const router = createBrowserRouter([
   // Root shows Splash
