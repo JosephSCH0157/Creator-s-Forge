@@ -25,7 +25,7 @@ export default function Splash() {
       <Link to="/tools/ledger" className="hotspot" style={{ top: "80%", left: "65%" }}>
         Ledger
       </Link>
-      <Link to="/tools/stock" className="hotspot" style={{ top: "75%", left: "30%" }}>
+      <Link to="/tools/stock" className="hotspot" style={{ top: "85%", left: "20%" }}>
         Bar Stock
       </Link>
 
