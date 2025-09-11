@@ -13,7 +13,7 @@ export default function Splash() {
       <Link to="/tools/anvil" className="hotspot" style={{ top: "70%", left: "40%" }}>
         Anvil
       </Link>
-      <Link to="/tools/hammer" className="hotspot" style={{ top: "45%", left: "35%" }}>
+      <Link to="/tools/hammer" className="hotspot" style={{ top: "15%", left: "35%" }}>
         Hammer
       </Link>
       <Link to="/tools/tongs" className="hotspot" style={{ top: "50%", left: "60%" }}>
