@@ -62,10 +62,7 @@ export default function Splash() {
     <div
       className="min-h-screen grid place-items-center text-[#e7eef7]"
       style={{
-        background:
-          "radial-gradient(1200px 800px at 70% 10%, #1e232b10 0%, transparent 60%)," +
-          "radial-gradient(900px 600px at 20% 80%, #0f131910 0%, transparent 60%)," +
-          "linear-gradient(180deg, #111419, #0b0d10)",
+        background: `url('/src/assets/forge.png') center/cover no-repeat, linear-gradient(180deg, #111419, #0b0d10)`,
       }}
       aria-label="Creator’s Forge — Splash"
     >
