@@ -2,32 +2,34 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import Splash from "./routes/Splash";
-import App from "./App.jsx";           // optional, if you use it as a layout
-import Units from "./Units.jsx";       // Tongs
+import Layout from "./routes/Layout.jsx";
+import Splash from "./routes/splash.jsx";
+import Units from "./Units.jsx";
 import UnitDetail from "./UnitDetail.jsx";
-import Placeholder from "./routes/Placeholder.jsx";
+import Forge from "./routes/Forge.jsx";
+import Anvil from "./routes/Anvil.jsx";
+import Hammer from "./routes/Hammer.jsx";
+import Quench from "./routes/Quench.jsx";
+import Ledger from "./routes/Ledger.jsx";
+import Stock from "./routes/Stock.jsx";
 import "./index.css";
 
+const NotFound = () => <div style={{ padding: 24 }}>Not Found</div>;
+
 const router = createBrowserRouter([
-  // Root shows Splash
-  { path: "/", element: <Splash /> },
-
-  // Tongs routes
-  { path: "/tools/tongs", element: <Units /> },
-  { path: "/units/:id", element: <UnitDetail /> }, // detail keeps working
-
-  // Other tools
   {
-    path: "/tools",
+    element: <Layout />,
     children: [
-      { path: "forge", element: <Placeholder name="Forge" /> },
-      { path: "anvil", element: <Placeholder name="Anvil" /> },
-      { path: "hammer", element: <Placeholder name="Hammer" /> },
-      { path: "quench", element: <Placeholder name="Quench" /> },
-      { path: "ledger", element: <Placeholder name="Ledger" /> },
-      { path: "stock",  element: <Placeholder name="Bar Stock" /> },
-      { path: "tongs",  element: <Placeholder name="Tongs" /> },
+      { path: "/", element: <Splash /> },
+      { path: "/tools/tongs", element: <Units /> },
+      { path: "/units/:id", element: <UnitDetail /> },
+      { path: "/tools/forge", element: <Forge /> },
+      { path: "/tools/anvil", element: <Anvil /> },
+      { path: "/tools/hammer", element: <Hammer /> },
+      { path: "/tools/quench", element: <Quench /> },
+      { path: "/tools/ledger", element: <Ledger /> },
+      { path: "/tools/stock", element: <Stock /> },
+      { path: "*", element: <NotFound /> },
     ],
   },
 ]);
