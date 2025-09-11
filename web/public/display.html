@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Teleprompter Display</title>
+  <style>
+    html,body{height:100%;margin:0;background:#000;color:#fff;font-family:system-ui,sans-serif}
+    .wrap{position:relative;height:100%;overflow:auto}
+    .stage{padding:12vh 8vw;font-weight:900;font-size:60px;line-height:1.35}
+    .stage.mirror{transform:scaleX(-1)}
+    .word{opacity:.35}.word.hit{opacity:.12}.word.next{opacity:1;text-decoration:underline}
+    .marker{position:sticky;top:45%;height:0;border-top:2px dashed rgba(92,200,255,.7)}
+    .hud{position:fixed;right:10px;bottom:10px;background:rgba(0,0,0,.6);border:1px solid #1e2b39;border-radius:12px;padding:.4rem .6rem;font-size:.9rem}
+    video{position:fixed;inset:auto 12px 12px auto;width:320px;height:180px;object-fit:cover;border:1px solid #333;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+    .hidden{display:none}
+    .black{position:fixed;inset:0;background:#000;z-index:9;display:none}
+    .black.show{display:block}
+    .cue{position:fixed;left:50%;transform:translateX(-50%);max-width:80vw;padding:.6rem .9rem;border-radius:10px;background:rgba(0,0,0,.85);color:#fff;border:1px solid #2a2a2a;font:700 22px/1.25 system-ui,sans-serif;z-index:9999}
+    .cue.top{top:12px}.cue.bottom{bottom:12px}
+    .cue.urgent{background:rgba(220,53,69,.92);border-color:#8a1c26}
+    .cue.blink{animation:blink .8s ease-in-out 2}
+    @keyframes blink{50%{filter:brightness(1.35)}}
+    @media (prefers-reduced-motion: reduce){ .cue.blink{animation:none !important} }
+
+    /* Countdown overlay */
+    .count-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:9999}
+    .count-card{background:#0e141b;border:1px solid #1e2936;padding:24px 32px;border-radius:16px;text-align:center}
+    .count-label{color:#96a0aa;font:14px/1.2 system-ui;margin-bottom:6px}
+    .count-num{font:700 96px/1 system-ui;color:#7cc4ff;text-shadow:0 0 10px #7cc4ff}
+  </style>
+</head>
+<body>
+  <div class="wrap" id="wrap">
+    <div class="marker"></div>
+    <div id="stage" class="stage"></div>
+  </div>
+
+  <div class="hud">
+    Display ready ·
+    <button id="allow" onclick="startCam()">Allow Camera</button>
+    <button id="dl" disabled>Download</button>
+  </div>
+
+  <div id="black" class="black"></div>
+  <video id="preview" class="hidden" playsinline muted></video>
+
+  <!-- Countdown overlay -->
+  <div id="countOverlay" class="count-overlay" aria-hidden="true">
+    <div class="count-card">
+      <div class="count-label">Begin speaking in</div>
+      <div id="countNum" class="count-num">3</div>
+    </div>
+  </div>
+
+  <script>
+    let media = null, rec = null, chunks = [];
+    const stage = document.getElementById('stage');
+    const wrap  = document.getElementById('wrap');
+    const scriptEl = document.getElementById('script');
+    const ov  = document.getElementById('countOverlay');
+    const num = document.getElementById('countNum');
+
+    function renderWords(arr){
+      stage.innerHTML = '';
+      arr.forEach(w => {
+        const s = document.createElement('span');
+        s.className = 'word';
+        s.textContent = w;
+        stage.appendChild(s);
+        stage.appendChild(document.createTextNode(' '));
+      });
+    }
+
+    function setIdx(i){
+      const nodes = stage.querySelectorAll('.word');
+      nodes.forEach((n,k) => {
+        n.classList.toggle('hit',  k <  i);
+        n.classList.toggle('next', k === i);
+      });
+      const host  = wrap.getBoundingClientRect();
+      const targetY = host.top + host.height * 0.45;
+      const rect = nodes[i]?.getBoundingClientRect();
+      if (rect){
+        wrap.scrollBy({ top: rect.top - targetY, behavior: 'smooth' });
+      }
+    }
+
+    function mirror(v){ stage.classList.toggle('mirror', !!v); }
+    function blackout(v){ document.getElementById('black').className = v ? 'black show' : 'black'; }
+
+    // Camera / recording
+    async function startCam(){
+      try{
+        media = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
+        const pv = document.getElementById('preview');
+        pv.srcObject = media;
+        pv.classList.remove('hidden');
+        await pv.play();
+
+        const MediaRecorderCtor = window.MediaRecorder;
+        rec = new MediaRecorderCtor(media, { mimeType: 'video/webm;codecs=vp9,opus' });
+        rec.ondataavailable = (e) => { if (e.data?.size > 0) chunks.push(e.data); };
+        rec.onstop = () => {
+          const blob = new Blob(chunks, { type:'video/webm' });
+          chunks = [];
+          const btn = document.getElementById('dl');
+          btn.disabled = false;
+          btn.onclick = () => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'recording.webm';
+            a.click();
+            URL.revokeObjectURL(url);
+          };
+        };
+      }catch(e){
+        alert('Camera permission denied: ' + e.message);
+      }
+    }
+    function toggleRec(){
+      if (!rec) return;
+      if (rec.state === 'recording'){ rec.stop(); }
+      else { chunks = []; rec.start(); }
+    }
+
+    // On-screen cues
+    const activeCues = new Map();
+    function showCue({ id, text, ttlMs = 12000, priority = 'normal', pos = 'top' }){
+      clearCue(id);
+      const el = document.createElement('div');
+      el.className = `cue ${pos} ${priority} ${priority === 'urgent' ? 'blink' : ''}`;
+      el.textContent = text;
+      el.dataset.cueId = id;
+      document.body.appendChild(el);
+
+      if (priority === 'urgent'){
+        try{
+          const a = new AudioContext(), o = a.createOscillator(), g = a.createGain();
+          o.type = 'square'; o.frequency.value = 880;
+          o.connect(g); g.connect(a.destination);
+          g.gain.setValueAtTime(0.05, a.currentTime);
+          o.start(); o.stop(a.currentTime + 0.15);
+          setTimeout(() => a.close(), 250);
+        }catch(_){}
+      }
+      const tid = setTimeout(() => clearCue(id), ttlMs);
+      activeCues.set(id, { el, tid });
+    }
+    function clearCue(id){
+      const c = activeCues.get(id);
+      if (!c) return;
+      clearTimeout(c.tid);
+      c.el.remove();
+      activeCues.delete(id);
+    }
+    function clearAllCues(){ [...activeCues.keys()].forEach(clearCue); }
+
+    // Unified message listener (accept only messages from opener window)
+    window.addEventListener('message', (ev) => {
+      if (window.opener && ev.source !== window.opener) return;
+      const { type, data } = ev.data || {};
+      if (type === 'WORDS')  renderWords(data);
+      if (type === 'IDX')    setIdx(data);
+      if (type === 'MIRROR') mirror(data);
+      if (type === 'BLACK')  blackout(data);
+      if (type === 'REC')    toggleRec();
+      if (type === 'CUE'){
+        if (data?.cmd === 'SHOW')      showCue(data);
+        if (data?.cmd === 'CLEAR_ID')  clearCue(data.id);
+        if (data?.cmd === 'CLEAR_ALL') clearAllCues();
+      }
+    });
+
+    (() => {
+  // Elements (create on the fly if missing)
+  const overlay = document.getElementById('countOverlay') || (() => {
+    const ov = document.createElement('div');
+    ov.id = 'countOverlay'; ov.className = 'count-overlay'; ov.style.display = 'none';
+    ov.setAttribute('aria-hidden','true');
+    const card = document.createElement('div'); card.className = 'count-card';
+    const label = document.createElement('div'); label.className = 'count-label'; label.textContent = 'Begin speaking in';
+    const num = document.createElement('div'); num.id = 'countNum'; num.className = 'count-num'; num.textContent = '3';
+    card.append(label, num); ov.appendChild(card); document.body.appendChild(ov); return ov;
+  })();
+  const numEl = overlay.querySelector('#countNum');
+
+  function showCountdown(n){
+    if (typeof n !== 'undefined' && numEl) numEl.textContent = String(n);
+    overlay.style.display = 'flex';
+    overlay.setAttribute('aria-hidden','false');
+  }
+  function hideCountdown(){
+    overlay.style.display = 'none';
+    overlay.setAttribute('aria-hidden','true');
+  }
+
+  // Listen for messages from the main window
+  window.addEventListener('message', (ev) => {
+    const d = ev.data || {};
+    // Support both embedded-template and standalone protocols
+    if (d.type === 'countdown') {
+      if (d.show) showCountdown(d.n);
+      else hideCountdown();
+    }
+    if (d.type === 'COUNTDOWN' && d.data) {
+      if (d.data.show) showCountdown(d.data.n);
+      else hideCountdown();
+    }
+  });
+})();
+
+function openDisplay() {
+  displayWin = window.open('display.html', 'TeleprompterDisplay', 'width=1000,height=700');
+  if (!displayWin) { setStatus('Pop-up blocked…'); return; }
+  displayChip.textContent = 'Display: open';
+  closeDisplayBtn.disabled = false;
+
+  // Wait for the display window to load before posting messages
+  const init = () => {
+    sendToDisplay({ type: 'render', html: scriptEl.innerHTML, fontSize: fontSizeInput.value, lineHeight: lineHeightInput.value });
+    sendToDisplay({ type: 'scroll', top: viewer.scrollTop });
+    // Optionally, configure marker position or other settings here if needed
+  };
+
+  // Use a polling approach to ensure the window is ready for messaging
+  const pollReady = () => {
+    try {
+      if (displayWin.document && displayWin.document.readyState === 'complete') {
+        init();
+      } else {
+        setTimeout(pollReady, 50);
+      }
+    } catch (e) {
+      setTimeout(pollReady, 100);
+    }
+  };
+  pollReady();
+}
+  </script>
+</body>
+</html>
