@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "dev": "npm run -ws --if-present dev",
-    "start": "npm run dev",
+    "start": "concurrently -n server,web -c green,cyan \"npm -w server run dev\" \"npm -w web run dev\"",
     "build": "npm run -ws --if-present build",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
+    "concurrently": "^9.0.0",
     "eslint": "^9.9.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-react": "^7.35.0",
