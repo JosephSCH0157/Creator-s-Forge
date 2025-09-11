@@ -2,66 +2,59 @@
 import * as React from "react";
 
 type Phase = "idea" | "script" | "record" | "published";
-export type ForgeDoc = {
-  id: string;
-  name: string;
-  phase: Phase;
-  content: string;
-  updated: number;
-};
+export type ForgeDoc = { id: string; name: string; phase: Phase; content: string; updated: number; };
 
 const STORE_KEY = "tongs:docs:v1";
+const QK = "__forge_bus_queue__";
+const CH = "creators-forge";
 
-function loadAll(): ForgeDoc[] {
-  try { return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); }
-  catch { return []; }
-}
-function saveAll(docs: ForgeDoc[]) {
-  localStorage.setItem(STORE_KEY, JSON.stringify(docs));
-}
+function loadAll(): ForgeDoc[] { try { return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); } catch { return []; } }
+function saveAll(docs: ForgeDoc[]) { localStorage.setItem(STORE_KEY, JSON.stringify(docs)); }
+function nowId(){ return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,7); }
 
-function nowId() {
-  // sortable & unique enough for local use
-  return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,7);
+function popQueue(): any[] {
+  try {
+    const q = JSON.parse(localStorage.getItem(QK) || "[]");
+    localStorage.setItem(QK, JSON.stringify([]));
+    return Array.isArray(q) ? q : [];
+  } catch { return []; }
 }
 
 export function useForgeBus() {
   React.useEffect(() => {
-    const CH = "creators-forge";
     const bc = ("BroadcastChannel" in window) ? new BroadcastChannel(CH) : null;
-
-    function post(msg: any) {
+    function post(msg: any){
       if (bc) bc.postMessage(msg);
       else localStorage.setItem("__forge_bus__", JSON.stringify({ ...msg, ts: Date.now() }));
     }
 
-    function onMsg(msg: any) {
-      if (!msg || !msg.type) return;
+    function respondIndex(){
       const docs = loadAll();
+      const items = docs
+        .filter(d => d.phase === "script")
+        .sort((a,b) => b.updated - a.updated)
+        .map(d => ({ id: d.id, name: d.name, updated: d.updated }));
+      post({ type: "SCRIPT_INDEX", items });
+    }
 
-      // Only include SCRIPT phase docs in the index when requested
+    function handle(msg: any) {
+      if (!msg || !msg.type) return;
+      let docs = loadAll();
+
       if (msg.type === "REQUEST_SCRIPT_INDEX") {
-        const items = docs
-          .filter(d => d.phase === "script")
-          .sort((a,b) => b.updated - a.updated)
-          .map(d => ({ id: d.id, name: d.name, updated: d.updated }));
-        post({ type: "SCRIPT_INDEX", items });
+        respondIndex();
       }
 
       if (msg.type === "REQUEST_SCRIPT" && msg.id) {
         const d = docs.find(x => x.id === msg.id);
-        if (d) {
-          post({ type: "SCRIPT_READY", id: d.id, payload: { title: d.name, content: d.content } });
-        } else {
-          post({ type: "OP_RESULT", ok: false, message: "Script not found." });
-        }
+        if (d) post({ type: "SCRIPT_READY", id: d.id, payload: { title: d.name, content: d.content } });
+        else post({ type: "OP_RESULT", ok: false, message: "Script not found." });
       }
 
       if (msg.type === "SAVE_SCRIPT" && msg.payload) {
         const { name, content, phase } = msg.payload as { name: string; content: string; phase?: Phase; };
-        const id = nowId();
         const doc: ForgeDoc = {
-          id,
+          id: nowId(),
           name: (name || "Untitled").trim() || "Untitled",
           content: content || "",
           phase: phase || "script",
@@ -70,32 +63,48 @@ export function useForgeBus() {
         docs.unshift(doc);
         saveAll(docs);
         post({ type: "OP_RESULT", ok: true, message: `Saved "${doc.name}".`, refreshIndex: true });
+        respondIndex();
       }
 
       if (msg.type === "DELETE_SCRIPT" && msg.id) {
-        const idx = docs.findIndex(x => x.id === msg.id);
-        if (idx >= 0) {
-          const [gone] = docs.splice(idx, 1);
+        const i = docs.findIndex(x => x.id === msg.id);
+        if (i >= 0) {
+          const gone = docs.splice(i, 1)[0];
           saveAll(docs);
           post({ type: "OP_RESULT", ok: true, message: `Deleted "${gone?.name || msg.id}".`, refreshIndex: true });
+          respondIndex();
         } else {
           post({ type: "OP_RESULT", ok: false, message: "Nothing to delete." });
         }
       }
     }
 
-    function storageEcho(e: StorageEvent) {
+    function onMessage(e: MessageEvent){ handle(e.data); }
+    function onStorage(e: StorageEvent){
+      // 1) live messages
       if (e.key === "__forge_bus__" && e.newValue) {
-        try { onMsg(JSON.parse(e.newValue)); } catch {}
+        try { handle(JSON.parse(e.newValue)); } catch {}
+      }
+      // 2) queued backlog (e.g., Teleprompter saved before Tongs was open)
+      if (e.key === QK && (e.newValue || e.oldValue)) {
+        const backlog = popQueue();
+        backlog.forEach(handle);
+        // after draining, refresh index for any listeners
+        respondIndex();
       }
     }
 
-    if (bc) bc.onmessage = (e) => onMsg(e.data);
-    window.addEventListener("storage", storageEcho);
+    // DRain any backlog immediately on startup
+    const startupBacklog = popQueue();
+    startupBacklog.forEach(handle);
+    respondIndex(); // make Teleprompter’s dropdown populate right away
+
+    if (bc) bc.onmessage = onMessage;
+    window.addEventListener("storage", onStorage);
 
     return () => {
       if (bc) bc.close();
-      window.removeEventListener("storage", storageEcho);
+      window.removeEventListener("storage", onStorage);
     };
   }, []);
 
