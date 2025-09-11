@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import Layout from "./routes/Layout.jsx";
-import Splash from "./routes/splash.jsx";
+import Splash from "./routes/Splash.tsx";
 import Units from "./Units.jsx";
 import UnitDetail from "./UnitDetail.jsx";
 import Forge from "./routes/Forge.jsx";

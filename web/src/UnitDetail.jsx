@@ -1,6 +1,15 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
+function Badge({ children }) {
+  return (
+    <span style={{
+      padding: "2px 8px", borderRadius: 999, fontSize: 12,
+      background: "#111827", color: "white"
+    }}>{children}</span>
+  );
+}
+
 export default function UnitDetail() {
   const { id } = useParams();
   const [unit, setUnit] = useState(null);
@@ -13,7 +22,7 @@ export default function UnitDetail() {
   return (
     <div style={{ padding: 24 }}>
       <h1>{unit.title}</h1>
-      <div><b>Status:</b> {unit.status}</div>
+      <div><b>Status:</b> <Badge>{unit.status}</Badge></div>
       <div><b>Id:</b> <code>{id}</code></div>
     </div>
   );
