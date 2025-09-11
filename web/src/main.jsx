@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import Splash from "./assets/routes/splash.jsx";
+import Splash from "./routes/Splash";
 import App from "./App.jsx";           // optional, if you use it as a layout
 import Units from "./Units.jsx";       // Tongs
 import UnitDetail from "./UnitDetail.jsx";
