@@ -1,8 +1,13 @@
 export default function Anvil() {
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Anvil</h1>
-      <p>This is the Anvil module — coming soon.</p>
-    </div>
+    <iframe
+      src="/teleprompter_pro.html"
+      title="Teleprompter"
+      style={{
+        width: "100%",
+        height: "100vh",
+        border: "none",
+      }}
+    />
   );
 }
