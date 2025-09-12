@@ -16,19 +16,26 @@
 .hotspot {
   position: absolute;
   transform: translate(-50%, -50%);
-  padding: 4px 8px;
-  background: rgba(0,0,0,0.6);
-  color: #ffd9a6;
-  font-weight: bold;
-  border-radius: 6px;
+  padding: 6px 10px;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
   text-decoration: none;
   font-size: 14px;
-  transition: background 0.2s, transform 0.2s;
+  z-index: 2;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .hotspot:hover {
   background: rgba(255,106,0,0.8);
   transform: translate(-50%, -50%) scale(1.1);
+  color: transparent; /* hide original text */
+}
+
+/* text swap on hover */
+.hotspot:hover::after {
+  content: attr(data-hover); /* show alternate name */
 }
 
 .brand {
