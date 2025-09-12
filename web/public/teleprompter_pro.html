@@ -133,11 +133,17 @@
         <button id="openDisplayBtn">Open display window</button>
         <button id="closeDisplayBtn" disabled>Close display window</button>
       </div>
+
       <div class="row">
         <button id="micBtn">Request mic</button>
         <button id="recBtn" disabled>Start speech sync</button>
         <button id="resetScript">Reset script</button>
         <button id="clearText">Clear</button>
+      </div>
+      <div style="margin: 16px 0;">
+        <button id="recStart">Start Rec (WebM)</button>
+        <button id="recStop" disabled>Stop</button>
+        <a id="recDownload" style="display:none">Download</a>
       </div>
 
       
@@ -220,12 +226,7 @@
       <h2>Script</h2>
       <textarea id="editor" placeholder="Paste or import your script…"></textarea>
 
-    <!-- Controls -->
-    <div style="margin: 16px 0;">
-      <button id="recStart">Start Rec (WebM)</button>
-      <button id="recStop" disabled>Stop</button>
-      <a id="recDownload" style="display:none">Download</a>
-    </div>
+  <!-- Controls moved above -->
     <script>
     let mediaRec, chunks = [], recMime = "";
     let stream; // camera+mic
