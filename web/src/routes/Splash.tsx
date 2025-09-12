@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import SplashWithEmbers from "./SplashWithEmbers";
-import "./Splash.css"; // contains the .hotspot styles & hover text swap
+import "./Splash.css";
 
 type HotspotProps = {
   to: string;
@@ -27,16 +27,17 @@ const Hotspot: React.FC<HotspotProps> = ({ to, top, left, label, hover }) => (
 export default function SplashRoute() {
   return (
     <div className="relative w-screen h-screen bg-black overflow-hidden">
-      {/* Full-screen forge image + ember effect */}
+      {/* Full-screen background (forge image + embers).
+         - Uses /public/forge.png. Change if your file lives elsewhere. */}
       <SplashWithEmbers
-        src="/images/forge_splash.png"
-        hearth={{ x: 520, y: 520, w: 220, h: 120 }} // tune to your image coords
+        src="/forge.png"
+        hearth={{ x: 520, y: 520, w: 220, h: 120 }} // tune to match fire area
         spawnRate={140}
         maxEmbers={600}
         className="absolute inset-0 -z-10 pointer-events-none"
       />
 
-      {/* Hotspots (forge term by default → real name on hover) */}
+      {/* Hotspots — default label = forge term; hover shows real tool name */}
       <Hotspot to="/tools/forge"  top={55} left={70} label="Forge"     hover="Script Editor" />
       <Hotspot to="/tools/anvil"  top={80} left={50} label="Anvil"     hover="Teleprompter" />
       <Hotspot to="/tools/hammer" top={15} left={35} label="Hammer"    hover="Video Editor" />
