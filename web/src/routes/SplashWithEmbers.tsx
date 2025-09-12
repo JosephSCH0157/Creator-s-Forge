@@ -8,6 +8,8 @@ type Props = {
   spawnRate?: number;          // embers per second
   maxEmbers?: number;          // cap
   className?: string;          // pass-through for positioning/z-index
+  debug?: boolean;             // <— start with debug on?
+  debugKey?: string;           // <— key to toggle (default: "d")
 };
 
 type Ember = {
@@ -21,7 +23,20 @@ const SplashWithEmbers: React.FC<Props> = ({
   spawnRate = 120,
   maxEmbers = 500,
   className = "",
+  debug = false,
+  debugKey = "d",
 }) => {
+  const [showDebug, setShowDebug] = React.useState<boolean>(!!debug);
+
+  // Toggle with keyboard
+  useEffect(() => {
+    const key = (debugKey || "d").toLowerCase();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === key) setShowDebug(s => !s);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [debugKey, debug]);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const embersRef = useRef<Ember[]>([]);
@@ -102,6 +117,27 @@ const SplashWithEmbers: React.FC<Props> = ({
         const sy = dy + hearth.y * scale;
         const sw = hearth.w * scale;
         const sh = hearth.h * scale;
+
+        // DEBUG overlay
+        if (showDebug) {
+          ctx.save();
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = "rgba(255, 80, 80, 0.9)";
+          ctx.setLineDash([6, 4]);
+          ctx.strokeRect(sx, sy, sw, sh);
+
+          // label (top-left)
+          ctx.fillStyle = "rgba(0,0,0,0.6)";
+          const label = `hearth { x:${Math.round(hearth.x)}, y:${Math.round(hearth.y)}, w:${Math.round(hearth.w)}, h:${Math.round(hearth.h)} }`;
+          const pad = 6;
+          ctx.font = "12px sans-serif";
+          const metrics = ctx.measureText(label);
+          const lh = 14;
+          ctx.fillRect(sx, sy - (lh + pad * 2), metrics.width + pad * 2, lh + pad * 2);
+          ctx.fillStyle = "#fff";
+          ctx.fillText(label, sx + pad, sy - pad);
+          ctx.restore();
+        }
 
         // spawn embers
         pendingSpawnRef.current += dt * spawnRate;

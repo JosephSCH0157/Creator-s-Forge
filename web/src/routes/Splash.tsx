@@ -29,13 +29,15 @@ export default function SplashRoute() {
     <div className="relative w-screen h-screen bg-black overflow-hidden">
       {/* Full-screen background (forge image + embers).
          - Uses /public/forge.png. Change if your file lives elsewhere. */}
-   <SplashWithEmbers
-  src={`${import.meta.env.BASE_URL}forge.png`}
-  hearth={{ x: 1010, y: 515, w: 220, h: 120 }}
-  spawnRate={100}
-  maxEmbers={400}
-  className="absolute inset-0 z-0 pointer-events-none"
-/>
+      <SplashWithEmbers
+        src="/forge.png"
+        hearth={{ x: 520, y: 520, w: 220, h: 120 }}
+        spawnRate={140}
+        maxEmbers={600}
+        debug={false}          // set true to start with overlay
+        debugKey="d"           // press D to toggle
+        className="absolute inset-0 z-0 pointer-events-none"
+      />
 
       {/* Hotspots — default label = forge term; hover shows real tool name */}
       <Hotspot to="/tools/forge"  top={55} left={70} label="Forge"     hover="Script Editor" />
