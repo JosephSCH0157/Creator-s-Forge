@@ -1,14 +1,15 @@
 // src/routes/splash.tsx
 import React from "react";
-import SplashWithEmbers from "./SplashWithEmbers.tsx";
 import { Link } from "react-router-dom";
+import SplashWithEmbers from "./SplashWithEmbers";
+import "./Splash.css"; // contains the .hotspot styles & hover text swap
 
 type HotspotProps = {
   to: string;
-  top: number;
-  left: number;
-  label: string;
-  hover: string;
+  top: number;   // percentage 0–100
+  left: number;  // percentage 0–100
+  label: string; // forge-term (default text)
+  hover: string; // real tool name on hover
 };
 
 const Hotspot: React.FC<HotspotProps> = ({ to, top, left, label, hover }) => (
@@ -26,9 +27,10 @@ const Hotspot: React.FC<HotspotProps> = ({ to, top, left, label, hover }) => (
 export default function SplashRoute() {
   return (
     <div className="relative w-screen h-screen bg-black overflow-hidden">
+      {/* Full-screen forge image + ember effect */}
       <SplashWithEmbers
         src="/images/forge_splash.png"
-        hearth={{ x: 520, y: 520, w: 220, h: 120 }}
+        hearth={{ x: 520, y: 520, w: 220, h: 120 }} // tune to your image coords
         spawnRate={140}
         maxEmbers={600}
         className="absolute inset-0 -z-10 pointer-events-none"
