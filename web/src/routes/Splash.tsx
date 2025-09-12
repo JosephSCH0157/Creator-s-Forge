@@ -31,8 +31,8 @@ export default function SplashRoute() {
          - Uses /public/forge.png. Change if your file lives elsewhere. */}
       <SplashWithEmbers
         src="/forge.png"
-        hearth={{ x: 1010, y: 525, w: 220, h: 120 }}
-        spawnRate={140}
+        hearth={{ x: 1010, y: 525, w: 215, h: 120 }}
+        spawnRate={100}
         maxEmbers={600}
         debug={false}          // set true to start with overlay
         debugKey="d"           // press D to toggle
