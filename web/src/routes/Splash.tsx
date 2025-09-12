@@ -88,6 +88,10 @@ export default function Splash() {
           Bar Stock
         </Link>
       </div>
+      <div style={{ marginTop: 32, display: 'flex', gap: 24, justifyContent: 'center' }}>
+        <Link to="/tools/anvil">Teleprompter (Anvil)</Link>
+        <Link to="/tools/tongs">Tongs</Link>
+      </div>
     </div>
   );
 }
