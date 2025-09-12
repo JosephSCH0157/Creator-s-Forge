@@ -19,7 +19,7 @@
 .splash-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;  /* or contain, depending on whether you want cropping */
+  object-fit: contain;  /* or contain, depending on whether you want cropping */
   display: block;
   user-select: none;
   pointer-events: none;
