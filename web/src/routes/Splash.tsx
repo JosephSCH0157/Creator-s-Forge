@@ -31,6 +31,7 @@ export default function Splash() {
           style={{
             width: "100%",
             height: "auto",
+            flexDirection: "column",   
             display: "block",
             aspectRatio: "16/9",
             objectFit: "contain",
@@ -41,6 +42,7 @@ export default function Splash() {
         <Link
           to="/tools/forge"
           className="hotspot"
+           data-hover="Script Editor"  
           style={{ position: "absolute", top: "55%", left: "70%" }}
         >
           Forge
@@ -48,6 +50,7 @@ export default function Splash() {
         <Link
           to="/tools/anvil"
           className="hotspot"
+          data-hover="Teleprompter"  
           style={{ position: "absolute", top: "70%", left: "40%" }}
         >
           Anvil
@@ -62,6 +65,7 @@ export default function Splash() {
         <Link
           to="/tools/tongs"
           className="hotspot"
+          data-hover="File System"  
           style={{ position: "absolute", top: "50%", left: "10%" }}
         >
           Tongs
@@ -69,6 +73,7 @@ export default function Splash() {
         <Link
           to="/tools/quench"
           className="hotspot"
+          data-hover="Editing"  
           style={{ position: "absolute", top: "70%", left: "80%" }}
         >
           Quench
@@ -76,6 +81,7 @@ export default function Splash() {
         <Link
           to="/tools/ledger"
           className="hotspot"
+          data-hover="Analytics"
           style={{ position: "absolute", top: "80%", left: "65%" }}
         >
           Ledger
@@ -83,8 +89,18 @@ export default function Splash() {
         <Link
           to="/tools/stock"
           className="hotspot"
+          data-hover="Raw Ideas"  
           style={{ position: "absolute", top: "85%", left: "20%" }}
         >
+            Marketplace
+        </Link>
+        <Link
+          to="/tools/market"
+          className="hotspot"
+          data-hover="Uploader"  
+          style={{ position: "absolute", top: "95%", left: "30%" }}
+        >
+        
           Bar Stock
         </Link>
       </div>

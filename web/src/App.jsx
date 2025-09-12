@@ -12,7 +12,7 @@ export default function App() {
       <Route path="/" element={<Splash />} />
   <Route path="/tools/anvil" element={<Anvil />} />
   <Route path="/tools/tongs" element={<Tongs />} />
-  <Route path="/tools/Tongs" element={<Navigate to="/tools/tongs" replace />} />
+  <Route path="/tools/tongs" element={<Tongs />} />
   <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
