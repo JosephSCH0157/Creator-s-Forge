@@ -1,49 +1,38 @@
-.splash-container {
-  position: relative;
-  display: inline-block;
-  width: 100%;
-  max-width: 1200px;
-  margin: auto;
-}
-
-.splash-bg {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 12px;
-}
-
+/* /src/routes/Splash.css */
 .hotspot {
   position: absolute;
   transform: translate(-50%, -50%);
   padding: 6px 10px;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0, 0, 0, 0.55);
   border: 1px solid #333;
   border-radius: 8px;
   color: #fff;
   text-decoration: none;
   font-size: 14px;
   z-index: 2;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease;
+  pointer-events: auto;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .hotspot:hover {
-  background: rgba(255,106,0,0.8);
+  background: rgba(255, 106, 0, 0.8);
   transform: translate(-50%, -50%) scale(1.1);
-  color: transparent; /* hide original text */
 }
 
-/* text swap on hover */
+/* Swap label text on hover */
 .hotspot:hover::after {
-  content: attr(data-hover); /* show alternate name */
+  content: attr(data-hover);
 }
 
-.brand {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  font-size: 24px;
-  font-weight: bold;
-  color: #ffd9a6;
-  text-shadow: 0 0 6px #000;
+/* Hide the original text on hover so only the real tool name shows */
+.hotspot:hover {
+  color: transparent;
+}
+
+/* Keep keyboard focus behavior consistent */
+.hotspot:focus {
+  outline: 2px solid #ff6a00;
+  outline-offset: 2px;
 }
