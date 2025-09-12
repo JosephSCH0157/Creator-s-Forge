@@ -32,7 +32,7 @@ export default function SplashRoute() {
    <SplashWithEmbers
   src={`${import.meta.env.BASE_URL}forge.png`}
   hearth={{ x: 1010, y: 515, w: 220, h: 120 }}
-  spawnRate={140}
+  spawnRate={100}
   maxEmbers={400}
   className="absolute inset-0 z-0 pointer-events-none"
 />
