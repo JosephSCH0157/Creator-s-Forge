@@ -219,6 +219,59 @@
       <p class="status" id="status"></p>
       <h2>Script</h2>
       <textarea id="editor" placeholder="Paste or import your script…"></textarea>
+
+    <!-- Controls -->
+    <div style="margin: 16px 0;">
+      <button id="recStart">Start Rec (WebM)</button>
+      <button id="recStop" disabled>Stop</button>
+      <a id="recDownload" style="display:none">Download</a>
+    </div>
+    <script>
+    let mediaRec, chunks = [], recMime = "";
+    let stream; // camera+mic
+
+    async function pickMime() {
+      const prefs = [
+        'video/webm;codecs=vp9,opus',
+        'video/webm;codecs=vp8,opus',
+        'video/webm'
+      ];
+      for (const t of prefs) if (MediaRecorder.isTypeSupported(t)) return t;
+      return ""; // let browser choose
+    }
+
+    async function startRec() {
+      // Use your existing device selection if you have it
+      stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      recMime = await pickMime();
+      mediaRec = new MediaRecorder(stream, recMime ? { mimeType: recMime } : {});
+      chunks = [];
+      mediaRec.ondataavailable = e => e.data.size && chunks.push(e.data);
+      mediaRec.onstop = () => {
+        const blob = new Blob(chunks, { type: mediaRec.mimeType || 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.getElementById('recDownload');
+        a.href = url;
+        a.download = `recording.${(mediaRec.mimeType||'video/webm').includes('webm') ? 'webm':'mp4'}`;
+        a.style.display = 'inline-block';
+        a.textContent = 'Download recording';
+        // stop tracks
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mediaRec.start(250); // gather data in chunks
+      document.getElementById('recStart').disabled = true;
+      document.getElementById('recStop').disabled = false;
+    }
+
+    function stopRec() {
+      mediaRec?.state === 'recording' && mediaRec.stop();
+      document.getElementById('recStart').disabled = false;
+      document.getElementById('recStop').disabled = true;
+    }
+
+    document.getElementById('recStart').onclick = startRec;
+    document.getElementById('recStop').onclick = stopRec;
+    </script>
     </aside>
 
     <main class="viewer" id="viewer">
