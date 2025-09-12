@@ -2,7 +2,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Splash from "./routes/Splash";
 import Anvil from "./routes/Anvil";
-import Tongs from "./Tongs";
+import Tongs from "./routes/Tongs";
 import { useForgeBus } from "./forgeBus";
 
 export default function App() {
