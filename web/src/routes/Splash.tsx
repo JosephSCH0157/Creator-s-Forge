@@ -1,6 +1,6 @@
 // src/routes/splash.tsx
 import React from "react";
-import SplashWithEmbers from "./SplashWithEmbers";
+import SplashWithEmbers from "./SplashWithEmbers.tsx";
 import { Link } from "react-router-dom";
 
 type HotspotProps = {
