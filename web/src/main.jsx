@@ -17,17 +17,24 @@ import Stock from "./routes/Stock";
 import "./index.css";
 
 const router = createBrowserRouter([
-  { path: "/", element: <Splash /> },          // HOME = Splash
-  { path: "/tools/tongs", element: <Units /> },
-  { path: "/units/:id", element: <UnitDetail /> },
+  { path: "/", element: <Splash /> },
+
+  // Tongs
+  { path: "/tools/tongs", element: <Units /> },        // your Tongs page (Units)
+
+  // Anvil (Teleprompter)
+  { path: "/tools/anvil", element: <Anvil /> },        // <-- canonical
+
+  // other tools...
   { path: "/tools/forge", element: <Forge /> },
-  { path: "/tools/anvil", element: <Anvil /> },
   { path: "/tools/hammer", element: <Hammer /> },
   { path: "/tools/quench", element: <Quench /> },
   { path: "/tools/ledger", element: <Ledger /> },
   { path: "/tools/stock", element: <Stock /> },
-  { path: "/teleprompter", element: <Navigate to="/teleprompter_pro.html" replace /> },
+
+  { path: "/units/:id", element: <UnitDetail /> },
 ]);
+
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
