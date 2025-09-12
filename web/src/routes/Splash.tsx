@@ -38,6 +38,24 @@ export default function SplashRoute() {
         debugKey="d"           // press D to toggle
         className="absolute inset-0 z-0 pointer-events-none"
       />
+{/* Brand bar */}
+<a
+  href="/"
+  className="absolute left-4 top-4 flex items-center gap-3 text-white no-underline"
+  style={{ textShadow: "0 1px 6px rgba(0,0,0,.45)" }}
+  aria-label="Creator’s Forge – Home"
+>
+  <img
+    src="/creators-forge-logo.png"
+    alt="Creator’s Forge"
+    style={{ width: 40, height: 40, objectFit: "contain" }}
+    draggable={false}
+  />
+  <div style={{ lineHeight: 1 }}>
+    <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: 0.4 }}>Creator’s Forge</div>
+    <div style={{ fontSize: 12, opacity: 0.85 }}>make, refine, publish</div>
+  </div>
+</a>
 
       {/* Hotspots — default label = forge term; hover shows real tool name */}
       <Hotspot to="/tools/forge"  top={55} left={70} label="Forge"     hover="Script Editor" />
