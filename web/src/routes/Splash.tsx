@@ -31,7 +31,7 @@ export default function SplashRoute() {
          - Uses /public/forge.png. Change if your file lives elsewhere. */}
    <SplashWithEmbers
   src={`${import.meta.env.BASE_URL}forge.png`}
-  hearth={{ x: 520, y: 1020, w: 220, h: 120 }}
+  hearth={{ x: 900, y: 620, w: 220, h: 120 }}
   spawnRate={140}
   maxEmbers={600}
   className="absolute inset-0 z-0 pointer-events-none"
