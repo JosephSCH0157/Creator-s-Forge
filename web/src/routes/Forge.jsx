@@ -1,4 +1,8 @@
+import { useForgeBus } from "../forgeBus";
+
 export default function Forge() {
+  useForgeBus();
+
   return (
     <div style={{ padding: 24 }}>
       <h1>Forge</h1>
