@@ -54,8 +54,9 @@ export default function CFWordmark({ className }: Props) {
           </text>
           <text x="96" y="14"
             fontFamily="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial"
-            fontWeight={800}
-            fontSize="18"
+            fontWeight={500}
+            fontSize="11"
+            fill="rgba(255,255,255,.9)"
             className="cfwordmark-highlight"
           >
             Forge
