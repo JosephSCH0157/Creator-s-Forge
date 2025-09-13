@@ -1153,8 +1153,15 @@ function updateCamDevices(devices){
       camPiPBtn.onclick = togglePiP;
       window.addEventListener('resize', applyCamSizing);
 
+
       // Scripts
-      saveAsBtn.onclick = saveCurrentAs;
+      saveAsBtn.onclick = function() {
+        if (window.TP_TONGS && typeof window.TP_TONGS.saveCurrent === 'function') {
+          window.TP_TONGS.saveCurrent();
+        } else {
+          saveCurrentAs(); // fallback to old logic if TP_TONGS not present
+        }
+      };
       loadBtn.onclick = loadSelectedScript;
       deleteBtn.onclick = deleteSelectedScript;
       refreshScriptDropdown();
@@ -1379,4 +1386,63 @@ window.addEventListener('message', function(ev) {
 </script>
 </script>
 </body>
+<script>
+(function(){
+  const CH_NAME = "creators-forge:v1";
+  const REQ_PREFIX = "REQ:";
+  const RSP_PREFIX = "RSP:";
+  const ch = new BroadcastChannel(CH_NAME);
+  let seq = 0;
+  const pending = new Map();
+
+  ch.onmessage = (ev) => {
+    const m = ev.data || {};
+    if (m.kind !== RSP_PREFIX) return;
+    const entry = pending.get(m.id);
+    if (!entry) return;
+    clearTimeout(entry.timer);
+    pending.delete(m.id);
+    entry.resolve(m.payload);
+  };
+
+  function request(payload, timeoutMs=5000){
+    const id = Date.now().toString(36) + "-" + (seq++);
+    return new Promise((resolve,reject)=>{
+      const timer = setTimeout(()=>{ pending.delete(id); reject("TONGS timeout"); }, timeoutMs);
+      pending.set(id, { resolve, reject, timer });
+      ch.postMessage({ kind: REQ_PREFIX, id, payload });
+    });
+  }
+
+  // Example: populate Teleprompter dropdown with scripts
+  async function loadScriptIndex(){
+    const rsp = await request({ type: "SCRIPT.INDEX" });
+    if (!rsp.ok) return console.error("SCRIPT.INDEX error:", rsp.error);
+    const list = rsp.data || [];
+    const sel = document.getElementById("scriptSelect");
+    sel.innerHTML = "";
+    list.forEach(item=>{
+      const opt = document.createElement("option");
+      opt.value = item.projectId;
+      opt.textContent = `${item.projectTitle} — ${item.name}`;
+      sel.appendChild(opt);
+    });
+  }
+
+  // Example: Save current editor text into chosen project
+  async function saveCurrent(){
+    const projectId = document.getElementById("scriptSelect").value;
+    const name = document.getElementById("scriptName").value || "Untitled";
+    const text = document.getElementById("editor").value || "";
+    const rsp = await request({ type: "SCRIPT.SAVE", projectId, name, text });
+    if (!rsp.ok) return alert("Save failed: " + rsp.error);
+    alert("Saved to Tongs");
+    loadScriptIndex();
+  }
+
+  window.TP_TONGS = { loadScriptIndex, saveCurrent };
+  // call loadScriptIndex() on init
+  document.addEventListener("DOMContentLoaded", loadScriptIndex);
+})();
+</script>
 </html>

@@ -1,5 +1,37 @@
+// --- Bus utility for React pages ---
+export function createTongsBus() {
+  const CH_NAME = "podcasters-forge:v1";
+  const REQ_PREFIX = "REQ:";
+  const RSP_PREFIX = "RSP:";
+  const ch = new BroadcastChannel(CH_NAME);
+  let seq = 0;
+  const pending = new Map();
+
+  ch.onmessage = (ev) => {
+    const m = ev.data || {};
+    if (m.kind !== RSP_PREFIX) return;
+    const entry = pending.get(m.id);
+    if (!entry) return;
+    clearTimeout(entry.timer);
+    pending.delete(m.id);
+    entry.resolve(m.payload);
+  };
+
+  function request(payload, timeoutMs = 5000) {
+    const id = Date.now().toString(36) + "-" + (seq++);
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => { pending.delete(id); reject("TONGS timeout"); }, timeoutMs);
+      pending.set(id, { resolve, reject, timer });
+      ch.postMessage({ kind: REQ_PREFIX, id, payload });
+    });
+  }
+
+  function close() { ch.close(); }
+
+  return { request, close };
+}
 useEffect(() => {
-  const CH_NAME = "creators-forge:v1";
+  const CH_NAME = "podcasters-forge:v1";
   const REQ_PREFIX = "REQ:";
   const RSP_PREFIX = "RSP:";
   const ch = new BroadcastChannel(CH_NAME);
