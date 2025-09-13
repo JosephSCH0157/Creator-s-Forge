@@ -1,6 +1,6 @@
 # Server (Backend)
 
-This folder contains the backend components of Creator’s Forge.
+This folder contains the backend components of Podcaster’s Forge.
 
 ## Structure
 - **src/adapters/** — Interfaces for external services (e.g., YouTube, Rumble, Spotify APIs).
@@ -9,7 +9,7 @@ This folder contains the backend components of Creator’s Forge.
 - **test/** — Unit and integration tests.
 
 ## Purpose
-The server layer powers Creator’s Forge modules such as the Uploader and Teleprompter by handling:
+The server layer powers Podcaster’s Forge modules such as the Uploader and Teleprompter by handling:
 - Authentication
 - File handling
 - API communication

@@ -5,7 +5,7 @@ REM === Go to repo root (folder where this .bat lives) ===
 cd /d "%~dp0"
 
 REM === Nice console cosmetics (optional) ===
-title Creator's Forge - Dev Launcher
+title Podcaster's Forge - Dev Launcher
 color 0A
 
 echo [1/4] Checking Docker...

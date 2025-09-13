@@ -1,6 +1,6 @@
-# Legal Notices for Creator’s Forge
+# Legal Notices for Podcaster’s Forge
 
-Creator’s Forge is proprietary software. All rights reserved unless otherwise specified.  
+Podcaster’s Forge is proprietary software. All rights reserved unless otherwise specified.  
 
 This folder contains documents that define how the project may be tested and contributed to:
 

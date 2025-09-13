@@ -1,6 +1,6 @@
 ---
 name: "✨ Feature request"
-about: Suggest an idea to improve Creator’s Forge
+about: Suggest an idea to improve Podcaster’s Forge
 labels: enhancement, needs-triage
 ---
 

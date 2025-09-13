@@ -1,6 +1,6 @@
-# Contributing to Creator’s Forge
+# Contributing to Podcaster’s Forge
 
-Thanks for your interest in Creator’s Forge! This project is in active development and will eventually be monetized, so contributions and testing are welcome under specific terms.
+Thanks for your interest in Podcaster’s Forge! This project is in active development and will eventually be monetized, so contributions and testing are welcome under specific terms.
 
 ---
 
@@ -30,7 +30,7 @@ Thanks for your interest in Creator’s Forge! This project is in active develop
 
 ## 🚫 What’s Not Allowed
 - Forking or redistributing the project without explicit permission.  
-- Using the code for commercial purposes outside of Creator’s Forge.  
+- Using the code for commercial purposes outside of Podcaster’s Forge.  
 
 ---
 
@@ -39,4 +39,4 @@ Thanks for your interest in Creator’s Forge! This project is in active develop
 - **Contributors**: Must sign the CLA.  
 - **Everyone**: The project remains proprietary; all rights reserved.  
 
-Thank you for helping shape Creator’s Forge while respecting the protections that keep it sustainable.
+Thank you for helping shape Podcaster’s Forge while respecting the protections that keep it sustainable.

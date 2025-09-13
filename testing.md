@@ -1,6 +1,6 @@
-# Creator’s Forge Testing Agreement
+# Podcaster’s Forge Testing Agreement
 
-Thank you for your interest in testing Creator’s Forge. Please read this agreement carefully before running the software.
+Thank you for your interest in testing Podcaster’s Forge. Please read this agreement carefully before running the software.
 
 ## Permissions
 - You are granted permission to **clone and run** the code for the sole purpose of evaluation and testing.
@@ -12,8 +12,8 @@ Thank you for your interest in testing Creator’s Forge. Please read this agree
 - All rights not expressly granted are reserved.
 
 ## Ownership
-- Creator’s Forge remains the sole intellectual property of the project owner.
+- Podcaster’s Forge remains the sole intellectual property of the project owner.
 - By submitting feedback or suggestions, you grant the project owner a perpetual, royalty-free license to use them in any way, without obligation or compensation.
 - Running the code does not create any partnership, joint venture, or entitlement to revenue.
 
-By testing Creator’s Forge, you agree to these terms.
+By testing Podcaster’s Forge, you agree to these terms.

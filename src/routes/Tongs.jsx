@@ -23,7 +23,7 @@ export default function Tongs() {
           style={{ height: 24, width: 24, objectFit: "contain" }}
         />
         <Link to="/" style={{ color: "white", textDecoration: "none", fontWeight: 600 }}>
-          Back to Creator’s Forge
+          Back to Podcaster’s Forge
         </Link>
       </div>
 

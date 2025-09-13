@@ -1,11 +1,11 @@
-# Creator’s Forge Roadmap
+# Podcaster’s Forge Roadmap
 
-This roadmap outlines the planned development stages for Creator’s Forge. It is a living document and will be updated as priorities shift.
+This roadmap outlines the planned development stages for Podcaster’s Forge. It is a living document and will be updated as priorities shift.
 
 ---
 
 ## 🎯 Phase 1: MVP (Minimum Viable Product)
-**Goal:** Establish the core foundation of Creator’s Forge.
+**Goal:** Establish the core foundation of Podcaster’s Forge.
 
 - [ ] Teleprompter Pro (basic version)
   - Auto-scroll with adjustable speed
@@ -41,7 +41,7 @@ This roadmap outlines the planned development stages for Creator’s Forge. It i
 ---
 
 ## 💡 Phase 3: Pro Features
-**Goal:** Position Creator’s Forge as a monetizable product.
+**Goal:** Position Podcaster’s Forge as a monetizable product.
 
 - [ ] Uploader Pro
   - Multi-platform publishing (TikTok, Apple Podcasts)
@@ -70,7 +70,7 @@ This roadmap outlines the planned development stages for Creator’s Forge. It i
 ---
 
 ## 🔒 Notes
-- Creator’s Forge is proprietary (all rights reserved).
+- Podcaster’s Forge is proprietary (all rights reserved).
 - Testers are limited to evaluation only (see TESTING.md).
 - Contributions require CLA agreement.
 

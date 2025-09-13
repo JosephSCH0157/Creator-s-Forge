@@ -1,6 +1,6 @@
-# Creator’s Forge Overview
+# Podcaster’s Forge Overview
 
-Creator’s Forge is a modular toolkit for podcasters, musicians, and creators. It addresses pain points in the creative workflow: wasted hours on uploads, formatting, and metadata.
+Podcaster’s Forge is a modular toolkit for podcasters, musicians, and creators. It addresses pain points in the creative workflow: wasted hours on uploads, formatting, and metadata.
 
 ## Modules
 

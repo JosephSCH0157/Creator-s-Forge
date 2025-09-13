@@ -1,6 +1,6 @@
 ---
 name: "🐛 Bug report"
-about: Report a problem while testing Creator’s Forge
+about: Report a problem while testing Podcaster’s Forge
 labels: bug, needs-triage
 ---
 

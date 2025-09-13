@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Creator’s Forge will be documented here.
+All notable changes to Podcaster’s Forge will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/),  
 and this project follows semantic versioning (MAJOR.MINOR.PATCH).

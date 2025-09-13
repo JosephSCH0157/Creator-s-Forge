@@ -196,7 +196,7 @@ const SplashWithEmbers: React.FC<Props> = ({
       {/* fallback image so you never see a blank background before the first draw */}
       <img
         src={src}
-        alt="Creator's Forge Splash"
+  alt="Podcaster's Forge Splash"
         style={{ width: "100%", height: "100%", objectFit: "contain" }}
         draggable={false}
       />

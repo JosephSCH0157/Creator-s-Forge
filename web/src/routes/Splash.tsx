@@ -43,16 +43,16 @@ export default function SplashRoute() {
   href="/"
   className="absolute left-4 top-4 flex items-center gap-3 text-white no-underline"
   style={{ textShadow: "0 1px 6px rgba(0,0,0,.45)" }}
-  aria-label="Creator’s Forge – Home"
+  aria-label="Podcaster’s Forge – Home"
 >
   <img
-    src="/creators-forge-logo.png"
-    alt="Creator’s Forge"
+    src="/podcastersforge.png"
+    alt="Podcaster’s Forge"
     style={{ width: 40, height: 40, objectFit: "contain" }}
     draggable={false}
   />
   <div style={{ lineHeight: 1 }}>
-    <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: 0.4 }}>Creator’s Forge</div>
+  <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: 0.4 }}>Podcaster’s Forge</div>
     <div style={{ fontSize: 12, opacity: 0.85 }}>make, refine, publish</div>
   </div>
 </a>
