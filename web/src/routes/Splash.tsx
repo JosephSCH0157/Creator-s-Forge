@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import SplashWithEmbers from "./SplashWithEmbers";
-import CFWordmark from "@/components/CFWordmark";
+import CFWordmark from "../components/CFWordmark";
 import "./Splash.css";
 
 type HotspotProps = {

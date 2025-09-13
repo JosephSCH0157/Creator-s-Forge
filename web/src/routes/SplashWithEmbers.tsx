@@ -192,17 +192,17 @@ const SplashWithEmbers: React.FC<Props> = ({
   }, [hearth, spawnRate, maxEmbers]);
 
   return (
-    <div className={className} style={{ position: "absolute", inset: 0 }}>
+  <div className={"cf-embers-container " + className}>
       {/* fallback image so you never see a blank background before the first draw */}
       <img
         src={src}
-  alt="Podcaster's Forge Splash"
-        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+        alt="Podcaster's Forge Splash"
+        className="cf-embers-image"
         draggable={false}
       />
       <canvas
         ref={canvasRef}
-        style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+        className="cf-embers-canvas"
       />
     </div>
   );

@@ -1,3 +1,28 @@
+/* SplashWithEmbers component styles */
+.cf-embers-container {
+  position: absolute;
+  inset: 0;
+}
+.cf-embers-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}
+.cf-embers-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.noselect {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none;    /* Firefox */
+  -ms-user-select: none;     /* IE/Edge legacy */
+  user-select: none;         /* Standard */
+}
+/* keep it readable over any background */
+.cf-brand { text-shadow: 0 1px 6px rgba(0,0,0,.45); }
 /* Splash.css */
 .brand-glow {
   text-shadow: 0 1px 6px rgba(0,0,0,.45);
@@ -25,6 +50,7 @@
   height: 100%;
   object-fit: contain;  /* or contain, depending on whether you want cropping */
   display: block;
+  -webkit-user-select: none;
   user-select: none;
   pointer-events: none;
 }
