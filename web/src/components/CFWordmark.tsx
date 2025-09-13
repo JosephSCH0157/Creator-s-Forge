@@ -1,5 +1,6 @@
 // src/components/CFWordmark.tsx
 import React from "react";
+import "./CFWordmark.css";
 
 type Props = { className?: string };
 
@@ -8,12 +9,12 @@ export default function CFWordmark({ className }: Props) {
     <a
       href="/"
       aria-label="Podscaster’s Forge — Home"
-      className={className}
-      style={{ textDecoration: "none" }}
+      className={["cfwordmark-link", className].filter(Boolean).join(" ")}
     >
       <svg
         width="220" height="48" viewBox="0 0 220 48" role="img"
         aria-labelledby="cfTitle"
+        className="cfwordmark-svg"
       >
   <title id="cfTitle">Podcaster’s Forge</title>
         <defs>
@@ -47,16 +48,15 @@ export default function CFWordmark({ className }: Props) {
             fontWeight={800}
             fontSize="18"
             fill="#ffffff"
-            style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,.45)", strokeWidth: 1 }}
+            className="cfwordmark-main"
           >
-              Podcaster’s
+            Podcaster’s
           </text>
           <text x="96" y="14"
             fontFamily="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial"
             fontWeight={800}
             fontSize="18"
-            fill="url(#cfFire)"
-            style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,.45)", strokeWidth: 1 }}
+            className="cfwordmark-highlight"
           >
             Forge
           </text>
@@ -65,7 +65,7 @@ export default function CFWordmark({ className }: Props) {
             fontWeight={500}
             fontSize="11"
             fill="rgba(255,255,255,.9)"
-            style={{ letterSpacing: ".06em" }}
+            className="cfwordmark-sub"
           >
             make · refine · publish
           </text>

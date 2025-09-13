@@ -1,0 +1,21 @@
+/* CFWordmark component styles */
+.cfwordmark-link {
+  text-decoration: none;
+}
+.cfwordmark-svg {
+  display: block;
+}
+.cfwordmark-main {
+  paint-order: stroke;
+  stroke: rgba(0,0,0,.45);
+  stroke-width: 1;
+}
+.cfwordmark-highlight {
+  paint-order: stroke;
+  stroke: rgba(0,0,0,.45);
+  stroke-width: 1;
+  fill: url(#cfFire);
+}
+.cfwordmark-sub {
+  letter-spacing: .06em;
+}
