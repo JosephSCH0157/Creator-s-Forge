@@ -1,0 +1,39 @@
+/* Teleprompter Pro extracted styles */
+.tp-topbar {
+  height:48px;display:flex;align-items:center;gap:8px;padding:0 16px;
+  background:#111827;color:white;border-bottom:1px solid #333;box-sizing:border-box;
+}
+.tp-back-link {
+  display:flex;align-items:center;gap:8px;color:white;text-decoration:none;
+}
+.tp-back-img {
+  height:24px;width:24px;object-fit:contain;
+}
+.tp-margin-16 {
+  margin: 16px 0;
+}
+.tp-display-none { display: none; }
+.tp-minw-220 { min-width:220px; }
+.tp-count-overlay {
+  position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:9999;
+}
+.tp-count-card {
+  background:#0e141b;border:1px solid var(--edge);padding:24px 32px;border-radius:16px;text-align:center;
+}
+.tp-count-label {
+  font-size:14px;color:#96a0aa;
+}
+.tp-count-num {
+  font-variant-numeric:tabular-nums;font-size:64px;line-height:1;margin-top:6px;
+}
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+.tp-inline-highlight {
+  padding: 0 .15em;
+  border-radius: .25em;
+}

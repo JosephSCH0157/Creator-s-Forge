@@ -8,6 +8,22 @@
   <title>Teleprompter — FULL (fix1)</title>
   <link rel="icon" href="data:,">
   <style>
+    /* --- Inline style refactor classes --- */
+    .tp-topbar {
+      height:48px;display:flex;align-items:center;gap:8px;padding:0 16px;
+      background:#111827;color:white;border-bottom:1px solid #333;box-sizing:border-box;
+    }
+    .tp-back-link {
+      display:flex;align-items:center;gap:8px;color:white;text-decoration:none;
+    }
+    .tp-back-img {
+      height:24px;width:24px;object-fit:contain;
+    }
+    .tp-margin-16 {
+      margin: 16px 0;
+    }
+    .tp-display-none { display: none; }
+    .tp-minw-220 { min-width:220px; }
       textarea, input, [contenteditable="true"] {
         -webkit-user-select: text;
         user-select: text;
@@ -106,12 +122,10 @@
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
 </head>
 <body>
-  <div id="tp-topbar" style="
-    height:48px;display:flex;align-items:center;gap:8px;padding:0 16px;
-    background:#111827;color:white;border-bottom:1px solid #333;box-sizing:border-box;">
-  <a href="/" title="Back to Podcaster’s Forge" style="display:flex;align-items:center;gap:8px;color:white;text-decoration:none;">
-      <img src="/anvil.png" alt="Anvil" style="height:24px;width:24px;object-fit:contain;">
-  <strong>Back to Podcaster’s Forge</strong>
+  <div id="tp-topbar" class="tp-topbar">
+    <a href="/" title="Back to Podcaster’s Forge" class="tp-back-link">
+      <img src="/anvil.png" alt="Anvil" class="tp-back-img">
+      <strong>Back to Podcaster’s Forge</strong>
     </a>
   </div>
   <div class="topbar">
@@ -140,17 +154,17 @@
         <button id="resetScript">Reset script</button>
         <button id="clearText">Clear</button>
       </div>
-      <div style="margin: 16px 0;">
+      <div class="tp-margin-16">
         <button id="recStart">Start Rec (WebM)</button>
         <button id="recStop" disabled>Stop</button>
-        <a id="recDownload" style="display:none">Download</a>
+        <a id="recDownload" class="tp-display-none">Download</a>
       </div>
 
       
       <h2>Microphone</h2>
       <div class="row">
         <label>Input
-          <select id="micDevice" style="min-width:220px"></select>
+          <select id="micDevice" class="tp-minw-220"></select>
         </label>
         <button id="micRefresh">Refresh</button>
       </div>
@@ -181,7 +195,7 @@
       </div>
       <div class="row">
         <label>Device
-          <select id="camDevice" style="min-width:220px"></select>
+          <select id="camDevice" class="tp-minw-220"></select>
         </label>
       </div>
       <div class="row">
@@ -205,7 +219,7 @@
       <h2>Scripts</h2>
       <div class="row">
         <label>Saved
-          <select id="scriptSelect" style="min-width:220px"></select>
+          <select id="scriptSelect" class="tp-minw-220"></select>
         </label>
         <button id="saveAsBtn">Save As</button>
         <button id="loadBtn">Load</button>
@@ -218,7 +232,7 @@
       <div class="row">
         <button id="downloadFile">Download .txt</button>
         <button id="uploadFileBtn">Upload file</button>
-        <input id="uploadFile" type="file" accept=".txt,.md,.rtf,.text,.docx" style="display:none" />
+  <input id="uploadFile" type="file" accept=".txt,.md,.rtf,.text,.docx" class="tp-display-none" title="Upload file" />
         <button id="loadSample">Load sample</button>
       </div>
 
@@ -280,14 +294,18 @@
       <div class="script" id="script"></div>
 
       <!-- Camera overlay -->
-      <div class="camWrap" id="camWrap"><video id="camVideo" autoplay playsinline muted></video></div>
+      <div class="camWrap" id="camWrap">
+        <video id="camVideo" autoplay muted>
+          Sorry, your browser does not support the video tag.
+        </video>
+      </div>
     </main>
   </div>
 
-  <div id="countOverlay" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:9999">
-    <div style="background:#0e141b;border:1px solid var(--edge);padding:24px 32px;border-radius:16px;text-align:center">
-      <div style="font-size:14px;color:#96a0aa">Begin speaking in</div>
-      <div id="countNum" style="font-variant-numeric:tabular-nums;font-size:64px;line-height:1;margin-top:6px">3</div>
+  <div id="countOverlay" class="tp-count-overlay">
+    <div class="tp-count-card">
+      <div class="tp-count-label">Begin speaking in</div>
+      <div id="countNum" class="tp-count-num">3</div>
     </div>
   </div>
 
@@ -347,6 +365,11 @@
       const tag = document.createElement('span');
       tag.className = 'tag';
       tag.innerHTML = '<span class="dot" style="background:'+item.color+'"></span>'+item.name;
+      // Set background color via JS after element is in DOM
+      setTimeout(() => {
+        const dot = tag.querySelector('.dot');
+        if (dot) dot.style.background = item.color;
+      }, 0);
       legendEl.appendChild(tag);
     }
   }
@@ -474,13 +497,13 @@
         });
         t = t.replace(/\[(r|g|y|b|red|green|yellow|blue)\]([\s\S]*?)\[\/\1\]/gi, function(_, name, inner){
           const col = nameMap[name.toLowerCase()] || '#e7ebf0';
-          return '<span style="color:'+col+'">' + formatInlineMarkup(inner, true) + '</span>';
+          return '<span class="tp-inline-color" data-color="'+col+'">' + formatInlineMarkup(inner, true) + '</span>';
         });
         t = t.replace(/\[color=([^\]\s]+)\]([\s\S]*?)\[\/color\]/gi, function(_, col, inner){
-          return '<span style="color:'+esc(col)+'">' + formatInlineMarkup(inner, true) + '</span>';
+          return '<span class="tp-inline-color" data-color="'+esc(col)+'">' + formatInlineMarkup(inner, true) + '</span>';
         });
         t = t.replace(/\[bg=([^\]\s]+)\]([\s\S]*?)\[\/bg\]/gi, function(_, bg, inner){
-          return '<span style="background:'+esc(bg)+';padding:0 .15em;border-radius:.25em">' + formatInlineMarkup(inner, true) + '</span>';
+          return '<span class="tp-inline-highlight" data-bg="'+esc(bg)+'">' + formatInlineMarkup(inner, true) + '</span>';
         });
         t = t.replace(/\[note\]([\s\S]*?)\[\/note\]/gi, function(_, inner){
           return '<span class="note">' + formatInlineMarkup(inner, true) + '</span>';
@@ -686,6 +709,19 @@ body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-appl
 <div id="countOverlayD"><div class="card"><div class="title">Begin speaking in</div><div id="countNumD" class="num">3</div></div></div>
 <div class="hud">Display <button class="btn" id="flip">Flip</button> <button class="btn" id="invert">Invert</button></div>
 <script>
+  // After rendering, set dynamic colors/backgrounds for .tp-inline-color and .tp-inline-highlight
+  function applyDynamicStyles() {
+    document.querySelectorAll('.tp-inline-color').forEach(el => {
+      const col = el.getAttribute('data-color');
+      if (col) el.style.color = col;
+    });
+    document.querySelectorAll('.tp-inline-highlight').forEach(el => {
+      const bg = el.getAttribute('data-bg');
+      if (bg) el.style.background = bg;
+    });
+  }
+  // Call after script rendering or markup updates
+  // Example: applyDynamicStyles();
 const scriptEl=document.getElementById("script");const wrap=document.getElementById("wrap");const styleTag=document.getElementById("speakerStyle");
 const o=document.getElementById("countOverlayD");const num=document.getElementById("countNumD");
 function apply(f,l){scriptEl.querySelectorAll("p").forEach(p=>{p.style.fontSize=f+"px";p.style.lineHeight=l;});}
