@@ -49,7 +49,7 @@ export default function CFWordmark({ className }: Props) {
             fill="#ffffff"
             style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,.45)", strokeWidth: 1 }}
           >
-            Podcaster’s
+              Podcaster’s
           </text>
           <text x="96" y="14"
             fontFamily="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial"
