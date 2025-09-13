@@ -1165,27 +1165,13 @@ function beginCountdownThen(fn){
   // Ensure overlay exists in main window
   let overlay = document.getElementById('countOverlay');
   let num = document.getElementById('countNum');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'countOverlay';
-    overlay.style.cssText =
-      'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;' +
-      'background:rgba(0,0,0,.6);z-index:9999';
-    const card = document.createElement('div');
-    card.style.cssText = 'background:#0e141b;border:1px solid #22303d;padding:24px 32px;border-radius:16px;text-align:center';
-    const t = document.createElement('div');
-    t.textContent = 'Begin speaking in';
-    t.style.cssText = 'font-size:14px;color:#96a0aa';
-    num = document.createElement('div');
-    num.id = 'countNum';
-    num.style.cssText = 'font-variant-numeric:tabular-nums;font-size:64px;line-height:1;margin-top:6px';
-    num.textContent = String(secs);
-    card.appendChild(t); card.appendChild(num); overlay.appendChild(card); document.body.appendChild(overlay);
+  if (!overlay || !num) {
+    fn();
+    return;
   }
-
   overlay.classList.remove('tp-display-none');
   overlay.style.display = 'flex';
-  if (num) num.textContent = String(secs);
+  num.textContent = String(secs);
 
   // Mirror to display window (if open)
   try { if (window._sendToDisplay) window._sendToDisplay({ type:'preroll', show:true, n: secs }); } catch(_){}
