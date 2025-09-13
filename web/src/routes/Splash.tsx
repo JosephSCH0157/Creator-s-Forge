@@ -28,7 +28,7 @@ const Hotspot: React.FC<HotspotProps> = ({ to, top, left, label, hover }) => (
 export default function SplashRoute() {
 
   return (
-    <div className="relative w-screen h-screen bg-black overflow-hidden">
+  <div className="relative w-screen h-screen overflow-hidden splash-bg">
       <SplashWithEmbers
         src="/forge.png"
         hearth={{ x: 1010, y: 525, w: 215, h: 120 }}
