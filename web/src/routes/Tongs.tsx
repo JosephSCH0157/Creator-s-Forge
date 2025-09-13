@@ -1,179 +1,231 @@
-// src/routes/tongs.tsx (skeleton)
-import { useEffect, useMemo, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
-import { Project, Phase, Asset } from "@/tongs/types";
+// /src/routes/Tongs.tsx
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-const STORE = "tongs:projects:v1";
-const now = () => Date.now();
-const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+// --- Types & storage ---
+type Doc = {
+  id: string;
+  name: string;
+  phase: "script" | "idea" | "draft";
+  text: string;
+  updatedAt: number;
+};
 
-function load(): Project[] { try { return JSON.parse(localStorage.getItem(STORE) || "[]"); } catch { return []; } }
-function save(arr: Project[]) { localStorage.setItem(STORE, JSON.stringify(arr)); }
+const LIST_KEY = "tongs:docs:v1";
 
-  const { projectId } = useParams();
-  const nav = useNavigate();
+function loadAll(): Doc[] {
+  try {
+    return JSON.parse(localStorage.getItem(LIST_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+function saveAll(docs: Doc[]) {
+  localStorage.setItem(LIST_KEY, JSON.stringify(docs));
+}
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
+
+// --- Component ---
+export default function Tongs() {
   const navigate = useNavigate();
-  const [projects, setProjects] = useState<Project[]>(() => load());
-  useEffect(() => save(projects), [projects]);
+  const [docs, setDocs] = useState<Doc[]>(() => loadAll());
+  const [filter, setFilter] = useState<"script" | "all">("script");
+  const [editing, setEditing] = useState<Doc | null>(null);
 
-  // BroadcastChannel to serve Anvil
+  // Persist to localStorage whenever docs change
+  useEffect(() => saveAll(docs), [docs]);
+
+  // --- BroadcastChannel: serve Teleprompter (Anvil) ---
   useEffect(() => {
-    const ch = new BroadcastChannel("creators-forge");
-    const send = (msg:any) => ch.postMessage({ kind:"TONGS->TP", ...msg });
-    ch.onmessage = (ev) => {
-      const m = ev.data || {};
-      if (m.kind !== "TP->TONGS") return;
+    const CH = new BroadcastChannel("creators-forge");
+    const send = (msg: any) => CH.postMessage({ kind: "TONGS->TP", ...msg });
 
-      if (m.type === "REQUEST_PROJECTS_WITH_SCRIPTS") {
-        const items = projects.filter(p=>p.scriptId).map(p=>({
-          projectId: p.id, title: p.title, updatedAt: p.updatedAt
-        }));
-        send({ type:"PROJECTS_WITH_SCRIPTS", items });
+    CH.onmessage = (ev) => {
+      const msg = ev.data || {};
+      if (msg.kind !== "TP->TONGS") return;
+
+      // Teleprompter asks for list of scripts
+      if (msg.type === "REQUEST_SCRIPT_INDEX") {
+        const items = docs
+          .filter((d) => d.phase === "script")
+          .sort((a, b) => b.updatedAt - a.updatedAt)
+          .map((d) => ({ id: d.id, name: d.name }));
+        send({ type: "SCRIPT_INDEX", items, replyTo: msg.id });
       }
 
-      if (m.type === "REQUEST_SCRIPT_FOR_PROJECT") {
-        const p = projects.find(x=>x.id===m.projectId);
-        const s = p?.assets.find(a=>a.id===p.scriptId);
-        send({ type:"SCRIPT_DATA", projectId: p?.id, name: s?.name, text: s?.meta?.text ?? "" });
+      // Teleprompter asks for a specific script
+      if (msg.type === "REQUEST_SCRIPT") {
+        const d = docs.find((x) => x.id === msg.id);
+        if (d)
+          send({
+            type: "SCRIPT_DATA",
+            id: d.id,
+            name: d.name,
+            text: d.text,
+            replyTo: msg.id,
+          });
+        else send({ type: "SCRIPT_DATA", error: "not_found", replyTo: msg.id });
       }
 
-      if (m.type === "SAVE_SCRIPT_FOR_PROJECT") {
-        const { projectId, name, text } = m;
-        setProjects(prev => {
-          const idx = prev.findIndex(p=>p.id===projectId);
-          if (idx < 0) return prev;
-          const p = { ...prev[idx] };
-          const asset: Asset = {
-            id: uid(), kind:"script", name: name || "Untitled", createdAt: now(), meta: { text }
-          };
-          p.assets = [asset, ...p.assets];
-          p.scriptId = asset.id;
-          p.phase = p.phase === "idea" ? "script" : p.phase;
-          p.updatedAt = now();
-          const next = [...prev]; next[idx] = p; return next;
-        });
-        // after state updates apply, broadcast latest list
-        const items = projects.filter(p=>p.scriptId).map(p=>({projectId:p.id,title:p.title,updatedAt:p.updatedAt}));
-        send({ type:"SAVED", projectId, replyTo: m.id });
-        send({ type:"PROJECTS_WITH_SCRIPTS", items });
+      // Teleprompter saves a script
+      if (msg.type === "SAVE_SCRIPT") {
+        const { name, text } = msg.payload || {};
+        const doc: Doc = {
+          id: uid(),
+          name: String(name || "Untitled").trim() || "Untitled",
+          phase: "script",
+          text: String(text || ""),
+          updatedAt: Date.now(),
+        };
+        const next = [doc, ...docs].slice(0, 500);
+        setDocs(next);
+        send({ type: "SAVED", id: doc.id, name: doc.name, replyTo: msg.id });
+
+        // broadcast fresh index
+        const items = next
+          .filter((d) => d.phase === "script")
+          .sort((a, b) => b.updatedAt - a.updatedAt)
+          .map((d) => ({ id: d.id, name: d.name }));
+        send({ type: "SCRIPT_INDEX", items });
       }
 
-      if (m.type === "DELETE_SCRIPT_FOR_PROJECT") {
-        const { projectId } = m;
-        setProjects(prev => {
-          const idx = prev.findIndex(p=>p.id===projectId);
-          if (idx < 0) return prev;
-          const p = { ...prev[idx] };
-          p.assets = p.assets.filter((a: Asset) => a.id !== p.scriptId);
-          p.scriptId = undefined;
-          p.updatedAt = now();
-          const next = [...prev]; next[idx] = p; return next;
-        });
-        send({ type:"DELETED", projectId });
-      }
-
-      if (m.type === "ATTACH_RECORDING") {
-        const { projectId, asset } = m;
-        setProjects(prev => {
-          const idx = prev.findIndex(p=>p.id===projectId);
-          if (idx < 0) return prev;
-          const p = { ...prev[idx] };
-          const a: Asset = { id: uid(), kind:"video", name: asset?.name || "Take", createdAt: now(), ...asset };
-          p.assets = [a, ...p.assets];
-          p.recordingIds = [a.id, ...p.recordingIds];
-          p.phase = p.phase === "script" ? "recorded" : p.phase;
-          p.updatedAt = now();
-          const next = [...prev]; next[idx] = p; return next;
-        });
+      // Teleprompter deletes a script
+      if (msg.type === "DELETE_SCRIPT") {
+        const next = docs.filter((d) => d.id !== msg.id);
+        setDocs(next);
+        send({ type: "DELETED", id: msg.id, replyTo: msg.id });
+        const items = next
+          .filter((d) => d.phase === "script")
+          .sort((a, b) => b.updatedAt - a.updatedAt)
+          .map((d) => ({ id: d.id, name: d.name }));
+        send({ type: "SCRIPT_INDEX", items });
       }
     };
-    return () => ch.close();
-  }, [projects]);
 
-  // UI basics
-  const [title, setTitle] = useState("");
-  const createProject = () => {
-    const p: Project = {
-      id: uid(), title: title.trim() || "Untitled Project",
-      phase:"idea", createdAt: now(), updatedAt: now(),
-      assets: [], recordingIds: []
-    };
-    setProjects([p, ...projects]); setTitle(""); nav(`/tools/tongs/${p.id}`);
-  };
+    return () => CH.close();
+  }, [docs]);
 
-  const current = useMemo(()=> projects.find(p=>p.id===projectId) || null, [projects, projectId]);
+  const visible = useMemo(
+    () => (filter === "script" ? docs.filter((d) => d.phase === "script") : docs),
+    [docs, filter]
+  );
 
   return (
-    <>
-      <header>
-        <button onClick={() => navigate('/forge')}>Return to Forge</button>
-      </header>
-      <div style={{ display:"grid", gridTemplateColumns:"320px 1fr", height:"100vh", background:"#0b0f14", color:"#e8f0f7" }}>
-      {/* Left: projects */}
-      <aside style={{ borderRight:"1px solid #223243", padding:12, overflow:"auto" }}>
-        <div style={{ display:"flex", gap:8, marginBottom:12 }}>
-          <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="New project title"
-                 style={{ flex:1, padding:"8px 10px", borderRadius:8, border:"1px solid #233242", background:"#0e141b", color:"#e5eef7" }}/>
-          <button onClick={createProject}>New</button>
-        </div>
-        {["idea","script","recorded","edited","published"].map(ph => (
-          <div key={ph} style={{ marginBottom:10 }}>
-            <div style={{ opacity:.7, fontSize:12, margin:"6px 0" }}>{ph.toUpperCase()}</div>
-            {(projects.filter(p=>p.phase===ph) || []).map(p => (
-              <Link key={p.id} to={`/tools/tongs/${p.id}`} style={{ display:"block", color:"#e5eef7", textDecoration:"none", padding:"8px 10px", borderRadius:8, border:"1px solid #233242", marginBottom:6 }}>
-                {p.title}
-              </Link>
-            ))}
-          </div>
-        ))}
-      </aside>
-
-      {/* Right: project detail */}
-      <main style={{ padding:16, overflow:"auto" }}>
-        {!current ? <p>Select or create a project.</p> : (
-          <>
-            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-              <h1 style={{ margin:0 }}>{current.title}</h1>
-              <span style={{ padding:"4px 8px", borderRadius:999, background:"#14202b", border:"1px solid #223243", fontSize:12 }}>{current.phase}</span>
-              <div style={{ marginLeft:"auto", display:"flex", gap:8 }}>
-                <Link to="/">Back to Forge</Link>
-              </div>
-            </div>
-
-            {/* Script card */}
-            <section style={{ marginTop:16, padding:12, border:"1px solid #223243", borderRadius:12 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <strong>Script</strong>
-                <div style={{ display:"flex", gap:8 }}>
-                  <button onClick={()=>{
-                    // open Anvil (Teleprompter) in same tab
-                    window.location.href = "/tools/anvil";
-                    // let TP know which project to load
-                    new BroadcastChannel("creators-forge").postMessage({ kind:"TONGS->TP", type:"REQUEST_SCRIPT_FOR_PROJECT", projectId: current.id });
-                  }}>Open in Teleprompter</button>
-                </div>
-              </div>
-              {current.scriptId ? (
-                <p style={{ opacity:.8, marginTop:8 }}>
-                  Current script: {current.assets.find(a=>a.id===current.scriptId)?.name}
-                </p>
-              ) : <p style={{ opacity:.6, marginTop:8 }}>No script attached yet.</p>}
-            </section>
-
-            {/* Recordings */}
-            <section style={{ marginTop:16, padding:12, border:"1px solid #223243", borderRadius:12 }}>
-              <strong>Recordings</strong>
-              <ul style={{ listStyle:"none", padding:0, marginTop:8 }}>
-                {current.recordingIds.map(id => {
-                  const a = current.assets.find(x=>x.id===id);
-                  return <li key={id} style={{ padding:"6px 0", borderBottom:"1px solid #18232f" }}>{a?.name || id}</li>;
-                })}
-              </ul>
-            </section>
-          </>
-        )}
-      </main>
+    <div style={{ display: "grid", gridTemplateRows: "48px 1fr", height: "100vh", background: "#0b0f14" }}>
+      {/* Top bar */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "0 16px",
+          borderBottom: "1px solid #233242",
+          background: "#111827",
+          color: "#fff",
+        }}
+      >
+        <img src="/tongs.png" alt="" style={{ width: 24, height: 24, objectFit: "contain" }} />
+        <button onClick={() => navigate("/forge")} style={{ color: "#fff", background: "transparent", border: 0, fontWeight: 600, cursor: "pointer" }}>
+          Back to Creator’s Forge
+        </button>
+        <div style={{ marginLeft: "auto", opacity: 0.8, fontSize: 12 }}>Tongs · Script storage</div>
       </div>
-    </>
+
+      {/* Body */}
+      <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 0, minHeight: 0, color: "#e5eef7" }}>
+        {/* Left panel */}
+        <aside style={{ padding: 16, borderRight: "1px solid #233242", overflow: "auto" }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            <button onClick={() => setFilter(filter === "script" ? "all" : "script")}>
+              {filter === "script" ? "Show: Scripts" : "Show: All"}
+            </button>
+            <button
+              onClick={() =>
+                setEditing({ id: "", name: "New Script", phase: "script", text: "", updatedAt: Date.now() })
+              }
+            >
+              New script
+            </button>
+          </div>
+
+          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+            {visible.map((d) => (
+              <li key={d.id} style={{ padding: "8px 6px", border: "1px solid #233242", marginBottom: 8, borderRadius: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <strong>{d.name}</strong>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={() => setEditing(d)}>Edit</button>
+                    <button onClick={() => setDocs((prev) => prev.filter((x) => x.id !== d.id))}>Delete</button>
+                  </div>
+                </div>
+                <div style={{ opacity: 0.7, fontSize: 12, marginTop: 4 }}>
+                  {d.phase} · {new Date(d.updatedAt).toLocaleString()}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </aside>
+
+        {/* Right editor */}
+        <main style={{ padding: 16, overflow: "auto" }}>
+          {!editing ? (
+            <p style={{ color: "#c7d1db" }}>Select a script on the left or create a new one.</p>
+          ) : (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setDocs((prev) => {
+                  if (!editing.id) {
+                    // Create new
+                    const id = uid();
+                    return [{ ...editing, id, updatedAt: Date.now(), phase: "script" }, ...prev];
+                  }
+                  // Update existing
+                  return prev.map((d) => (d.id === editing.id ? { ...editing, updatedAt: Date.now() } : d));
+                });
+                setEditing(null);
+              }}
+              style={{ display: "grid", gap: 12 }}
+            >
+              <input
+                value={editing.name}
+                onChange={(e) => setEditing((s) => s && { ...s, name: e.target.value })}
+                placeholder="Name"
+                style={{
+                  padding: "8px 10px",
+                  borderRadius: 8,
+                  border: "1px solid #233242",
+                  background: "#0e141b",
+                  color: "#e5eef7",
+                }}
+              />
+              <textarea
+                value={editing.text}
+                onChange={(e) => setEditing((s) => s && { ...s, text: e.target.value })}
+                placeholder="Script text"
+                rows={18}
+                style={{
+                  padding: 12,
+                  borderRadius: 8,
+                  border: "1px solid #233242",
+                  background: "#0e141b",
+                  color: "#e5eef7",
+                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                }}
+              />
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="submit">Save</button>
+                <button type="button" onClick={() => setEditing(null)}>
+                  Cancel
+                </button>
+              </div>
+              <p style={{ opacity: 0.75, fontSize: 12 }}>
+                Tip: Saving here will also make it available to Teleprompter.
+              </p>
+            </form>
+          )}
+        </main>
+      </div>
+    </div>
   );
 }
