@@ -41,13 +41,13 @@ export default function SplashRoute() {
       <CFWordmark className="absolute left-4 top-4 z-10" />
 
       {/* Hotspots — default label = forge term; hover shows real tool name */}
-      <Hotspot to="/tools/forge"  top={55} left={70} label="Forge"     hover="Script Editor" />
-      <Hotspot to="/tools/anvil"  top={80} left={50} label="Anvil"     hover="Teleprompter" />
-      <Hotspot to="/tools/hammer" top={15} left={35} label="Hammer"    hover="Video Editor" />
-      <Hotspot to="/tools/tongs"  top={45} left={25} label="Tongs"     hover="File System" />
-      <Hotspot to="/tools/quench" top={70} left={80} label="Quench"    hover="Uploader" />
-      <Hotspot to="/tools/ledger" top={80} left={65} label="Ledger"    hover="Analytics" />
-      <Hotspot to="/tools/stock"  top={85} left={30} label="Bar Stock" hover="Ideas" />
+    <Hotspot to="/forge"  top={55} left={70} label="Forge"     hover="Script Editor" />
+    <Hotspot to="/anvil"  top={80} left={50} label="Anvil"     hover="Teleprompter" />
+    <Hotspot to="/hammer" top={15} left={35} label="Hammer"    hover="Video Editor" />
+    <Hotspot to="/tongs"  top={45} left={25} label="Tongs"     hover="File System" />
+    <Hotspot to="/quench" top={70} left={80} label="Quench"    hover="Uploader" />
+    <Hotspot to="/ledger" top={80} left={65} label="Ledger"    hover="Analytics" />
+    <Hotspot to="/stock"  top={85} left={30} label="Bar Stock" hover="Ideas" />
     </div>
   );
 }

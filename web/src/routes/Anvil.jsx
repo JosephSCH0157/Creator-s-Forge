@@ -1,4 +1,7 @@
+import { useNavigate } from 'react-router-dom';
+
 export default function Anvil() {
+  const navigate = useNavigate();
   return (
     <div>
       <header>
