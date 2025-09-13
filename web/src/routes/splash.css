@@ -1,6 +1,12 @@
 .splash-bg {
   background: #242424;
 }
+html, body {
+  background: #242424 !important;
+}
+.splash-bg {
+  background: #242424;
+}
 /* SplashWithEmbers component styles */
 .cf-embers-container {
   position: absolute;
