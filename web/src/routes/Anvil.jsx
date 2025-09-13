@@ -1,12 +1,17 @@
 export default function Anvil() {
   return (
-    <iframe
-      src="/teleprompter_pro.html"
-      title="Teleprompter Pro"
-      style={{ position:"fixed", inset:0, width:"100vw", height:"100vh", border:"none", display:"block" }}
-      allow="clipboard-read; clipboard-write; fullscreen"
-      allowFullScreen
-    />
+    <div>
+      <header>
+        <button onClick={() => navigate('/forge')}>Return to Forge</button>
+      </header>
+      <iframe
+        src="/teleprompter_pro_fixed_v1_5_4c.html"
+        title="Teleprompter Pro"
+        style={{ width: '100%', height: '100vh', border: 0 }}
+        allow="clipboard-read; clipboard-write; fullscreen"
+        allowFullScreen
+      />
+    </div>
   );
 }
 

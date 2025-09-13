@@ -10,9 +10,9 @@ const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 function load(): Project[] { try { return JSON.parse(localStorage.getItem(STORE) || "[]"); } catch { return []; } }
 function save(arr: Project[]) { localStorage.setItem(STORE, JSON.stringify(arr)); }
 
-export default function Tongs() {
   const { projectId } = useParams();
   const nav = useNavigate();
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>(() => load());
   useEffect(() => save(projects), [projects]);
 
@@ -104,7 +104,11 @@ export default function Tongs() {
   const current = useMemo(()=> projects.find(p=>p.id===projectId) || null, [projects, projectId]);
 
   return (
-    <div style={{ display:"grid", gridTemplateColumns:"320px 1fr", height:"100vh", background:"#0b0f14", color:"#e8f0f7" }}>
+    <>
+      <header>
+        <button onClick={() => navigate('/forge')}>Return to Forge</button>
+      </header>
+      <div style={{ display:"grid", gridTemplateColumns:"320px 1fr", height:"100vh", background:"#0b0f14", color:"#e8f0f7" }}>
       {/* Left: projects */}
       <aside style={{ borderRight:"1px solid #223243", padding:12, overflow:"auto" }}>
         <div style={{ display:"flex", gap:8, marginBottom:12 }}>
@@ -169,6 +173,7 @@ export default function Tongs() {
           </>
         )}
       </main>
-    </div>
+      </div>
+    </>
   );
 }

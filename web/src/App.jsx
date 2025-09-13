@@ -1,19 +1,26 @@
 // web/src/App.jsx
-import { Routes, Route, Navigate } from "react-router-dom";
-import Splash from "./routes/Splash";
-import Anvil from "./routes/Anvil";
-import Tongs from "./routes/tongs";
-import { useForgeBus } from "./forgeBus";
+
+import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import Splash from './routes/Splash';
+import Anvil from './routes/Anvil';
+import Tongs from './routes/Tongs';
 
 export default function App() {
-  useForgeBus();
   return (
-    <Routes>
-      <Route path="/" element={<Splash />} />
-  <Route path="/tools/anvil" element={<Anvil />} />
-  <Route path="/tools/tongs" element={<Tongs />} />
-  <Route path="/tools/tongs" element={<Tongs />} />
-  <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <nav className="topbar">
+        <Link to="/forge">Forge</Link>
+        <Link to="/tools/anvil">Anvil</Link>
+        <Link to="/tools/tongs">TONGS</Link>
+      </nav>
+
+      <Routes>
+        <Route path="/" element={<Splash />} />
+        <Route path="/forge" element={<Splash />} />
+        <Route path="/tools/anvil" element={<Anvil />} />
+        <Route path="/tools/tongs" element={<Tongs />} />
+        {/* Add other tools here */}
+      </Routes>
+    </>
   );
 }
