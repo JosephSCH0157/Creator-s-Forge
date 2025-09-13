@@ -1286,84 +1286,95 @@ window.addEventListener('message', function(ev) {
 </style>
 <!-- Pre-roll overlay (main window) -->
 <script>
-(function () {
-  const CH = "creators-forge";
-  const QK = "__forge_bus_queue__";
-  const bus = ("BroadcastChannel" in window) ? new BroadcastChannel(CH) : null;
+(function(){
+  // Only install once
+  if (window.ForgeBus) return;
 
-  // --- queue helpers ---
-  function readQueue(){
-    try { return JSON.parse(localStorage.getItem(QK) || "[]"); } catch { return []; }
-  }
-  function writeQueue(arr){ localStorage.setItem(QK, JSON.stringify(arr)); }
-  function enqueue(msg){
-    const q = readQueue();
-    q.push({ ...msg, ts: Date.now() });
-    writeQueue(q);
-  }
+  const CH = new BroadcastChannel('creators-forge');
+  const pending = new Map(); // id -> resolver
+  let seq = 1;
 
-  // live send (if someone’s listening) + always enqueue for durability
-  function send(msg){
-    try { bus && bus.postMessage(msg); } catch {}
-    enqueue(msg);                 // <— make it durable
-    // also poke storage so already-open Tongs gets a 'storage' event
-    try { localStorage.setItem("__forge_bus__", JSON.stringify({ ...msg, ts: Date.now() })); } catch {}
+  function ask(type, payload){
+    return new Promise((resolve) => {
+      const id = 'q'+(seq++);
+      pending.set(id, resolve);
+      CH.postMessage({ kind:'TP->TONGS', id, type, payload });
+      // Optional: timeout fallback
+      setTimeout(() => {
+        if (pending.has(id)) { pending.delete(id); resolve({ ok:false, error:'timeout' }); }
+      }, 2000);
+    });
   }
 
-  window.addEventListener("storage", (e) => {
-    if (e.key === "__forge_bus__" && e.newValue) {
-      try { onMessage(JSON.parse(e.newValue)); } catch {}
+  // Handle replies from Tongs
+  CH.onmessage = (ev) => {
+    const msg = ev.data || {};
+    if (msg.kind !== 'TONGS->TP') return;
+
+    // resolve request-style messages
+    if (msg.replyTo && pending.has(msg.replyTo)) {
+      const resolve = pending.get(msg.replyTo);
+      pending.delete(msg.replyTo);
+      resolve(msg);
     }
-  });
-  if (bus) bus.onmessage = (e) => onMessage(e.data);
 
-  window.ForgeBus = {
-    requestIndex(){ send({ type: "REQUEST_SCRIPT_INDEX", filter: { phase: "script" } }); },
-    requestScript(id){ send({ type: "REQUEST_SCRIPT", id }); },
-    saveScript(name, content){ send({ type: "SAVE_SCRIPT", payload: { name, content, phase: "script" } }); },
-    deleteScript(id){ send({ type: "DELETE_SCRIPT", id }); },
-  };
-
-  function onMessage(msg){
-    if(!msg || !msg.type) return;
-    if (msg.type === "SCRIPT_INDEX" && Array.isArray(msg.items)) {
-      const sel = document.getElementById("scriptSelect");
-      const loadBtn = document.getElementById("loadBtn");
-      const deleteBtn = document.getElementById("deleteBtn");
+    // side-channel events (index updates, saved, deleted)
+    if (msg.type === 'SCRIPT_INDEX') {
+      const sel = document.getElementById('scriptSelect');
+      const loadBtn = document.getElementById('loadBtn');
+      const deleteBtn = document.getElementById('deleteBtn');
       if (!sel) return;
-      sel.innerHTML = "";
-      msg.items.forEach(item => {
-        const opt = document.createElement("option");
-        opt.value = item.id;
-        opt.textContent = item.name || item.id;
+      sel.innerHTML = '';
+      (msg.items || []).forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id; opt.textContent = s.name;
         sel.appendChild(opt);
       });
-      const has = msg.items.length > 0;
-      if (loadBtn) loadBtn.disabled = !has;
-      if (deleteBtn) deleteBtn.disabled = !has;
-    }
-    if (msg.type === "SCRIPT_READY" && msg.payload) {
-      const { title, content } = msg.payload;
-      const editor = document.getElementById("editor");
-      if (title?.trim()) document.title = "TP • " + title;
-      if (editor && typeof content === "string") {
-        editor.value = content;
-        if (typeof renderScript === "function") renderScript(editor.value);
-      }
-      if (msg.id) {
-        const sel = document.getElementById("scriptSelect");
-        if (sel) sel.value = msg.id;
+      if (loadBtn && deleteBtn) {
+        const has = (msg.items || []).length > 0;
+        loadBtn.disabled = deleteBtn.disabled = !has;
       }
     }
-    if (msg.type === "OP_RESULT") {
-      const s = document.getElementById("status");
-      if (s) s.textContent = msg.ok ? (msg.message || "OK") : (msg.message || "Operation failed");
-      if (msg.refreshIndex && window.ForgeBus) window.ForgeBus.requestIndex();
+    if (msg.type === 'SCRIPT_DATA') {
+      const editor = document.getElementById('editor');
+      if (editor && typeof msg.text === 'string') {
+        editor.value = msg.text;
+        if (typeof renderScript === 'function') renderScript(editor.value);
+      }
     }
-  }
+    if (msg.type === 'SAVED') {
+      (typeof setStatus==='function' ? setStatus : console.log)(`Saved “${msg.name}”.`);
+      // ask for fresh index so dropdown refreshes
+      window.ForgeBus.requestIndex();
+    }
+    if (msg.type === 'DELETED') {
+      (typeof setStatus==='function' ? setStatus : console.log)('Deleted.');
+      window.ForgeBus.requestIndex();
+    }
+  };
 
-  // Let Tongs know we’re around
-  send({ type: "ACK", for: "READY:TELEPROMPTER" });
+  window.ForgeBus = {
+    requestIndex(){
+      CH.postMessage({ kind:'TP->TONGS', type:'REQUEST_SCRIPT_INDEX' });
+    },
+    requestScript(id){
+      CH.postMessage({ kind:'TP->TONGS', type:'REQUEST_SCRIPT', id });
+    },
+    async saveScript(name, text){
+      const res = await ask('SAVE_SCRIPT', { name, text });
+      // Tongs will also emit SAVED + SCRIPT_INDEX, but this covers the request/reply path.
+      return res?.ok;
+    },
+    deleteScript(id){
+      CH.postMessage({ kind:'TP->TONGS', type:'DELETE_SCRIPT', id });
+    }
+  };
+
+  // Teleprompter already calls these (shown in your file). This just makes them work:
+  // - refreshScriptDropdown() -> ForgeBus.requestIndex()
+  // - saveCurrentAs() -> ForgeBus.saveScript(name, editor.value)
+  // - loadSelectedScript() -> ForgeBus.requestScript(id)
+  // - deleteSelectedScript() -> ForgeBus.deleteScript(id)
 })();
 </script>
 </script>
