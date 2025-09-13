@@ -52,7 +52,7 @@ export default function CFWordmark({ className }: Props) {
           >
             Podcaster’s
           </text>
-          <text x="102" y="14"
+          <text x="105" y="14"
             fontFamily="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial"
             fontWeight={800}
             fontSize="18"
