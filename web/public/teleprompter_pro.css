@@ -15,7 +15,7 @@
 .tp-display-none { display: none; }
 .tp-minw-220 { min-width:220px; }
 .tp-count-overlay {
-  position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:9999;
+  position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:10000;
 }
 .tp-count-card {
   background:#0e141b;border:1px solid var(--edge);padding:24px 32px;border-radius:16px;text-align:center;
@@ -36,4 +36,20 @@
 .tp-inline-highlight {
   padding: 0 .15em;
   border-radius: .25em;
+}
+.app {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+  z-index: 1;
+}
+.panel {
+  padding: 16px;
+  border-right: 1px solid var(--edge);
+  overflow: auto;
+  background: var(--card);
+  min-height: 0;
+  z-index: 2;
 }
