@@ -79,7 +79,8 @@ export default function SplashRoute() {
         className="bg"
       />
 
-      <CFWordmark className="absolute left-4 top-4 z-10" />
+     <CFWordmark className="absolute left-4 top-4 z-10" />
+
 
       {SPOTS.map((s) => <Hotspot key={`${s.left}-${s.top}-${s.to}`} s={s} />)}
 
