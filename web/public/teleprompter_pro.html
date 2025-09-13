@@ -305,7 +305,7 @@
 
 
   <!-- Countdown overlay: must be direct child of body, not inside .app or any flex/grid -->
-  <div id="countOverlay" class="tp-count-overlay">
+  <div id="countOverlay" class="tp-count-overlay tp-display-none">
     <div class="tp-count-card">
       <div class="tp-count-label">Begin speaking in</div>
       <div id="countNum" class="tp-count-num">3</div>
@@ -1168,7 +1168,7 @@ function beginCountdownThen(fn){
   if (!overlay) {
     overlay = document.createElement('div');
     overlay.id = 'countOverlay';
-    overlay.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:9999';
+    overlay.className = 'tp-count-overlay tp-display-none';
     const card = document.createElement('div');
     card.style.cssText = 'background:#0e141b;border:1px solid #22303d;padding:24px 32px;border-radius:16px;text-align:center';
     const t = document.createElement('div');
@@ -1181,6 +1181,7 @@ function beginCountdownThen(fn){
     card.appendChild(t); card.appendChild(num); overlay.appendChild(card); document.body.appendChild(overlay);
   }
 
+  overlay.classList.remove('tp-display-none');
   overlay.style.display = 'flex';
   if (num) num.textContent = String(secs);
 
@@ -1193,7 +1194,8 @@ function beginCountdownThen(fn){
     n -= 1;
     if (n <= 0) {
       clearInterval(id);
-      overlay.style.display = 'none';
+  overlay.classList.add('tp-display-none');
+  overlay.style.display = 'none';
       try { if (window._sendToDisplay) window._sendToDisplay({ type:'preroll', show:false }); } catch(_){}
       fn();
     } else {
