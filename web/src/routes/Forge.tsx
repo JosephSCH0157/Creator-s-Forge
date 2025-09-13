@@ -1,5 +1,7 @@
 import { useForgeBus } from "../forgeBus";
 import { useNavigate } from 'react-router-dom';
+import type { Project } from "../tongs/types";
+import { createTongsBus } from "../lib/tongs-bus";
 
 export default function Forge() {
   useForgeBus();
