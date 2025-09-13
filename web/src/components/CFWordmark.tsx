@@ -61,7 +61,7 @@ export default function CFWordmark({ className }: Props) {
           >
             Forge
           </text>
-          <text x="0" y="38"
+          <text x="0" y="34"
             fontFamily="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial"
             fontWeight={500}
             fontSize="11"
