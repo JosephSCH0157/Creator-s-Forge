@@ -14,25 +14,27 @@
 }
 .tp-display-none { display: none; }
 .tp-minw-220 { min-width:220px; }
+/* Preroll countdown overlay — MAIN WINDOW */
 .tp-count-overlay {
-  position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:10000;
-  pointer-events: all;
-  /* debug: outline: 2px solid red; */
+  position: fixed;
+  inset: 0;                 /* top/right/bottom/left: 0 */
+  display: none;            /* toggled to flex in JS */
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.6);
+  z-index: 9999;            /* above topbar/camera */
 }
+
 .tp-count-card {
-  background:#0e141b;border:1px solid var(--edge);padding:24px 32px;border-radius:16px;text-align:center;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
-}
-.tp-count-label {
-  font-size:14px;color:#96a0aa;
-}
-.tp-count-num {
-  font-variant-numeric:tabular-nums;font-size:64px;line-height:1;margin-top:6px;
-  display: block;
+  background: #0e141b;
+  border: 1px solid var(--edge);
+  padding: 24px 32px;
+  border-radius: 16px;
   text-align: center;
-  /* Remove any bottom alignment */
-  position: static !important;
 }
+
+.tp-count-label { font-size: 14px; color: #96a0aa; }
+.tp-count-num   { font-variant-numeric: tabular-nums; font-size: 64px; line-height: 1; margin-top: 6px; }
 .dot {
   display: inline-block;
   width: 10px;
