@@ -1184,6 +1184,7 @@ function beginCountdownThen(fn){
   // Mirror to display window (if open)
   try { if (window._sendToDisplay) window._sendToDisplay({ type:'preroll', show:true, n: secs }); } catch(_){}
 
+  // Also show overlay in this window
   let n = secs;
   const id = setInterval(() => {
     n -= 1;
@@ -1199,6 +1200,21 @@ function beginCountdownThen(fn){
   }, 1000);
 }
 
+// Listen for preroll countdown messages in the main window (for popup sync)
+window.addEventListener('message', function(ev) {
+  const d = ev.data || {};
+  if (d.type === 'preroll') {
+    let overlay = document.getElementById('countOverlay');
+    let num = document.getElementById('countNum');
+    if (!overlay) return;
+    if (d.show) {
+      overlay.style.display = 'flex';
+      if (typeof d.n !== 'undefined' && num) num.textContent = String(d.n);
+    } else {
+      overlay.style.display = 'none';
+    }
+  }
+});
       function toggleRec(){
         if(!recognition){ recognition = setupRecognition(); if(!recognition) return; }
         if(recognizing || wantListening){
