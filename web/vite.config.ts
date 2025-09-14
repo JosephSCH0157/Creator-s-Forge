@@ -8,21 +8,18 @@ const __dirname = dirname(__filename);
 const r = (...p: string[]) => resolve(__dirname, ...p);
 
 export default defineConfig({
-  root: r('web'),
+  root: r('web'),                         // serve from /web
   plugins: [react()],
-  resolve: {
-    alias: {
-      '@': r('web', 'src'),
-    },
-  },
-  publicDir: r('web', 'public'),
+  resolve: { alias: { '@': r('web','src') } },
+  publicDir: r('web','public'),
+  appType: 'spa',                         // <- force SPA index.html fallback
   server: {
     host: true,
     port: 5173,
-    open: '/', // open splash/home reliably
+    open: '/',                           // open the splash/home
   },
   build: {
-    outDir: r('dist'), // or r('web','dist') if you prefer inside web
+    outDir: r('dist'),
     emptyOutDir: true,
   },
 });
