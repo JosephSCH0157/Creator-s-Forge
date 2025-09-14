@@ -1,6 +1,6 @@
 
 import ReturnHome from "@/components/ReturnHome";
-import type { ProjectResponse, AssetListResponse } from "@/tongs/types";
+import type { ProjectResponse, AssetListResponse, AssetReadResponse } from "@/tongs/types";
 import { api } from "@/lib/api";
 import { useState } from "react";
 
@@ -17,7 +17,12 @@ export default function Ledger() {
     setProjectId(rsp.data.projectId);
     // Example: list assets for the new project
     const assetsRsp = await api.get<AssetListResponse>(`/projects/${rsp.data.projectId}/assets`);
-    assetsRsp.data.forEach(a => console.log(a.id, a.kind, a.name));
+    assetsRsp.data.forEach(async a => {
+      console.log(a.id, a.kind, a.name);
+      // Example: read asset details
+      const assetRead = await api.get<AssetReadResponse>(`/projects/${rsp.data.projectId}/assets/${a.id}`);
+      console.log("asset meta:", assetRead.data.meta);
+    });
     } catch (e: any) {
       setError(e.message || "Unknown error");
     } finally {
