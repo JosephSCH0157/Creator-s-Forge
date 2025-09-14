@@ -49,7 +49,7 @@ export default function SplashRoute() {
         />
       </div>
 
-      <CFWordmark className="brand-glow" />
+  <CFWordmark className="splash-wordmark brand-glow" />
 
       {SPOTS.map((s) => (
         <Hotspot key={`${s.left}-${s.top}-${s.to}`} s={s} />
