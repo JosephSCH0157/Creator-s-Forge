@@ -3,6 +3,7 @@ export interface ProjectResponse {
   name?: string;
   createdAt?: string;
 }
+// Existing:
 export type Phase = "idea" | "script" | "recorded" | "edited" | "published";
 
 export type Asset = {
@@ -24,6 +25,59 @@ export type Project = {
   recordingIds: string[];
 };
 
+export interface ProjectResponse {
+  projectId: string;
+  name?: string;
+  createdAt?: string;
+}
+
+// New: generic API envelope (optional but handy)
+export type ApiOk<T> = { ok: true; data: T };
+export type ApiErr = { ok: false; error: string };
+export type ApiRsp<T> = ApiOk<T> | ApiErr;
+
+// New: asset responses
+export interface AssetResponse {
+  assetId: string;
+}
+
+export interface AssetReadResponse {
+  id: string;
+  kind: Asset["kind"];
+  name: string;
+  createdAt: number;
+  meta?: Record<string, unknown>;
+}
+
+export interface AssetListItem {
+  id: string;
+  kind: Asset["kind"];
+  name: string;
+  createdAt: number;
+}
+
+export type AssetListResponse = AssetListItem[];
+
+// Script-focused helpers
+export interface ScriptGetResponse {
+  name: string | null;
+  text: string; // empty string if none
+}
+
+export interface ScriptIndexItem {
+  projectId: string;
+  projectTitle: string;
+  assetId: string;
+  name: string;
+  updatedAt: number;
+}
+export type ScriptIndexResponse = ScriptIndexItem[];
+
+export interface ScriptSaveResponse {
+  saved: true;
+  projectId: string;
+  assetId: string;
+}
 export type BusRequest =
   | { type: "PING" }
   | { type: "PROJECT.LIST" }
