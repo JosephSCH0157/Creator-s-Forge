@@ -1292,164 +1292,98 @@ window.addEventListener('message', function(ev) {
   <!-- Pre-roll overlay (main window) -->
 </style>
 <!-- Pre-roll overlay (main window) -->
-
 <script>
-/* Unified ForgeBus — single source of truth
-   - Primary: REQ/RSP over BroadcastChannel "podcasters-forge:v1"
-   - Fallback: legacy event bridge ("TP->TONGS" / "TONGS->TP") if REQ/RSP not supported by current Tongs
-   Exposes window.ForgeBus with:
-     - requestIndex()
-     - requestScript(assetId)  // prefers ASSET.READ when index provides projectId
-     - saveScript(name, text)  // uses ?project=… or localStorage("pf:lastProjectId")
-     - deleteScript(assetId)   // when supported
-*/
 (function(){
+  // Only install once
   if (window.ForgeBus) return;
 
-  const CH_NAME = "podcasters-forge:v1";
-  const REQ = "REQ:";
-  const RSP = "RSP:";
-  const ch = new BroadcastChannel(CH_NAME);
+  const CH = new BroadcastChannel('creators-forge');
+  const pending = new Map(); // id -> resolver
+  let seq = 1;
 
-  // ---------- REQ/RSP core ----------
-  let seq = 0;
-  const pending = new Map(); // id -> { resolve, timer }
-  ch.onmessage = (ev) => {
-    const m = ev.data || {};
-    // REQ/RSP reply path
-    if (m.kind === RSP && pending.has(m.id)) {
-      const entry = pending.get(m.id);
-      pending.delete(m.id);
-      clearTimeout(entry.timer);
-      entry.resolve(m.payload);
-      return;
+  function ask(type, payload){
+    return new Promise((resolve) => {
+      const id = 'q'+(seq++);
+      pending.set(id, resolve);
+      CH.postMessage({ kind:'TP->TONGS', id, type, payload });
+      // Optional: timeout fallback
+      setTimeout(() => {
+        if (pending.has(id)) { pending.delete(id); resolve({ ok:false, error:'timeout' }); }
+      }, 2000);
+    });
+  }
+
+  // Handle replies from Tongs
+  CH.onmessage = (ev) => {
+    const msg = ev.data || {};
+    if (msg.kind !== 'TONGS->TP') return;
+
+    // resolve request-style messages
+    if (msg.replyTo && pending.has(msg.replyTo)) {
+      const resolve = pending.get(msg.replyTo);
+      pending.delete(msg.replyTo);
+      resolve(msg);
     }
-    // Legacy "TONGS->TP" side-channel events (support older Tongs)
-    if (m.kind === "TONGS->TP") {
-      if (m.type === "SCRIPT_INDEX") {
-        populateIndexOptions(m.items || []);
+
+    // side-channel events (index updates, saved, deleted)
+    if (msg.type === 'SCRIPT_INDEX') {
+      const sel = document.getElementById('scriptSelect');
+      const loadBtn = document.getElementById('loadBtn');
+      const deleteBtn = document.getElementById('deleteBtn');
+      if (!sel) return;
+      sel.innerHTML = '';
+      (msg.items || []).forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id; opt.textContent = s.name;
+        sel.appendChild(opt);
+      });
+      if (loadBtn && deleteBtn) {
+        const has = (msg.items || []).length > 0;
+        loadBtn.disabled = deleteBtn.disabled = !has;
       }
-      if (m.type === "SCRIPT_DATA") {
-        const editor = document.getElementById("editor");
-        if (editor && typeof m.text === "string") {
-          editor.value = m.text;
-          if (typeof window.renderScript === "function") window.renderScript(editor.value);
-        }
+    }
+    if (msg.type === 'SCRIPT_DATA') {
+      const editor = document.getElementById('editor');
+      if (editor && typeof msg.text === 'string') {
+        editor.value = msg.text;
+        if (typeof renderScript === 'function') renderScript(editor.value);
       }
-      if (m.type === "SAVED") {
-        (typeof window.setStatus === "function" ? window.setStatus : console.log)(`Saved “${m.name}”.`);
-        requestIndex(); // refresh
-      }
-      if (m.type === "DELETED") {
-        (typeof window.setStatus === "function" ? window.setStatus : console.log)("Deleted.");
-        requestIndex();
-      }
+    }
+    if (msg.type === 'SAVED') {
+      (typeof setStatus==='function' ? setStatus : console.log)(`Saved “${msg.name}”.`);
+      // ask for fresh index so dropdown refreshes
+      window.ForgeBus.requestIndex();
+    }
+    if (msg.type === 'DELETED') {
+      (typeof setStatus==='function' ? setStatus : console.log)('Deleted.');
+      window.ForgeBus.requestIndex();
     }
   };
 
-  function request(payload, timeoutMs = 5000){
-    const id = Date.now().toString(36) + "-" + (seq++);
-    return new Promise((resolve) => {
-      const timer = setTimeout(() => {
-        // timeout: resolve with { ok:false } so caller can fallback
-        pending.delete(id);
-        resolve({ ok:false, error:"timeout" });
-      }, timeoutMs);
-      pending.set(id, { resolve, timer });
-      ch.postMessage({ kind: REQ, id, payload });
-    });
-  }
-
-  // ---------- helpers ----------
-  function getProjectId(){
-    const params = new URLSearchParams(location.search);
-    const q = params.get("project");
-    if (q) { try { localStorage.setItem("pf:lastProjectId", q); } catch(_) {} return q; }
-    try { return localStorage.getItem("pf:lastProjectId") || ""; } catch(_) { return ""; }
-  }
-
-  function populateIndexOptions(items){
-    // Supports both shapes:
-    //  A) { assetId, projectId, projectTitle, name, updatedAt }  (preferred)
-    //  B) { id, name }                                            (legacy)
-    const sel = document.getElementById("scriptSelect");
-    if (!sel) return;
-    sel.innerHTML = "";
-    items.forEach((it) => {
-      const opt = document.createElement("option");
-      const assetId = it.assetId || it.id;
-      opt.value = assetId;
-      opt.textContent = it.projectTitle ? `${it.projectTitle} — ${it.name}` : (it.name || assetId);
-      if (it.projectId) opt.dataset.project = it.projectId;
-      if (it.name) opt.dataset.name = it.name;
-      sel.appendChild(opt);
-    });
-    const loadBtn = document.getElementById("loadBtn");
-    const delBtn = document.getElementById("deleteBtn");
-    if (loadBtn) loadBtn.disabled = !sel.options.length;
-    if (delBtn) delBtn.disabled = !sel.options.length;
-  }
-
-  async function requestIndex(){
-    // Try REQ/RSP first
-    const rsp = await request({ type: "SCRIPT.INDEX" });
-    if (rsp && rsp.ok) { populateIndexOptions(rsp.data || []); return true; }
-    // Fallback to legacy event
-    ch.postMessage({ kind: "TP->TONGS", type: "REQUEST_SCRIPT_INDEX" });
-    return false;
-  }
-
-  async function requestScript(assetId){
-    const sel = document.getElementById("scriptSelect");
-    const opt = sel && sel.selectedOptions && sel.selectedOptions[0];
-    const projectId = opt && (opt.dataset.project || null);
-    // Prefer ASSET.READ when we know projectId (from modern index)
-    if (projectId) {
-      const rsp = await request({ type: "ASSET.READ", projectId, assetId });
-      if (rsp && rsp.ok) {
-        const ed = document.getElementById("editor");
-        const text = (rsp.data && (rsp.data.text || (rsp.data.meta && rsp.data.meta.text))) || "";
-        if (ed) ed.value = text;
-        if (typeof window.renderScript === "function") window.renderScript(text);
-        return true;
-      }
+  window.ForgeBus = {
+    requestIndex(){
+      CH.postMessage({ kind:'TP->TONGS', type:'REQUEST_SCRIPT_INDEX' });
+    },
+    requestScript(id){
+      CH.postMessage({ kind:'TP->TONGS', type:'REQUEST_SCRIPT', id });
+    },
+    async saveScript(name, text){
+      const res = await ask('SAVE_SCRIPT', { name, text });
+      // Tongs will also emit SAVED + SCRIPT_INDEX, but this covers the request/reply path.
+      return res?.ok;
+    },
+    deleteScript(id){
+      CH.postMessage({ kind:'TP->TONGS', type:'DELETE_SCRIPT', id });
     }
-    // Fallback legacy: ask Tongs to push SCRIPT_DATA
-    ch.postMessage({ kind: "TP->TONGS", type: "REQUEST_SCRIPT", id: assetId });
-    return false;
-  }
+  };
 
-  async function saveScript(name, text){
-    const projectId = getProjectId();
-    if (projectId) {
-      const rsp = await request({ type: "SCRIPT.SAVE", projectId, name, text });
-      if (rsp && rsp.ok) return true;
-    }
-    // Fallback legacy
-    const id = "q" + Math.random().toString(36).slice(2);
-    ch.postMessage({ kind: "TP->TONGS", id, type: "SAVE_SCRIPT", payload: { name, text } });
-    return false;
-  }
-
-  async function deleteScript(assetId){
-    const sel = document.getElementById("scriptSelect");
-    const opt = sel && sel.selectedOptions && sel.selectedOptions[0];
-    const projectId = opt && (opt.dataset.project || getProjectId());
-    if (projectId) {
-      const rsp = await request({ type: "ASSET.DELETE", projectId, assetId });
-      if (rsp && rsp.ok) { requestIndex(); return true; }
-    }
-    // Fallback legacy
-    ch.postMessage({ kind:"TP->TONGS", type:"DELETE_SCRIPT", id: assetId });
-    requestIndex();
-    return false;
-  }
-
-  window.ForgeBus = { requestIndex, requestScript, saveScript, deleteScript };
-  // Kick off index refresh on load
-  document.addEventListener("DOMContentLoaded", requestIndex);
+  // Teleprompter already calls these (shown in your file). This just makes them work:
+  // - refreshScriptDropdown() -> ForgeBus.requestIndex()
+  // - saveCurrentAs() -> ForgeBus.saveScript(name, editor.value)
+  // - loadSelectedScript() -> ForgeBus.requestScript(id)
+  // - deleteSelectedScript() -> ForgeBus.deleteScript(id)
 })();
 </script>
-
+</script>
 </body>
 </html>
