@@ -1,6 +1,6 @@
 
 import ReturnHome from "@/components/ReturnHome";
-import type { ProjectResponse, AssetListResponse, AssetReadResponse } from "@/tongs/types";
+import type { ProjectResponse, AssetListResponse, AssetReadResponse, AssetResponse } from "@/tongs/types";
 import { api } from "@/lib/api";
 import { useState } from "react";
 
@@ -15,13 +15,31 @@ export default function Hammer() {
     try {
       const rsp = await api.post<ProjectResponse>("/projects", { title: "Hammer Project" });
       setProjectId(rsp.data.projectId);
+      // Example: create an asset (script)
+      const assetPayload = {
+        kind: "script",
+        name: "Episode 1",
+        meta: { text: "Intro, segment 1, outro..." }
+      };
+      const assetRsp = await api.post<AssetResponse>(`/projects/${rsp.data.projectId}/assets`, assetPayload);
+      console.log("new assetId:", assetRsp.data.assetId);
+
       // Example: list assets for the new project
       const assetsRsp = await api.get<AssetListResponse>(`/projects/${rsp.data.projectId}/assets`);
       assetsRsp.data.forEach(async a => {
         console.log(a.id, a.kind, a.name);
-        // Example: read asset details
-        const assetRead = await api.get<AssetReadResponse>(`/projects/${rsp.data.projectId}/assets/${a.id}`);
-        console.log("asset meta:", assetRead.data.meta);
+        // Example: update asset (rename or change meta)
+        await api.patch<void>(`/projects/${rsp.data.projectId}/assets/${a.id}`,
+          {
+            name: "Episode 1 (final)",
+            meta: { text: "Updated content..." }
+          }
+        );
+  // Example: read asset details
+  const assetRead = await api.get<AssetReadResponse>(`/projects/${rsp.data.projectId}/assets/${a.id}`);
+  console.log("asset meta:", assetRead.data.meta);
+  // Example: delete asset
+  await api.delete<void>(`/projects/${rsp.data.projectId}/assets/${a.id}`);
       });
     } catch (e: any) {
       setError(e.message || "Unknown error");
