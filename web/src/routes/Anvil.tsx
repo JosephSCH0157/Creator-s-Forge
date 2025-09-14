@@ -1,14 +1,12 @@
-import { useNavigate } from 'react-router-dom';
+import ReturnHome from "@/components/ReturnHome";
 import type { Project } from "../tongs/types";
 import { createTongsBus } from "../lib/tongs-bus";
 
 export default function Anvil() {
-  const navigate = useNavigate();
   return (
     <div>
-      <header>
-        <button onClick={() => navigate('/forge')}>Return to Forge</button>
-      </header>
+      <h1>Anvil (Teleprompter)</h1>
+      <ReturnHome />
       <iframe
         src="/teleprompter_pro_fixed_v1_5_4c.html"
         title="Teleprompter Pro"

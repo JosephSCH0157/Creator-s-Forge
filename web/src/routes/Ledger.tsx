@@ -1,10 +1,9 @@
-import { useNavigate } from 'react-router-dom';
+import ReturnHome from "@/components/ReturnHome";
 import type { Project } from "../tongs/types";
 import { createTongsBus } from "../lib/tongs-bus";
 import { useState } from "react";
 
 export default function Ledger() {
-  const navigate = useNavigate();
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const [projectId, setProjectId] = useState("");
@@ -27,10 +26,8 @@ export default function Ledger() {
 
   return (
     <div style={{ padding: 24 }}>
-      <header>
-        <button onClick={() => navigate('/forge')}>Return to Forge</button>
-      </header>
       <h1>Ledger</h1>
+      <ReturnHome />
       <button onClick={handleCreate} disabled={creating}>
         {creating ? "Creating..." : "Create Ledger Project"}
       </button>
