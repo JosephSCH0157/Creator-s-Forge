@@ -1,5 +1,5 @@
 import ReturnHome from "../components/ReturnHome";
-import type { Project, ProjectResponse, ApiRsp } from "@/tongs/types";
+import type { Project, ProjectResponse, ApiRsp } from "../tongs/types";
 import { api } from "../lib/api";
 import { useEffect, useState } from "react";
 

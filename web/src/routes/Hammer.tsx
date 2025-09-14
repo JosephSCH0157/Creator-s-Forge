@@ -1,6 +1,6 @@
 
 import ReturnHome from "../components/ReturnHome";
-import type { ProjectResponse, AssetListResponse, AssetReadResponse, AssetResponse, ApiRsp } from "@/tongs/types";
+import type { ProjectResponse, AssetListResponse, AssetReadResponse, AssetResponse, ApiRsp } from "../tongs/types";
 import { api } from "../lib/api";
 import { useState } from "react";
 
