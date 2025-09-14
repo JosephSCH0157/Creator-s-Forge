@@ -1,6 +1,7 @@
+
 import ReturnHome from "@/components/ReturnHome";
-import type { Project, ProjectResponse } from "../tongs/types";
-import { createTongsBus } from "../lib/tongs-bus";
+import type { ProjectResponse } from "@/tongs/types";
+import axios from "axios";
 import { useState } from "react";
 
 export default function Ledger() {
@@ -12,11 +13,8 @@ export default function Ledger() {
     setCreating(true);
     setError("");
     try {
-      const bus = createTongsBus();
-      const rsp = await bus.request({ type: "PROJECT.CREATE", title: "Ledger Project" });
-      bus.close();
-      if (!rsp.ok) throw new Error(rsp.error);
-  setProjectId((rsp.data as ProjectResponse).projectId);
+      const rsp = await axios.post<ProjectResponse>("/api/projects", { title: "Ledger Project" });
+      setProjectId(rsp.data.projectId);
     } catch (e: any) {
       setError(e.message || "Unknown error");
     } finally {
