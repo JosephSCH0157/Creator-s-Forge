@@ -5,7 +5,7 @@ import { dirname, resolve } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const r = (...p) => resolve(__dirname, ...p);
+const r = (...p: string[]) => resolve(__dirname, ...p);
 
 export default defineConfig({
   root: r('web'),
