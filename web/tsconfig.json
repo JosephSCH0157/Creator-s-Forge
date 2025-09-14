@@ -1,16 +1,13 @@
 {
   "compilerOptions": {
+    "baseUrl": "./src",
+    "paths": { "@/*": ["*"] },
     "target": "ES2020",
     "lib": ["DOM", "ESNext"],
     "jsx": "react-jsx",
     "moduleResolution": "bundler",
-    "baseUrl": "./web/src",
-    "paths": {
-      "@/*": ["*"]
-    },
     "strict": true,
-    "skipLibCheck": true,
-    "allowJs": true
+    "skipLibCheck": true
   },
-  "include": ["web/src", "web/env.d.ts"]
+  "include": ["src", "env.d.ts"]
 }
