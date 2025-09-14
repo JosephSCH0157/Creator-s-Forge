@@ -1,5 +1,5 @@
 import ReturnHome from "@/components/ReturnHome";
-import type { Project, ProjectResponse } from "@/tongs/types";
+import type { Project, ProjectResponse, ApiRsp } from "@/tongs/types";
 import { api } from "@/lib/api";
 import { useEffect, useState } from "react";
 
@@ -11,8 +11,9 @@ export default function Anvil() {
   useEffect(() => {
     async function createProject() {
       try {
-        const rsp = await api.post<ProjectResponse>("/projects", { title: "Teleprompter Project" });
-        setProjectId(rsp.data.projectId);
+  const { data: rsp } = await api.post<ApiRsp<ProjectResponse>>("/projects", { title: "Teleprompter Project" });
+  if (!rsp.ok) throw new Error(rsp.error);
+  setProjectId(rsp.data.projectId);
       } catch (e: any) {
         setError(e.message || "Unknown error");
       }

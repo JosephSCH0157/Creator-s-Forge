@@ -2,7 +2,7 @@
 // Pure IPC client for Podcaster's Forge. No React. No state.
 // Tools import this and call request({...}) to talk to TONGS (the server).
 
-import type { BusRequest, BusResponse } from "../tongs/types";
+import type { BusRequest, ApiRsp, ProjectResponse, AssetListResponse, AssetReadResponse, AssetResponse, ScriptGetResponse, ScriptIndexResponse, ScriptSaveResponse } from "../tongs/types";
 
 const CH_NAME = "podcasters-forge:v1";
 const REQ = "REQ:";
@@ -15,7 +15,7 @@ export function createTongsBus(timeoutMs = 5000) {
   // id -> { resolve, reject, timer }
   const pending = new Map<
     string,
-    { resolve: (v: BusResponse) => void; reject: (e: any) => void; timer: number }
+    { resolve: (v: ApiRsp<any>) => void; reject: (e: any) => void; timer: number }
   >();
 
   ch.onmessage = (ev) => {
@@ -25,18 +25,18 @@ export function createTongsBus(timeoutMs = 5000) {
     if (!entry) return;
     clearTimeout(entry.timer);
     pending.delete(msg.id);
-    entry.resolve(msg.payload as BusResponse);
+  entry.resolve(msg.payload as ApiRsp<any>);
   };
 
-  function request(payload: BusRequest): Promise<BusResponse> {
+  function request<T = any>(payload: BusRequest): Promise<ApiRsp<T>> {
     const id = `${Date.now().toString(36)}-${seq++}`;
     return new Promise((resolve, reject) => {
       const timer = window.setTimeout(() => {
         pending.delete(id);
         reject(new Error("TONGS timeout"));
       }, timeoutMs);
-      pending.set(id, { resolve, reject, timer });
-      ch.postMessage({ kind: REQ, id, payload });
+  pending.set(id, { resolve, reject, timer });
+  ch.postMessage({ kind: REQ, id, payload });
     });
   }
 
@@ -53,19 +53,19 @@ export function createTongsBus(timeoutMs = 5000) {
   return { request, close };
 }
 
-// Convenience helpers (optional)
+// Convenience helpers (typed)
 export async function listScripts() {
   const bus = createTongsBus();
-  try { return await bus.request({ type: "SCRIPT.INDEX" }); }
+  try { return await bus.request<ScriptIndexResponse>({ type: "SCRIPT.INDEX" }); }
   finally { bus.close(); }
 }
 export async function saveScript(projectId: string, name: string, text: string) {
   const bus = createTongsBus();
-  try { return await bus.request({ type: "SCRIPT.SAVE", projectId, name, text }); }
+  try { return await bus.request<ScriptSaveResponse>({ type: "SCRIPT.SAVE", projectId, name, text }); }
   finally { bus.close(); }
 }
 export async function getProjectScript(projectId: string) {
   const bus = createTongsBus();
-  try { return await bus.request({ type: "SCRIPT.GET", projectId }); }
+  try { return await bus.request<ScriptGetResponse>({ type: "SCRIPT.GET", projectId }); }
   finally { bus.close(); }
 }
