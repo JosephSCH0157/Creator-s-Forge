@@ -27,64 +27,33 @@ function Hotspot({ s }: { s: Spot }) {
   return (
     <Link
       to={s.to}
-      className="hotspot-btn"
+      className="hotspot"
       style={{ top: `${s.top}%`, left: `${s.left}%` }}
       aria-label={s.hover}
+      data-hover={s.hover}   // <-- required for ::after hover label
     >
-      <span className="hotspot-icon" aria-hidden="true">{s.icon ?? "●"}</span>
-      <span className="hotspot-label">{s.label}</span>
-      <span className="hotspot-tooltip">{s.hover}</span>
+      {s.label}
     </Link>
   );
 }
 
 export default function SplashRoute() {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const [showGrid, setShowGrid] = useState(false);
-
-  // placement helper: press 'g' to toggle grid; press 'p' to enable pick mode, then click to log % coords
-  useEffect(() => {
-    let pickMode = false;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === "g") setShowGrid(v => !v);
-      if (e.key.toLowerCase() === "p") {
-        pickMode = !pickMode;
-        console.log(pickMode ? "Pick mode ON: click anywhere on the splash" : "Pick mode OFF");
-      }
-    };
-    const onClick = (e: MouseEvent) => {
-      if (!pickMode || !wrapRef.current) return;
-      const r = wrapRef.current.getBoundingClientRect();
-      const x = ((e.clientX - r.left) / r.width) * 100;
-      const y = ((e.clientY - r.top) / r.height) * 100;
-      console.log(`{ top: ${y.toFixed(1)}, left: ${x.toFixed(1)} }`);
-    };
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("click", onClick);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("click", onClick);
-    };
-  }, []);
-
   return (
-    <div ref={wrapRef} className="splash-wrap">
-      <SplashWithEmbers
-        src="/forge.png"
-        hearth={{ x: 1010, y: 525, w: 215, h: 120 }}
-        spawnRate={100}
-        maxEmbers={600}
-        debug={false}
-        debugKey="d"
-        className="bg"
-      />
+    <div className="splash-root">   {/* use splash-root, not splash-wrap */}
+      <div className="splash-stage">
+        <SplashWithEmbers
+          src="/forge.png"
+          hearth={{ x: 1010, y: 525, w: 215, h: 120 }}
+          spawnRate={100}
+          maxEmbers={600}
+        />
+      </div>
 
-     <CFWordmark className="absolute left-4 top-4 z-10" />
+      <CFWordmark className="brand-glow" />
 
-
-      {SPOTS.map((s) => <Hotspot key={`${s.left}-${s.top}-${s.to}`} s={s} />)}
-
-      {showGrid && <div className="splash-grid" aria-hidden="true" />}
+      {SPOTS.map((s) => (
+        <Hotspot key={`${s.left}-${s.top}-${s.to}`} s={s} />
+      ))}
     </div>
   );
 }
