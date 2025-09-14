@@ -1,3 +1,8 @@
+export interface ProjectResponse {
+  projectId: string;
+  name?: string;
+  createdAt?: string;
+}
 export type Phase = "idea" | "script" | "recorded" | "edited" | "published";
 
 export type Asset = {
