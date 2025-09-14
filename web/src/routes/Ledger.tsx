@@ -1,7 +1,7 @@
 
-import ReturnHome from "@/components/ReturnHome";
+import ReturnHome from "../components/ReturnHome";
 import type { ProjectResponse, AssetListResponse, AssetReadResponse, ApiRsp } from "@/tongs/types";
-import { api } from "@/lib/api";
+import { api } from "../lib/api";
 import { useState } from "react";
 
 export default function Ledger() {

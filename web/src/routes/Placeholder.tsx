@@ -1,4 +1,4 @@
-import ReturnHome from "@/components/ReturnHome";
+import ReturnHome from "../components/ReturnHome";
 import type { Project } from "../tongs/types";
 import { createTongsBus } from "../lib/tongs-bus";
 
