@@ -1,7 +1,7 @@
 
 import ReturnHome from "@/components/ReturnHome";
-import type { ProjectResponse } from "@/tongs/types";
-import axios from "axios";
+import type { ProjectResponse, AssetListResponse } from "@/tongs/types";
+import { api } from "@/lib/api";
 import { useState } from "react";
 
 export default function Hammer() {
@@ -13,8 +13,11 @@ export default function Hammer() {
     setCreating(true);
     setError("");
     try {
-      const rsp = await axios.post<ProjectResponse>("/api/projects", { title: "Hammer Project" });
+      const rsp = await api.post<ProjectResponse>("/projects", { title: "Hammer Project" });
       setProjectId(rsp.data.projectId);
+      // Example: list assets for the new project
+      const assetsRsp = await api.get<AssetListResponse>(`/projects/${rsp.data.projectId}/assets`);
+      assetsRsp.data.forEach(a => console.log(a.id, a.kind, a.name));
     } catch (e: any) {
       setError(e.message || "Unknown error");
     } finally {
