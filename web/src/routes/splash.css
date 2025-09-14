@@ -33,37 +33,31 @@
 .brand-glow {
   text-shadow: 0 1px 6px rgba(0,0,0,.45);
 }
+/* replace this whole block */
 .splash-root {
+  position: relative;         /* was display:flex */
   width: 100vw;
   height: 100vh;
-  display: flex;
-  flex-direction: column;       /* keep links under image */
-  align-items: center;
-  justify-content: center;
   background: #111;
   overflow: hidden;
 }
 
+/* make the stage fill the screen under everything */
 .splash-stage {
-  position: relative;
-  width: 100vw;
-  height: 100vh;      /* full viewport height */
+  position: absolute;
+  inset: 0;
 }
 
-
-.splash-image {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;  /* or contain, depending on whether you want cropping */
-  display: block;
-  -webkit-user-select: none;
-  user-select: none;
-  pointer-events: none;
+/* pin the wordmark top-left above the stage */
+.splash-wordmark {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 20;
 }
 
-
-
-/* Hotspots */
+/* keep your glow */
+.brand-glow { text-shadow: 0 1px 6px rgba(0,0,0,.45); }
 .hotspot {
   position: absolute;
   transform: translate(-50%, -50%);
