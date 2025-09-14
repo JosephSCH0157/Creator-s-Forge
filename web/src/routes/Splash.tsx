@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import SplashWithEmbers from "./SplashWithEmbers";
 import CFWordmark from "../components/CFWordmark";
-import "./Splash.css";
+import "./splash.css";
 
 type Spot = {
   to: string;
