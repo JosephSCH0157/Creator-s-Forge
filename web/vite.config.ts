@@ -10,8 +10,19 @@ const r = (...p: string[]) => resolve(__dirname, ...p);
 export default defineConfig({
   root: r('web'),
   plugins: [react()],
-  resolve: { alias: { '@': r('web','src') } },
-  publicDir: r('web','public'),
-  server: { host: true, port: 5173, open: '/forge' },
-  build: { outDir: r('dist'), emptyOutDir: true },
+  resolve: {
+    alias: {
+      '@': r('web', 'src'),
+    },
+  },
+  publicDir: r('web', 'public'),
+  server: {
+    host: true,
+    port: 5173,
+    open: '/', // open splash/home reliably
+  },
+  build: {
+    outDir: r('dist'), // or r('web','dist') if you prefer inside web
+    emptyOutDir: true,
+  },
 });
