@@ -1,32 +1,59 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import { defineConfig, globalIgnores } from 'eslint/config'
+// eslint.config.js (flat config)
+import js from "@eslint/js";
+import tseslint from "typescript-eslint";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
 
-import tseslint from 'typescript-eslint';
-
-export default defineConfig([
-  globalIgnores(['dist']),
+/** @type {import("eslint").Linter.FlatConfig[]} */
+export default [
+  // Ignore build artifacts & lockfiles
   {
-    files: ['**/*.{js,jsx,ts,tsx}'],
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-      reactHooks.configs['recommended-latest'],
-      reactRefresh.configs.vite,
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "**/*.min.js",
+      "**/*.d.ts",
     ],
+  },
+
+  // Base JS rules
+  js.configs.recommended,
+
+  // TypeScript (no type-aware rules = fastest)
+  ...tseslint.configs.recommended, // includes parser + TS rules
+
+  // Files to apply to
+  {
+    files: ["**/*.{js,jsx,ts,tsx}"],
     languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        ecmaFeatures: { jsx: true },
-        sourceType: 'module',
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        // browser globals for a Vite app
+        window: "readonly",
+        document: "readonly",
+        navigator: "readonly",
       },
     },
+    plugins: {
+      "react-hooks": reactHooks,
+      "react-refresh": reactRefresh,
+    },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // React Hooks
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+
+      // React Refresh (only warn in dev)
+      "react-refresh/only-export-components": [
+        "warn",
+        { allowConstantExport: true },
+      ],
+
+      // Nice-to-haves
+      "no-unused-vars": "off", // handled by TS
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/ban-ts-comment": "off",
     },
   },
-]);
+];
