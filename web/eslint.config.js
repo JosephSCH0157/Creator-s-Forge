@@ -45,19 +45,20 @@ export default tseslint.config(
       "react-refresh": reactRefresh,
     },
     rules: {
-      // React Hooks
+      // keep these strong
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/no-misused-promises": "error",
+
+      // migration softeners: turn down noisy unsafe-any family
+      "@typescript-eslint/no-unsafe-assignment": "warn",
+      "@typescript-eslint/no-unsafe-member-access": "warn",
+      "@typescript-eslint/no-unsafe-return": "warn",
+      "@typescript-eslint/no-unsafe-call": "warn",
+      "@typescript-eslint/no-explicit-any": "warn",
+
+      // keep hooks sanity
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
-
-      // Fast Refresh
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
-
-      // Prefer TS-flavored unused-vars
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
-
-      // Pragmatic
-      "@typescript-eslint/ban-ts-comment": "off",
     },
   },
 );
