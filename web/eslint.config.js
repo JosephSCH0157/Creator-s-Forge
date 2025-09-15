@@ -5,35 +5,42 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 
 /** @type {import("eslint").Linter.FlatConfig[]} */
-export default [
-  // Ignore build artifacts & lockfiles
+export default tseslint.config(
+  // 1) Ignore build artifacts and config files (avoid linting eslint.config.js itself)
   {
-    ignores: ["dist/**", "node_modules/**", "**/*.min.js", "**/*.d.ts"],
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "**/*.min.js",
+      "**/*.d.ts",
+      "eslint.config.*",
+      "vite.config.*",
+    ],
   },
 
-  // Base JS rules
+  // 2) Base JS rules
   js.configs.recommended,
 
-  // TypeScript (fast set)
+  // 3) TypeScript base (no type info)
   ...tseslint.configs.recommended,
 
-  // Type-aware rules (needs project)
+  // 4) Type-aware TS rules (require project)
   ...tseslint.configs.recommendedTypeChecked,
   {
-    files: ["**/*.{ts,tsx}"],
+    // apply type info to TS files by providing the project
     languageOptions: {
       parserOptions: {
-        project: ["./tsconfig.json"],       // adjust if your tsconfig lives elsewhere
+        project: ["./tsconfig.json"],
         tsconfigRootDir: import.meta.dirname,
       },
     },
   },
 
-  // Project rules (JS + TS)
+  // 5) Project-wide rules and plugins
   {
     files: ["**/*.{js,jsx,ts,tsx}"],
     plugins: {
-      "@typescript-eslint": tseslint.plugin,  // <-- important
+      "@typescript-eslint": tseslint.plugin,
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
     },
@@ -42,15 +49,15 @@ export default [
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
 
-      // React Fast Refresh
+      // Fast Refresh
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
 
-      // TS-flavored unused vars
+      // Prefer TS-flavored unused-vars
       "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
 
-      // Pragmatic for now
+      // Pragmatic
       "@typescript-eslint/ban-ts-comment": "off",
     },
   },
-];
+);
