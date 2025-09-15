@@ -1,25 +1,21 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const r = (...p: string[]) => resolve(__dirname, ...p);
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
-  root: r('web'),                         // serve from /web
+  // you're already running from /web — keep the app as a SPA
+  appType: 'spa',
   plugins: [react()],
-  resolve: { alias: { '@': r('web','src') } },
-  publicDir: r('web','public'),
-  appType: 'spa',                         // <- force SPA index.html fallback
+  resolve: {
+    alias: {
+      // Clean, robust alias to /web/src
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
   server: {
-    host: true,
+    host: '127.0.0.1',
     port: 5173,
-    open: '/',                           // open the splash/home
+    open: '/', // change to '/forge' if you want Forge to auto-open
+    fs: { allow: [fileURLToPath(new URL('..', import.meta.url))] }, // allow repo root
   },
-  build: {
-    outDir: r('dist'),
-    emptyOutDir: true,
-  },
-});
+})
