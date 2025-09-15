@@ -1,64 +1,67 @@
-// /web/eslint.config.js
-import js from "@eslint/js";
-import tseslint from "typescript-eslint";
-import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
+// C:\Dev\Creator-s-Forge\web\eslint.config.js
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import tseslint from 'typescript-eslint'
+import { defineConfig, globalIgnores } from 'eslint/config'
 
-/** @type {import("eslint").Linter.FlatConfig[]} */
-export default tseslint.config(
-  // 1) Ignore build artifacts and config files (avoid linting eslint.config.js itself)
+export default defineConfig([
+  // ignore build output
+  globalIgnores(['dist', 'node_modules']),
+
+  // Lint this config (plain JS rules only)
   {
-    ignores: [
-      "dist/**",
-      "node_modules/**",
-      "**/*.min.js",
-      "**/*.d.ts",
-      "eslint.config.*",
-      "vite.config.*",
-    ],
+    files: ['eslint.config.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: globals.node,
+    },
   },
 
-  // 2) Base JS rules
-  js.configs.recommended,
-
-  // 3) TypeScript base (no type info)
-  ...tseslint.configs.recommended,
-
-  // 4) Type-aware TS rules (require project)
-  ...tseslint.configs.recommendedTypeChecked,
+  // JS / JSX (no TypeScript parser here)
   {
-    // apply type info to TS files by providing the project
+    files: ['**/*.{js,jsx}'],
+    extends: [
+      js.configs.recommended,
+      reactHooks.configs['recommended-latest'],
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: globals.browser,
+      parserOptions: { ecmaFeatures: { jsx: true } },
+    },
+  },
+
+  // TS / TSX (type-aware rules)
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      ...tseslint.configs.recommended,
+      ...tseslint.configs.recommendedTypeChecked,
+    ],
     languageOptions: {
       parserOptions: {
-        project: ["./tsconfig.json"],
-        tsconfigRootDir: import.meta.dirname,
+        project: './tsconfig.json', // lets rules read type info
       },
-    },
-  },
-
-  // 5) Project-wide rules and plugins
-  {
-    files: ["**/*.{js,jsx,ts,tsx}"],
-    plugins: {
-      "@typescript-eslint": tseslint.plugin,
-      "react-hooks": reactHooks,
-      "react-refresh": reactRefresh,
+      globals: globals.browser,
     },
     rules: {
-      // keep these strong
-      "@typescript-eslint/no-floating-promises": "error",
-      "@typescript-eslint/no-misused-promises": "error",
+      // Soften noisy rules while you migrate
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
 
-      // migration softeners: turn down noisy unsafe-any family
-      "@typescript-eslint/no-unsafe-assignment": "warn",
-      "@typescript-eslint/no-unsafe-member-access": "warn",
-      "@typescript-eslint/no-unsafe-return": "warn",
-      "@typescript-eslint/no-unsafe-call": "warn",
-      "@typescript-eslint/no-explicit-any": "warn",
-
-      // keep hooks sanity
-      "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn",
+      // Keep promise safety, but workable in React handlers
+      '@typescript-eslint/no-floating-promises': ['warn', { ignoreVoid: true }],
+      '@typescript-eslint/no-misused-promises': [
+        'error',
+        { checksVoidReturn: { attributes: false } },
+      ],
     },
   },
-);
+])

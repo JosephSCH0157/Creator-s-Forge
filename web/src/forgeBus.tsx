@@ -39,7 +39,7 @@ export function useForgeBus() {
 
     function handle(msg: any) {
       if (!msg || !msg.type) return;
-      let docs = loadAll();
+      const docs = loadAll();
 
       if (msg.type === "REQUEST_SCRIPT_INDEX") {
         respondIndex();
