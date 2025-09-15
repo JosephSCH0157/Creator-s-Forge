@@ -19,8 +19,26 @@ export default [
   // Base JS rules
   js.configs.recommended,
 
+
   // TypeScript (no type-aware rules = fastest)
   ...tseslint.configs.recommended, // includes parser + TS rules
+
+  // TypeScript type-aware rules (requires project)
+  ...tseslint.configs.recommendedTypeChecked,
+  {
+    files: ["**/*.{ts,tsx}"],
+    languageOptions: {
+      parserOptions: {
+        project: ["./tsconfig.json"], // uses your TS config
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      // examples you might enable:
+      // "@typescript-eslint/no-misused-promises": "error",
+      // "@typescript-eslint/switch-exhaustiveness-check": "warn",
+    },
+  },
 
   // Files to apply to
   {
