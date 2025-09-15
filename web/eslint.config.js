@@ -1,4 +1,4 @@
-// eslint.config.js (flat config)
+// /web/eslint.config.js
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import reactHooks from "eslint-plugin-react-hooks";
@@ -8,52 +8,32 @@ import reactRefresh from "eslint-plugin-react-refresh";
 export default [
   // Ignore build artifacts & lockfiles
   {
-    ignores: [
-      "dist/**",
-      "node_modules/**",
-      "**/*.min.js",
-      "**/*.d.ts",
-    ],
+    ignores: ["dist/**", "node_modules/**", "**/*.min.js", "**/*.d.ts"],
   },
 
   // Base JS rules
   js.configs.recommended,
 
+  // TypeScript (fast set)
+  ...tseslint.configs.recommended,
 
-  // TypeScript (no type-aware rules = fastest)
-  ...tseslint.configs.recommended, // includes parser + TS rules
-
-  // TypeScript type-aware rules (requires project)
+  // Type-aware rules (needs project)
   ...tseslint.configs.recommendedTypeChecked,
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       parserOptions: {
-        project: ["./tsconfig.json"], // uses your TS config
+        project: ["./tsconfig.json"],       // adjust if your tsconfig lives elsewhere
         tsconfigRootDir: import.meta.dirname,
       },
     },
-    rules: {
-      // examples you might enable:
-      // "@typescript-eslint/no-misused-promises": "error",
-      // "@typescript-eslint/switch-exhaustiveness-check": "warn",
-    },
   },
 
-  // Files to apply to
+  // Project rules (JS + TS)
   {
     files: ["**/*.{js,jsx,ts,tsx}"],
-    languageOptions: {
-      ecmaVersion: "latest",
-      sourceType: "module",
-      globals: {
-        // browser globals for a Vite app
-        window: "readonly",
-        document: "readonly",
-        navigator: "readonly",
-      },
-    },
     plugins: {
+      "@typescript-eslint": tseslint.plugin,  // <-- important
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
     },
@@ -62,15 +42,14 @@ export default [
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
 
-      // React Refresh (only warn in dev)
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true },
-      ],
+      // React Fast Refresh
+      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
 
-      // Nice-to-haves
-      "no-unused-vars": "off", // handled by TS
+      // TS-flavored unused vars
+      "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+
+      // Pragmatic for now
       "@typescript-eslint/ban-ts-comment": "off",
     },
   },
