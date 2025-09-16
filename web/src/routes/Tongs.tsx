@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { PATHS } from "@/routes/paths";
+import ReturnHome from '@/components/ReturnHome';
 
 type Phase = "idea" | "script" | "recorded" | "edited" | "published";
 type AssetMeta = { text?: string; [k: string]: unknown };
@@ -10,85 +12,9 @@ type Asset = {
   createdAt: number;
   meta?: AssetMeta;
 };
-type Project = {
-  id: string;
-  title: string;
-  phase: Phase;
-  createdAt: number;
-  updatedAt: number;
-  assets: Asset[];
-  scriptId?: string;
-  recordingIds: string[];
-};
-type ReqPayload =
-  | { type: "PING" }
-  | { type: "PROJECT.LIST" }
-  | { type: "PROJECT.CREATE"; title?: unknown }
-  | { type: "PROJECT.READ"; projectId: string }
-  | { type: "PROJECT.UPDATE"; projectId: string; patch: Partial<Project> }
-  | { type: "PROJECT.DELETE"; projectId: string }
-  | { type: "ASSET.LIST"; projectId: string; kind?: Asset["kind"] }
-  | { type: "ASSET.CREATE"; projectId: string; asset: Partial<Asset> }
-  | { type: "ASSET.READ"; projectId: string; assetId: string }
-  | { type: "ASSET.UPDATE"; projectId: string; assetId: string; patch: Partial<Asset> }
-  | { type: "ASSET.DELETE"; projectId: string; assetId: string }
-  | { type: "SCRIPT.INDEX" }
-  | { type: "SCRIPT.GET"; projectId: string }
-  | { type: "SCRIPT.SAVE"; projectId: string; name?: unknown; text?: unknown }
-  | { type: "SEARCH"; query?: unknown };
-type ReqMsg = { kind: "REQ:"; id: string; payload: ReqPayload };
-type RspOk = { ok: true; data?: unknown };
-type RspErr = { ok: false; error: string };
-type RspPayload = RspOk | RspErr;
-type RspMsg = { kind: "RSP:"; id: string; payload: RspPayload };
-const assertNever = (x: never): never => {
-  throw new Error(`Unhandled message type: ${String(x)}`);
-};
-const STORE = "podcasters-forge:projects:v1";
-const now = () => Date.now();
-const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
-function load(): Project[] {
-  try {
-    return JSON.parse(localStorage.getItem(STORE) || "[]") as Project[];
-  } catch {
-    return [];
-  }
+    </div>
+  );
 }
-function save(arr: Project[]) {
-  localStorage.setItem(STORE, JSON.stringify(arr));
-}
-
-export default function Tongs() {
-  const navigate = useNavigate();
-  const { projectId } = useParams();
-  const [projects, setProjects] = useState<Project[]>(() => load());
-  const [title, setTitle] = useState("");
-  useEffect(() => save(projects), [projects]);
-  useEffect(() => {
-    const ch = new BroadcastChannel("podcasters-forge:v1");
-    const send = (id: string, payload: RspPayload) =>
-      ch.postMessage({ kind: "RSP:", id, payload } as RspMsg);
-    const ok = (id: string, data?: unknown) => send(id, { ok: true, data });
-    const fail = (id: string, error: string) => send(id, { ok: false, error });
-    ch.onmessage = (ev: MessageEvent<unknown>) => {
-      const msg = ev.data as Partial<ReqMsg>;
-      if (!msg || msg.kind !== "REQ:" || typeof msg.id !== "string" || !msg.payload) return;
-      const { id, payload } = msg;
-      try {
-        switch (payload.type) {
-          case "PING": {
-            ok(id, { pong: true });
-            break;
-          }
-          case "PROJECT.LIST": {
-            ok(id, projects);
-            break;
-          }
-          case "PROJECT.CREATE": {
-            const t = typeof payload.title === "string" ? payload.title : "Untitled Project";
-            const p: Project = {
-              id: uid(),
-              title: t.trim() || "Untitled Project",
               phase: "idea",
               createdAt: now(),
               updatedAt: now(),
@@ -277,7 +203,7 @@ export default function Tongs() {
     };
     setProjects([p, ...projects]);
     setTitle("");
-    void navigate(`/tools/tongs/${p.id}`);
+    navigate(`${PATHS.tongs}/${p.id}`);
   };
   const current = useMemo(
     () => projects.find((p) => p.id === projectId) || null,
@@ -287,12 +213,7 @@ export default function Tongs() {
     <div className="tongs-root">
       <div className="tongs-topbar">
         <img src="/tongs.png" alt="" className="tongs-logo" />
-        <button
-          onClick={() => navigate("/forge")}
-          className="tongs-back-btn"
-        >
-          Back to Podcaster’s Forge
-        </button>
+        <ReturnHome />
         <div className="tongs-topbar-desc">Tongs · Backbone (read/write bus)</div>
       </div>
       <div className="tongs-main">
