@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
   "baseUrl": "./src",
   "paths": { "@/*": ["*"] },
   "target": "ES2020",
