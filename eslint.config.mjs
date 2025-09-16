@@ -1,55 +1,95 @@
+// eslint.config.mjs
 import js from '@eslint/js';
-import reactPlugin from 'eslint-plugin-react';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
+import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import importPlugin from 'eslint-plugin-import';
 import unusedImports from 'eslint-plugin-unused-imports';
-import globals from 'globals';   // 👈 add this line
 
 export default [
+  // Ignore build artifacts & generated files
+  {
+    ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/*.d.ts'],
+  },
+
+  // Base JS rules
   js.configs.recommended,
 
-  { ignores: ['node_modules/**', 'dist/**', 'build/**', 'coverage/**'] },
-
-  // ... web override (browser globals) ...
-// Web (browser) override
-{
-  files: ['web/**/*.{js,jsx,ts,tsx}'],
-  plugins: {
-    react: reactPlugin,
-    'react-hooks': reactHooks
-  },
-  languageOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    globals: {
-      ...globals.browser    // 👈 add browser globals here
-    },
-    parserOptions: { ecmaFeatures: { jsx: true } }
-  },
-  settings: {
-    react: { version: 'detect' }
-  },
-  rules: {
-    'react/jsx-boolean-value': ['warn', 'never'],
-    'react/react-in-jsx-scope': 'off',
-    'react/prop-types': 'off',
-    ...reactHooks.configs.recommended.rules
-  }
-},
-
-  // Server (Node) override
+  // --- React app (browser) ---
   {
-    files: ['server/**/*.{js,jsx,ts,tsx}'],
+    files: ['web/src/**/*.{ts,tsx,js,jsx}'],
     languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module',
+      parser: tseslint.parser,
+      parserOptions: {
+        project: 'web/tsconfig.json',
+        tsconfigRootDir: new URL('.', import.meta.url), // windows-friendly
+        sourceType: 'module',
+        ecmaFeatures: { jsx: true },
+      },
       globals: {
-        ...globals.node   // 👈 this pulls in all Node.js built-ins (console, process, Buffer, etc.)
-      }
+        ...globals.browser,
+      },
+    },
+    settings: {
+      react: { version: 'detect' },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+      react,
+      'react-hooks': reactHooks,
+      import: importPlugin,
+      'unused-imports': unusedImports,
     },
     rules: {
-      // your server-specific rules here
-    }
-  }
-];
+      // TS
+      ...tseslint.configs.recommended.rules,
+      ...tseslint.configs['recommended-requiring-type-checking'].rules,
+      '@typescript-eslint/consistent-type-imports': ['warn', { fixStyle: 'inline-type-imports' }],
+      '@typescript-eslint/no-unsafe-argument': 'error',
+      '@typescript-eslint/no-explicit-any': ['warn', { ignoreRestArgs: false }],
 
+      // React / Hooks
+      'react/react-in-jsx-scope': 'off',
+      'react/jsx-uses-react': 'off',
+      ...reactHooks.configs.recommended.rules,
+
+      // Imports / unused
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'unused-imports/no-unused-imports': 'error',
+      'unused-imports/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+
+      // Import ordering (nice-to-have)
+      'import/order': ['warn', { 'newlines-between': 'always', alphabetize: { order: 'asc', caseInsensitive: true } }],
+    },
+  },
+
+  // --- Node-side configs (Vite, scripts) ---
+  {
+    files: ['web/vite.config.ts', '*.config.{ts,cts,mts}', 'scripts/**/*.{ts,cts,mts}'],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: 'tsconfig.node.json', // points at web/vite.config.ts
+        tsconfigRootDir: new URL('.', import.meta.url),
+        sourceType: 'module',
+      },
+      globals: {
+        ...globals.node,
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+      import: importPlugin,
+      'unused-imports': unusedImports,
+    },
+    rules: {
+      ...tseslint.configs.recommended.rules,
+      ...tseslint.configs['recommended-requiring-type-checking'].rules,
+      'no-console': 'off',
+      '@typescript-eslint/no-var-requires': 'off',
+      'unused-imports/no-unused-imports': 'error',
+    },
+  },
+];
