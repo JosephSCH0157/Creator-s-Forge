@@ -143,9 +143,10 @@
   font-size: 12px;
   padding: 2px 8px;
   border-radius: 999px;
-  background: var(--chip);
+  background: #192940;
   border: 1px solid var(--chip-bd);
-  color: var(--muted);
+  color: #c5d3ee;
+  font-weight: 500;
 }
 
 .tongs-list {
