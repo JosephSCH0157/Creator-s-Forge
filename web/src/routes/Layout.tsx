@@ -14,17 +14,9 @@ export default function Layout() {
         <NavLink to={PATHS.forge} className={linkClass}>
           Forge
         </NavLink>
-        <a
-          href="/teleprompter_pro.html"
-          className={
-            typeof linkClass === 'function'
-              ? linkClass({ isActive: false, isPending: false, isTransitioning: false })
-              : linkClass
-          }
-          title="Open Teleprompter"
-        >
+        <NavLink to="/teleprompter_pro.html" reloadDocument className={linkClass}>
           Anvil
-        </a>
+        </NavLink>
         <NavLink to={PATHS.tongs} className={linkClass}>
           Tongs
         </NavLink>
