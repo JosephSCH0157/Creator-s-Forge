@@ -71,7 +71,7 @@ export default function Units(): JSX.Element {
         </div>
       )}
 
-      <form onSubmit={createUnit} className="mb-6 flex gap-3 items-end">
+      <form onSubmit={(e) => { void createUnit(e); }} className="mb-6 flex gap-3 items-end">
         <div className="flex flex-col">
           <label htmlFor="title" className="text-sm mb-1">
             Title
