@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
-import iconTongs from '@/assets/IMGtongs.png';
+import IMGtongs from '@/assets/IMGtongs.png'; // ← import the image (no leading slash)
 import ReturnHome from '@/components/ReturnHome';
 import { PATHS } from '@/routes/paths';
 
@@ -439,7 +439,7 @@ export default function Tongs() {
   return (
     <div className="tongs-root">
       <div className="tongs-topbar">
-        <img src={iconTongs} alt="Tongs" className="tongs-logo" />
+        <img src={IMGtongs} alt="Tongs" className="tongs-logo" />
         <ReturnHome />
         <div className="tongs-topbar-desc">Tongs · Backbone (read/write bus)</div>
       </div>
