@@ -159,6 +159,7 @@ const SplashWithEmbers: React.FC<Props> = ({
         ctx.globalCompositeOperation = "lighter";   // additive glow
         for (let i = embersRef.current.length - 1; i >= 0; i--) {
           const e = embersRef.current[i];
+          if (!e) continue;
           e.life += dt;
           if (e.life >= e.maxLife) { embersRef.current.splice(i, 1); continue; }
           // simple physics
@@ -189,7 +190,7 @@ const SplashWithEmbers: React.FC<Props> = ({
       window.removeEventListener("resize", onResize);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [hearth, spawnRate, maxEmbers]);
+  }, [hearth, spawnRate, maxEmbers, showDebug]);
 
   return (
   <div className={"cf-embers-container " + className}>
