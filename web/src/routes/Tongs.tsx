@@ -1,3 +1,4 @@
+import '@/index.css';
 // routes/Tongs.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
