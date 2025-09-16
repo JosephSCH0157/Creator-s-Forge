@@ -1,3 +1,5 @@
+// Note: Node's `URL` is a global in ESM, but we explicitly import it from "node:url"
+// to make casing/usage clear across environments.
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath } from 'node:url'
