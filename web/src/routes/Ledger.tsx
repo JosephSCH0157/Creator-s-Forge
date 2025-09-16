@@ -1,3 +1,4 @@
+import { PATHS } from "@/routes/paths";
 
 import ReturnHome from "../components/ReturnHome";
 import type { ProjectResponse, AssetListResponse, AssetReadResponse, ApiRsp } from "../tongs/types";
@@ -49,7 +50,7 @@ export default function Ledger() {
     <div className="ledger-container">
       <h1>Ledger</h1>
   <nav className="ledger-nav">
-        <NavLink to="/forge" className={linkClass}>Forge</NavLink>
+         <NavLink to={PATHS.forge} className={linkClass}>Forge</NavLink>
         {/* Add more NavLinks as needed, e.g.:
         <NavLink to="/tools/tongs" className={linkClass}>Tongs</NavLink>
         */}
