@@ -86,14 +86,16 @@
 }
 .tongs-topbar-text {
   line-height: 1.2;
+  margin-left: 12px;
 }
 .tongs-title {
-  font-size: 18px;
+  font-size: 20px;
+  font-weight: 600;
   margin: 0;
 }
 .tongs-subtitle {
   margin: 2px 0 0;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
 }
 
