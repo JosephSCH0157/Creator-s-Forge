@@ -47,7 +47,7 @@ export default function Ledger() {
   }
 
   return (
-    <div className="ledger-container">
+    <div className="page-container">
       <h1>Ledger</h1>
   <nav className="ledger-nav">
          <NavLink to={PATHS.forge} className={linkClass}>Forge</NavLink>

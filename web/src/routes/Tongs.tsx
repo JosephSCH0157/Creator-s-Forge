@@ -78,7 +78,7 @@ export default function Tongs() {
   const [projects, setProjects] = useState<Project[]>(() => load());
   const [title, setTitle] = useState("");
 
-  // persist on change (debounced)
+  // persist on change (debounced to avoid hammering localStorage)
   useEffect(() => {
     const handle = setTimeout(() => save(projects), 200);
     return () => clearTimeout(handle);

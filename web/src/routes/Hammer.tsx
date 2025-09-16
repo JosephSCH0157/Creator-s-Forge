@@ -73,7 +73,7 @@ export default function Hammer() {
   }
 
   return (
-    <div className="hammer-container">
+    <div className="page-container">
       <h1>Hammer</h1>
       <ReturnHome />
       <button onClick={handleCreate} disabled={creating}>

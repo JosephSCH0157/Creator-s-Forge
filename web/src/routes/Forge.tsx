@@ -3,7 +3,7 @@ import { PATHS } from "@/routes/paths";
 
 export default function Forge() {
   return (
-    <div className="forge-container">
+    <div className="page-container">
       <h1>Forge</h1>
       <ReturnHome />
       <p>This is the Forge module — coming soon.</p>

@@ -34,7 +34,7 @@ export default function Anvil() {
   }, []);
 
   return (
-  <div className="anvil-container">
+  <div className="page-container">
       <h1>Anvil (Teleprompter)</h1>
       <ReturnHome />
       {projectId && <div>Created Project ID: {projectId}</div>}
@@ -42,7 +42,7 @@ export default function Anvil() {
       <iframe
         src="/teleprompter_pro_fixed_v1_5_4c.html"
         title="Teleprompter Pro"
-        className="anvil-iframe"
+        className="frame-full"
         allow="clipboard-read; clipboard-write; fullscreen"
         allowFullScreen
       />
