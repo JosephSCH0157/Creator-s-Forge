@@ -18,13 +18,12 @@ export default function Layout() {
           href="/teleprompter_pro.html"
           className={
             typeof linkClass === 'function'
-              ? linkClass({ isActive: false, isPending: false })
+              ? linkClass({ isActive: false, isPending: false, isTransitioning: false })
               : linkClass
           }
+          title="Open Teleprompter"
         >
-          <a href="/teleprompter_pro.html" className="px-2 py-1 rounded no-underline text-black">
-            Anvil
-          </a>
+          Anvil
         </a>
         <NavLink to={PATHS.tongs} className={linkClass}>
           Tongs
