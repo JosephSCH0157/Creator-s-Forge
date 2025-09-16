@@ -10,13 +10,16 @@ export default function Layout() {
       <header className="layout-header">
         <NavLink to={PATHS.root} className={linkClass}>
           Splash
-        </NavLink>
-        <NavLink to={PATHS.forge} className={linkClass}>
-          Forge
-        </NavLink>
-        <NavLink to="/teleprompter_pro.html" reloadDocument className={linkClass}>
+        <a
+          href={PATHS.anvil}
+          className={
+            typeof linkClass === 'function'
+              ? linkClass({ isActive: false, isPending: false, isTransitioning: false })
+              : linkClass
+          }
+        >
           Anvil
-        </NavLink>
+        </a>
         <NavLink to={PATHS.tongs} className={linkClass}>
           Tongs
         </NavLink>
