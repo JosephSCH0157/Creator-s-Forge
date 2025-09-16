@@ -57,7 +57,7 @@ export default function Ledger() {
         */}
       </nav>
       <ReturnHome />
-      <button onClick={handleCreate} disabled={creating}>
+      <button onClick={() => { void handleCreate(); }} disabled={creating}>
         {creating ? "Creating..." : "Create Ledger Project"}
       </button>
       {projectId && <div>Created Project ID: {projectId}</div>}
