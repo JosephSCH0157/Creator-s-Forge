@@ -3,19 +3,13 @@ import ReturnHome from "../components/ReturnHome";
 import type { ProjectResponse, AssetListResponse, AssetReadResponse, ApiRsp } from "../tongs/types";
 import { api } from "../lib/api";
 import { useState } from "react";
-import type { NavLinkProps } from "react-router-dom";
+import { NavLink, linkClass } from "@/ui/nav";
 
 export default function Ledger() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const [projectId, setProjectId] = useState("");
 
-  const linkClass: NavLinkProps["className"] = ({ isActive, isPending }) =>
-    [
-      "px-2 py-1 rounded no-underline",
-      isActive ? "text-white bg-gray-900" : "text-black",
-      isPending ? "opacity-70" : "",
-    ].join(" ");
 
   async function handleCreate() {
     setCreating(true);
@@ -54,7 +48,7 @@ export default function Ledger() {
   return (
     <div className="ledger-container">
       <h1>Ledger</h1>
-      <nav style={{ marginBottom: 16 }}>
+  <nav className="ledger-nav">
         <NavLink to="/forge" className={linkClass}>Forge</NavLink>
         {/* Add more NavLinks as needed, e.g.:
         <NavLink to="/tools/tongs" className={linkClass}>Tongs</NavLink>
