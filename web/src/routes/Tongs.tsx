@@ -137,27 +137,41 @@ export default function Tongs() {
 
           case 'PROJECT.UPDATE': {
             const { projectId, patch } = payload;
-            setProjects((prev) => {
+            setProjects((prev: Project[]) => {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
 
-              const base = prev[idx]!; // ✅ safe here
+              const base = prev[idx];
+              if (
+                !base ||
+                typeof base !== 'object' ||
+                typeof base.id !== 'string' ||
+                typeof base.title !== 'string' ||
+                typeof base.phase !== 'string' ||
+                typeof base.createdAt !== 'number' ||
+                typeof base.updatedAt !== 'number' ||
+                !Array.isArray(base.assets) ||
+                !Array.isArray(base.recordingIds)
+              ) {
+                return prev;
+              }
+              if (!patch || typeof patch !== 'object') return prev;
 
               const p: Project = {
-                ...base,
-                ...patch,
                 id: base.id,
-                title: patch.title ?? base.title,
-                phase: patch.phase ?? base.phase,
+                title: typeof patch.title === 'string' ? patch.title : base.title,
+                phase: typeof patch.phase === 'string' ? patch.phase : base.phase,
                 createdAt: base.createdAt,
                 updatedAt: now(),
-                assets: patch.assets ?? base.assets ?? [],
-                recordingIds: patch.recordingIds ?? base.recordingIds ?? [],
-                scriptId: patch.scriptId ?? base.scriptId,
+                assets: Array.isArray(patch.assets) ? patch.assets : base.assets,
+                recordingIds: Array.isArray(patch.recordingIds)
+                  ? patch.recordingIds
+                  : base.recordingIds,
+                scriptId: typeof patch.scriptId === 'string' ? patch.scriptId : base.scriptId,
               };
 
-              const next = [...prev];
-              next[idx] = p; // ✅ p is a full Project
+              const next: Project[] = [...prev];
+              next[idx] = p;
               return next;
             });
             ok(id, { projectId });
@@ -180,10 +194,23 @@ export default function Tongs() {
 
           case 'ASSET.CREATE': {
             const { projectId, asset } = payload;
-            setProjects((prev) => {
+            setProjects((prev: Project[]) => {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
-              const p = { ...prev[idx] };
+              const base = prev[idx];
+              if (
+                !base ||
+                typeof base !== 'object' ||
+                typeof base.id !== 'string' ||
+                typeof base.title !== 'string' ||
+                typeof base.phase !== 'string' ||
+                typeof base.createdAt !== 'number' ||
+                typeof base.updatedAt !== 'number' ||
+                !Array.isArray(base.assets) ||
+                !Array.isArray(base.recordingIds)
+              ) {
+                return prev;
+              }
               const a: Asset = {
                 id: uid(),
                 kind: (asset?.kind as Asset['kind']) ?? 'doc',
@@ -191,10 +218,13 @@ export default function Tongs() {
                 createdAt: now(),
                 meta: asset?.meta ?? {},
               };
-              p.assets = [a, ...(p.assets ?? [])];
-              if (a.kind === 'script') p.scriptId = a.id;
-              p.updatedAt = now();
-              const next = [...prev];
+              const p: Project = {
+                ...base,
+                assets: [a, ...base.assets],
+                scriptId: a.kind === 'script' ? a.id : base.scriptId,
+                updatedAt: now(),
+              };
+              const next: Project[] = [...prev];
               next[idx] = p;
               return next;
             });
@@ -213,13 +243,29 @@ export default function Tongs() {
 
           case 'ASSET.UPDATE': {
             const { projectId, assetId, patch } = payload;
-            setProjects((prev) => {
+            setProjects((prev: Project[]) => {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
-              const p = { ...prev[idx] };
-              p.assets = (p.assets ?? []).map((a) => (a.id === assetId ? { ...a, ...patch } : a));
-              p.updatedAt = now();
-              const next = [...prev];
+              const base = prev[idx];
+              if (
+                !base ||
+                typeof base !== 'object' ||
+                typeof base.id !== 'string' ||
+                typeof base.title !== 'string' ||
+                typeof base.phase !== 'string' ||
+                typeof base.createdAt !== 'number' ||
+                typeof base.updatedAt !== 'number' ||
+                !Array.isArray(base.assets) ||
+                !Array.isArray(base.recordingIds)
+              ) {
+                return prev;
+              }
+              const p: Project = {
+                ...base,
+                assets: base.assets.map((a) => (a.id === assetId ? { ...a, ...patch } : a)),
+                updatedAt: now(),
+              };
+              const next: Project[] = [...prev];
               next[idx] = p;
               return next;
             });
@@ -228,17 +274,31 @@ export default function Tongs() {
           }
           case 'ASSET.DELETE': {
             const { projectId, assetId } = payload;
-            setProjects((prev) => {
+            setProjects((prev: Project[]) => {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
-              const p = { ...prev[idx] };
-              p.assets = (p.assets ?? []).filter((a) => a.id !== assetId);
-              // Remove scriptId if the deleted asset was the script
-              if (p.scriptId === assetId) p.scriptId = undefined;
-              // Remove from recordingIds if present
-              p.recordingIds = (p.recordingIds ?? []).filter((id) => id !== assetId);
-              p.updatedAt = now();
-              const next = [...prev];
+              const base = prev[idx];
+              if (
+                !base ||
+                typeof base !== 'object' ||
+                typeof base.id !== 'string' ||
+                typeof base.title !== 'string' ||
+                typeof base.phase !== 'string' ||
+                typeof base.createdAt !== 'number' ||
+                typeof base.updatedAt !== 'number' ||
+                !Array.isArray(base.assets) ||
+                !Array.isArray(base.recordingIds)
+              ) {
+                return prev;
+              }
+              const p: Project = {
+                ...base,
+                assets: base.assets.filter((a) => a.id !== assetId),
+                scriptId: base.scriptId === assetId ? undefined : base.scriptId,
+                recordingIds: base.recordingIds.filter((id) => id !== assetId),
+                updatedAt: now(),
+              };
+              const next: Project[] = [...prev];
               next[idx] = p;
               return next;
             });
@@ -276,10 +336,23 @@ export default function Tongs() {
 
           case 'SCRIPT.SAVE': {
             const { projectId, name, text } = payload;
-            setProjects((prev) => {
+            setProjects((prev: Project[]) => {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
-              const p = { ...prev[idx] };
+              const base = prev[idx];
+              if (
+                !base ||
+                typeof base !== 'object' ||
+                typeof base.id !== 'string' ||
+                typeof base.title !== 'string' ||
+                typeof base.phase !== 'string' ||
+                typeof base.createdAt !== 'number' ||
+                typeof base.updatedAt !== 'number' ||
+                !Array.isArray(base.assets) ||
+                !Array.isArray(base.recordingIds)
+              ) {
+                return prev;
+              }
               const safeText =
                 typeof text === 'string' ? text : text !== undefined ? JSON.stringify(text) : '';
               const a: Asset = {
@@ -289,15 +362,17 @@ export default function Tongs() {
                 createdAt: now(),
                 meta: { text: safeText },
               };
-              p.assets = [a, ...(p.assets ?? [])];
-              p.scriptId = a.id;
-              if (p.phase === 'idea') p.phase = 'script';
-              p.updatedAt = now();
-              const next = [...prev];
+              const p: Project = {
+                ...base,
+                assets: [a, ...base.assets],
+                scriptId: a.id,
+                phase: base.phase === 'idea' ? 'script' : base.phase,
+                updatedAt: now(),
+              };
+              const next: Project[] = [...prev];
               next[idx] = p;
               return next;
             });
-            ok(id, true);
             break;
           }
 
