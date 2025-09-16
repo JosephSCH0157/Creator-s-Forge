@@ -16,14 +16,20 @@ export default [
   // Base JS rules
   js.configs.recommended,
 
+  // ✅ TypeScript base (flat presets are arrays — spread them)
+  ...tseslint.configs.recommendedTypeChecked,
+  // (Optional) also include stylistic TypeScript rules:
+  // ...tseslint.configs.stylisticTypeChecked,
+
   // --- React app (browser) ---
   {
     files: ['web/src/**/*.{ts,tsx,js,jsx}'],
     languageOptions: {
+      // We keep the TS parser + type-aware project here
       parser: tseslint.parser,
       parserOptions: {
         project: 'web/tsconfig.json',
-        tsconfigRootDir: new URL('.', import.meta.url), // windows-friendly
+        tsconfigRootDir: new URL('.', import.meta.url), // Windows-friendly
         sourceType: 'module',
         ecmaFeatures: { jsx: true },
       },
@@ -42,9 +48,7 @@ export default [
       'unused-imports': unusedImports,
     },
     rules: {
-      // TS
-      ...tseslint.configs.recommended.rules,
-      ...tseslint.configs['recommended-requiring-type-checking'].rules,
+      // TS hardening to match your codebase
       '@typescript-eslint/consistent-type-imports': ['warn', { fixStyle: 'inline-type-imports' }],
       '@typescript-eslint/no-unsafe-argument': 'error',
       '@typescript-eslint/no-explicit-any': ['warn', { ignoreRestArgs: false }],
@@ -54,13 +58,13 @@ export default [
       'react/jsx-uses-react': 'off',
       ...reactHooks.configs.recommended.rules,
 
-      // Imports / unused
+      // Unused imports/vars (use the plugin’s autofixers)
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
 
-      // Import ordering (nice-to-have)
+      // Import ordering (polish)
       'import/order': ['warn', { 'newlines-between': 'always', alphabetize: { order: 'asc', caseInsensitive: true } }],
     },
   },
@@ -85,11 +89,9 @@ export default [
       'unused-imports': unusedImports,
     },
     rules: {
-      ...tseslint.configs.recommended.rules,
-      ...tseslint.configs['recommended-requiring-type-checking'].rules,
       'no-console': 'off',
-      '@typescript-eslint/no-var-requires': 'off',
       'unused-imports/no-unused-imports': 'error',
+      // keep node-side TS rules light unless you want full type-checking here too
     },
   },
 ];
