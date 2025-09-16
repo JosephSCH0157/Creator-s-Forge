@@ -12,7 +12,7 @@ export default function Anvil() {
     async function createProject() {
       try {
         const { data: rsp } = await api.post<ApiRsp<ProjectResponse>>('/projects', {
-          title: 'Teleprompter Pro',
+          title: 'Teleprompter Project',
         });
         if (!rsp.ok) throw new Error(rsp.error);
         setProjectId(rsp.data.projectId);
