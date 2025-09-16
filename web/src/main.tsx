@@ -24,6 +24,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path={PATHS.ledger} element={<Ledger />} />
         <Route path={PATHS.stock} element={<Stock />} />
         <Route path={PATHS.tongs} element={<Tongs />} />
+        <Route path={`${PATHS.tongs}/:projectId`} element={<Tongs />} />
         <Route path="*" element={<Navigate to={PATHS.root} replace />} />
       </Route>
     </Routes>
