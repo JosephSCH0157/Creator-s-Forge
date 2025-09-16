@@ -48,9 +48,9 @@ function nowId(): string {
 
 function popQueue(): BusMsg[] {
   try {
-    const q = JSON.parse(localStorage.getItem(QK) || "[]");
+    const q = JSON.parse(localStorage.getItem(QK) || "[]") as BusMsg[];
     localStorage.setItem(QK, JSON.stringify([]));
-    return Array.isArray(q) ? (q as BusMsg[]) : [];
+    return Array.isArray(q) ? q : [];
   } catch {
     return [];
   }
