@@ -170,11 +170,13 @@
 .hammer-container {
   padding: 24px;
 }
-/* Ledger page styles */
-  text-rendering: optimizeLegibility; 
-  -webkit-font-smoothing: antialiased; 
+/* Ledger page styles (global) */
+body {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
 
 a {
   font-weight: 500;
