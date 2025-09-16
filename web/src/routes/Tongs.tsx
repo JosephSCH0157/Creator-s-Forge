@@ -334,7 +334,7 @@ export default function Tongs() {
     };
   setProjects([p, ...projects]);
   setTitle("");
-  navigate(`${PATHS.tongs}/${p.id}`);
+  void navigate(`${PATHS.tongs}/${p.id}`);
   };
 
   const current = useMemo(
