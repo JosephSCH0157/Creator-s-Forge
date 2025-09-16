@@ -18,7 +18,7 @@
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
 
   // Make VS Code use your flat config eslint.config.mjs
-  "eslint.useFlatConfig": true,
+  "eslint.experimental.useFlatConfig": true,
 
   // Auto-detect and use Prettier config
   "prettier.requireConfig": true,

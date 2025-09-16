@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint", // ESLint support
+    "esbenp.prettier-vscode", // Prettier formatter
+    "ms-vscode.vscode-typescript-tslint-plugin", // TS/TSLint bridge (legacy projects if needed)
+    "streetsidesoftware.code-spell-checker", // Spell check in code/comments
+    "yoavbls.pretty-ts-errors", // Pretty TS error messages
+    "gruntfuggly.todo-tree" // TODO/FIXME tree view
+  ],
+  "unwantedRecommendations": [
+    "hookyqr.beautify", // Conflicts with Prettier
+    "ms-vscode.vscode-typescript-next" // Not needed unless you want nightly TS
+  ]
+}
