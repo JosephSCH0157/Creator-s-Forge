@@ -1,3 +1,10 @@
+import { PATHS } from '@/routes/paths';
+
+const SPOTS = [
+  { to: PATHS.forge,  top: 55, left: 70, label: 'Forge',  hover: 'Home' },
+  { to: PATHS.anvil,  top: 80, left: 50, label: 'Anvil',  hover: 'Teleprompter' },
+  // ...
+];
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import SplashWithEmbers from "./SplashWithEmbers";
