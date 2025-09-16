@@ -22,8 +22,13 @@
 }
 
 .tongs-root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 8px 12px;
   color: var(--ink);
+  background: url('/forge_wall.png') center/cover no-repeat;
 }
 .tongs-topbar {
   display: flex;
