@@ -5,19 +5,13 @@ type Unit = { id: string; title: string; status: string };
 
 function Badge({ children }: { children: ReactNode }) {
   return (
-    <span
-      style={{
-        padding: "2px 8px",
-        borderRadius: 999,
-        fontSize: 12,
-        background: "#111827",
-        color: "white",
-      }}
-    >
+    <span className="unit-detail-badge">
       {children}
     </span>
   );
 }
+
+import "./UnitDetail.css";
 
 export default function UnitDetail() {
   const { id } = useParams<{ id: string }>();
@@ -35,9 +29,10 @@ export default function UnitDetail() {
       });
   }, [id]);
 
-  if (!unit) return <div style={{ padding: 24 }}>Loading…</div>;
+  if (!unit) return <div className="unit-detail-loading">Loading…</div>;
+
   return (
-    <div style={{ padding: 24 }}>
+    <div className="unit-detail-container">
       <h1>{unit.title}</h1>
       <div>
         <b>Status:</b> <Badge>{unit.status}</Badge>

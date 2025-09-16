@@ -18,7 +18,7 @@ function isRecord(x: unknown): x is Record<string, unknown> {
   return !!x && typeof x === 'object';
 }
 function isApiRsp(x: unknown): x is ApiRsp {
-  return isRecord(x) && 'ok' in x && typeof (x as any).ok === 'boolean';
+  return isRecord(x) && 'ok' in x && typeof (x as ApiRsp).ok === 'boolean';
 }
 function isRspMsg(x: unknown): x is RspMsg {
   return (
