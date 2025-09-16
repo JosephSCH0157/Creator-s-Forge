@@ -6,7 +6,12 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+
+import { fileURLToPath, URL } from 'node:url';
+
+// must be a string path (not a URL object)
+const TS_ROOT = fileURLToPath(new URL('.', import.meta.url));
+
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -67,6 +72,19 @@ export default defineConfig([
         'error',
         { checksVoidReturn: { attributes: false } },
       ],
+    },
+  },
+
+  // Node/config files (type-aware rules)
+  {
+    files: ['eslint.config.js', 'vite.config.js', '**/tsconfig.*.json'],
+    languageOptions: {
+      parserOptions: {
+        project: path.join(__dirname, '..', 'tsconfig.node.json'),
+        tsconfigRootDir: path.join(__dirname, '..'),
+        sourceType: 'module',
+      },
+      globals: globals.node,
     },
   },
 ])
