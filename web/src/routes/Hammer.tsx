@@ -77,7 +77,7 @@ export default function Hammer() {
     <div className="page-container">
       <h1>Hammer</h1>
       <ReturnHome />
-      <button onClick={handleCreate} disabled={creating}>
+      <button onClick={() => { void handleCreate(); }} disabled={creating}>
         {creating ? "Creating..." : "Create Hammer Project"}
       </button>
       {projectId && <div>Created Project ID: {projectId}</div>}
