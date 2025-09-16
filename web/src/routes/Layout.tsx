@@ -10,6 +10,7 @@ export default function Layout() {
       <header className="layout-header">
         <NavLink to={PATHS.root} className={linkClass}>
           Splash
+        </NavLink>
         <a
           href={PATHS.anvil}
           className={
