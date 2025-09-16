@@ -1,7 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
-import Anvil from '@/routes/Anvil';
 import Forge from '@/routes/Forge';
 import Hammer from '@/routes/Hammer';
 import Layout from '@/routes/Layout';
@@ -18,7 +17,6 @@ createRoot(document.getElementById('root')!).render(
       <Route element={<Layout />}>
         <Route index element={<Splash />} />
         <Route path={PATHS.forge} element={<Forge />} />
-        <Route path={PATHS.anvil} element={<Anvil />} />
         <Route path={PATHS.hammer} element={<Hammer />} />
         <Route path={PATHS.quench} element={<Quench />} />
         <Route path={PATHS.ledger} element={<Ledger />} />

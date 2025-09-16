@@ -519,14 +519,8 @@ export default function Tongs() {
                     <button
                       className="btn"
                       onClick={() => {
-                        window.location.href = PATHS.anvil;
-                        const ch = new BroadcastChannel('podcasters-forge:v1');
-                        ch.postMessage({
-                          kind: 'REQ:',
-                          id: `bootstrap-${Date.now()}`,
-                          payload: { type: 'SCRIPT.GET', projectId: current.id },
-                        } as ReqMsg);
-                        ch.close();
+                        const id = current.id;
+                        window.location.href = `/teleprompter_pro.html?projectId=${encodeURIComponent(id)}`;
                       }}
                     >
                       Open in Teleprompter
