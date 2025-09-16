@@ -6,10 +6,13 @@ import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import importPlugin from 'eslint-plugin-import';
 import unusedImports from 'eslint-plugin-unused-imports';
-import { fileURLToPath, URL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Must be a string (not a URL object)
-const TS_ROOT = fileURLToPath(new URL('.', import.meta.url));
+// Use __dirname for robust path resolution
 
 export default [
   // Ignore build artfacts + legacy config files
@@ -35,8 +38,8 @@ export default [
       ...(cfg.languageOptions ?? {}),
       parser: tseslint.parser,
       parserOptions: {
-        project: 'web/tsconfig.json',
-        tsconfigRootDir: TS_ROOT, // string path (Windows-friendly)
+        project: path.join(__dirname, 'tsconfig.json'),
+        tsconfigRootDir: __dirname,
         sourceType: 'module',
         ecmaFeatures: { jsx: true },
       },
