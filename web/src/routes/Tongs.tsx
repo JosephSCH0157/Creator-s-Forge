@@ -12,6 +12,386 @@ type Asset = {
   createdAt: number;
   meta?: AssetMeta;
 };
+type Project = {
+  id: string;
+  title: string;
+  phase: Phase;
+  createdAt: number;
+  updatedAt: number;
+  assets: Asset[];
+  scriptId?: string;
+  recordingIds: string[];
+};
+type ReqPayload =
+  | { type: "PING" }
+  | { type: "PROJECT.LIST" }
+  | { type: "PROJECT.CREATE"; title?: unknown }
+  | { type: "PROJECT.READ"; projectId: string }
+  | { type: "PROJECT.UPDATE"; projectId: string; patch: Partial<Project> }
+  | { type: "PROJECT.DELETE"; projectId: string }
+  | { type: "ASSET.LIST"; projectId: string; kind?: Asset["kind"] }
+  | { type: "ASSET.CREATE"; projectId: string; asset: Partial<Asset> }
+  | { type: "ASSET.READ"; projectId: string; assetId: string }
+  | { type: "ASSET.UPDATE"; projectId: string; assetId: string; patch: Partial<Asset> }
+  | { type: "ASSET.DELETE"; projectId: string; assetId: string }
+  | { type: "SCRIPT.INDEX" }
+  | { type: "SCRIPT.GET"; projectId: string }
+  | { type: "SCRIPT.SAVE"; projectId: string; name?: unknown; text?: unknown }
+  | { type: "SEARCH"; query?: unknown };
+type ReqMsg = { kind: "REQ:"; id: string; payload: ReqPayload };
+type RspOk = { ok: true; data?: unknown };
+type RspErr = { ok: false; error: string };
+type RspPayload = RspOk | RspErr;
+type RspMsg = { kind: "RSP:"; id: string; payload: RspPayload };
+const assertNever = (x: never): never => {
+  throw new Error(`Unhandled message type: ${String(x)}`);
+};
+const STORE = "podcasters-forge:projects:v1";
+const now = () => Date.now();
+const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+function load(): Project[] {
+  try {
+    return JSON.parse(localStorage.getItem(STORE) || "[]") as Project[];
+  } catch {
+    return [];
+  }
+}
+function save(arr: Project[]) {
+  localStorage.setItem(STORE, JSON.stringify(arr));
+}
+
+export default function Tongs() {
+  const navigate = useNavigate();
+  const { projectId } = useParams();
+  const [projects, setProjects] = useState<Project[]>(() => load());
+  const [title, setTitle] = useState("");
+  useEffect(() => save(projects), [projects]);
+  useEffect(() => {
+    const ch = new BroadcastChannel("podcasters-forge:v1");
+    const send = (id: string, payload: RspPayload) =>
+      ch.postMessage({ kind: "RSP:", id, payload } as RspMsg);
+    const ok = (id: string, data?: unknown) => send(id, { ok: true, data });
+    const fail = (id: string, error: string) => send(id, { ok: false, error });
+    ch.onmessage = (ev: MessageEvent<unknown>) => {
+      const msg = ev.data as Partial<ReqMsg>;
+      if (!msg || msg.kind !== "REQ:" || typeof msg.id !== "string" || !msg.payload) return;
+      const { id, payload } = msg;
+      try {
+        switch (payload.type) {
+          case "PING": {
+            ok(id, { pong: true });
+            break;
+          }
+          case "PROJECT.LIST": {
+            ok(id, projects);
+            break;
+          }
+          case "PROJECT.CREATE": {
+            const t = typeof payload.title === "string" ? payload.title : "Untitled Project";
+            const p: Project = {
+              id: uid(),
+              title: t.trim() || "Untitled Project",
+              phase: "idea",
+              createdAt: now(),
+              updatedAt: now(),
+              assets: [],
+              recordingIds: [],
+            };
+            setProjects((prev) => [p, ...prev]);
+            ok(id, { projectId: p.id });
+            break;
+          }
+          case "PROJECT.READ": {
+            const p = projects.find((x) => x.id === payload.projectId);
+            if (!p) return fail(id, "not_found");
+            ok(id, p);
+            break;
+          }
+          case "PROJECT.UPDATE": {
+            const { projectId, patch } = payload;
+            setProjects((prev) => {
+              const idx = prev.findIndex((x) => x.id === projectId);
+              if (idx < 0) return prev;
+              const next = [...prev];
+              next[idx] = { ...prev[idx], ...patch, updatedAt: now() };
+              return next;
+            });
+            ok(id, { projectId });
+            break;
+          }
+          case "PROJECT.DELETE": {
+            setProjects((prev) => prev.filter((x) => x.id !== payload.projectId));
+            ok(id, { projectId: payload.projectId });
+            break;
+          }
+          case "ASSET.LIST": {
+            const p = projects.find((x) => x.id === payload.projectId);
+            if (!p) return fail(id, "not_found");
+            const items = payload.kind ? p.assets.filter((a) => a.kind === payload.kind) : p.assets;
+            ok(id, items);
+            break;
+          }
+          case "ASSET.CREATE": {
+            const { projectId, asset } = payload;
+            setProjects((prev) => {
+              const idx = prev.findIndex((x) => x.id === projectId);
+              if (idx < 0) return prev;
+              const p = { ...prev[idx] };
+              const a: Asset = {
+                id: uid(),
+                kind: (asset.kind as Asset["kind"]) ?? "doc",
+                name: asset.name || "Untitled",
+                createdAt: now(),
+                meta: asset.meta ?? {},
+              };
+              p.assets = [a, ...p.assets];
+              if (a.kind === "script") p.scriptId = a.id;
+              p.updatedAt = now();
+              const next = [...prev];
+              next[idx] = p;
+              return next;
+            });
+            ok(id, true);
+            break;
+          }
+          case "ASSET.READ": {
+            const p = projects.find((x) => x.id === payload.projectId);
+            if (!p) return fail(id, "not_found");
+            const a = p.assets.find((x) => x.id === payload.assetId);
+            if (!a) return fail(id, "not_found");
+            ok(id, a);
+            break;
+          }
+          case "ASSET.UPDATE": {
+            const { projectId, assetId, patch } = payload;
+            setProjects((prev) => {
+              const idx = prev.findIndex((x) => x.id === projectId);
+              if (idx < 0) return prev;
+              const p = { ...prev[idx] };
+              p.assets = p.assets.map((a) => (a.id === assetId ? { ...a, ...(patch as Partial<Asset>) } : a));
+              p.updatedAt = now();
+              const next = [...prev];
+              next[idx] = p;
+              return next;
+            });
+            ok(id, true);
+            break;
+          }
+          case "ASSET.DELETE": {
+            const { projectId, assetId } = payload;
+            setProjects((prev) => {
+              const idx = prev.findIndex((x) => x.id === projectId);
+              if (idx < 0) return prev;
+              const p = { ...prev[idx] };
+              p.assets = p.assets.filter((a) => a.id !== assetId);
+              if (p.scriptId === assetId) p.scriptId = undefined;
+              p.updatedAt = now();
+              const next = [...prev];
+              next[idx] = p;
+              return next;
+            });
+            ok(id, true);
+            break;
+          }
+          case "SCRIPT.INDEX": {
+            const scripts = projects
+              .flatMap((p) => {
+                if (!p.scriptId) return [];
+                const s = p.assets.find((a) => a.id === p.scriptId);
+                if (!s) return [];
+                return [{ projectId: p.id, projectTitle: p.title, assetId: s.id, name: s.name, updatedAt: p.updatedAt }];
+              })
+              .sort((a, b) => b.updatedAt - a.updatedAt);
+            ok(id, scripts);
+            break;
+          }
+          case "SCRIPT.GET": {
+            const p = projects.find((x) => x.id === payload.projectId);
+            if (!p || !p.scriptId) return ok(id, { name: null, text: "" });
+            const s = p.assets.find((a) => a.id === p.scriptId);
+            ok(id, { name: s?.name ?? null, text: s?.meta?.text ?? "" });
+            break;
+          }
+          case "SCRIPT.SAVE": {
+            const { projectId, name, text } = payload;
+            setProjects((prev) => {
+              const idx = prev.findIndex((x) => x.id === projectId);
+              if (idx < 0) return prev;
+              const p = { ...prev[idx] };
+              const a: Asset = {
+                id: uid(),
+                kind: "script",
+                name: typeof name === "string" ? name : "Untitled",
+                createdAt: now(),
+                meta: { text: typeof text === "string" ? text : String(text ?? "") },
+              };
+              p.assets = [a, ...p.assets];
+              p.scriptId = a.id;
+              if (p.phase === "idea") p.phase = "script";
+              p.updatedAt = now();
+              const next = [...prev];
+              next[idx] = p;
+              return next;
+            });
+            ok(id, true);
+            break;
+          }
+          case "SEARCH": {
+            const q = typeof payload.query === "string" ? payload.query.toLowerCase() : "";
+            const hits = projects
+              .filter(
+                (p) =>
+                  p.title.toLowerCase().includes(q) ||
+                  p.assets.some(
+                    (a) =>
+                      (a.name?.toLowerCase() || "").includes(q) ||
+                      (a.meta?.text?.toLowerCase?.() || "").includes(q)
+                  )
+              )
+              .map((p) => ({ projectId: p.id, title: p.title }));
+            ok(id, hits);
+            break;
+          }
+          default:
+            assertNever(payload as never);
+        }
+      } catch (e: unknown) {
+        if (e instanceof Error) fail(id, e.message);
+        else if (typeof e === "string") fail(id, e);
+        else {
+          try { fail(id, JSON.stringify(e)); }
+          catch { fail(id, "Unknown error"); }
+        }
+      }
+    };
+    return () => ch.close();
+  }, [projects]);
+  const createProject = () => {
+    const t = title.trim() || "Untitled Project";
+    const p: Project = {
+      id: uid(),
+      title: t,
+      phase: "idea",
+      createdAt: now(),
+      updatedAt: now(),
+      assets: [],
+      recordingIds: [],
+    };
+    setProjects([p, ...projects]);
+    setTitle("");
+    navigate(`${PATHS.tongs}/${p.id}`);
+  };
+  const current = useMemo(
+    () => projects.find((p) => p.id === projectId) || null,
+    [projects, projectId]
+  );
+  return (
+    <div className="tongs-root">
+      <div className="tongs-topbar">
+        <img src="/tongs.png" alt="" className="tongs-logo" />
+        <ReturnHome />
+        <div className="tongs-topbar-desc">Tongs · Backbone (read/write bus)</div>
+      </div>
+      <div className="tongs-main">
+        <aside className="tongs-sidebar">
+          <div className="tongs-sidebar-new">
+            <input
+              value={title}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.currentTarget.value)}
+              placeholder="New project title"
+              className="tongs-input"
+            />
+            <button onClick={createProject}>New</button>
+          </div>
+          {(["idea", "script", "recorded", "edited", "published"] as Phase[]).map((ph) => (
+            <div key={ph} className="tongs-phase">
+              <div className="tongs-phase-label">{ph.toUpperCase()}</div>
+              {(projects.filter((p) => p.phase === ph) || []).map((p) => (
+                <Link
+                  key={p.id}
+                  to={`${PATHS.tongs}/${p.id}`}
+                  className="tongs-project-link"
+                >
+                  {p.title}
+                </Link>
+              ))}
+            </div>
+          ))}
+        </aside>
+        <main className="tongs-detail">
+          {!current ? (
+            <p>Select or create a project.</p>
+          ) : (
+            <>
+              <div className="tongs-detail-header">
+                <h1 className="tongs-detail-title">{current.title}</h1>
+                <span className="tongs-phase-badge">{current.phase}</span>
+                <div className="tongs-detail-back">
+                  <ReturnHome />
+                </div>
+              </div>
+              <section className="tongs-script-card">
+                <div className="tongs-script-header">
+                  <strong>Script</strong>
+                  <div className="tongs-script-actions">
+                    <button
+                      onClick={() => {
+                        window.location.href = PATHS.anvil;
+                        const ch = new BroadcastChannel("podcasters-forge:v1");
+                        ch.postMessage({
+                          kind: "REQ:",
+                          id: `bootstrap-${Date.now()}`,
+                          payload: { type: "SCRIPT.GET", projectId: current.id },
+                        });
+                        ch.close();
+                      }}
+                    >
+                      Open in Teleprompter
+                    </button>
+                  </div>
+                </div>
+                {current.scriptId ? (
+                  <p className="tongs-script-current">
+                    Current script: {current.assets.find((a) => a.id === current.scriptId)?.name}
+                  </p>
+                ) : (
+                  <p className="tongs-script-none">No script attached yet.</p>
+                )}
+              </section>
+              <section className="tongs-recordings-card">
+                <strong>Recordings</strong>
+                <ul className="tongs-recordings-list">
+                  {current.recordingIds.map((id) => {
+                    const a = current.assets.find((x) => x.id === id);
+                    return (
+                      <li key={id} className="tongs-recording-item">
+                        {a?.name || id}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            </>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { PATHS } from "@/routes/paths";
+import ReturnHome from '@/components/ReturnHome';
+
+type Phase = "idea" | "script" | "recorded" | "edited" | "published";
+type AssetMeta = { text?: string; [k: string]: unknown };
+type Asset = {
+  id: string;
+  kind: "script" | "video" | "image" | "doc";
+  name: string;
+  createdAt: number;
+  meta?: AssetMeta;
+};
     </div>
   );
 }
