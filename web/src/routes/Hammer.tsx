@@ -30,24 +30,42 @@ export default function Hammer() {
       // Example: list assets for the new project
       const { data: assetsRsp } = await api.get<ApiRsp<AssetListResponse>>(`projects/${rsp.data.projectId}/assets`);
       if (!assetsRsp.ok) throw new Error(assetsRsp.error);
-      assetsRsp.data.forEach(async a => {
+      for (const a of assetsRsp.data) {
         console.log(a.id, a.kind, a.name);
+
         // Example: update asset (rename or change meta)
-        await api.patch<void>(`projects/${rsp.data.projectId}/assets/${a.id}`,
+        await api.patch<void>(
+          `projects/${rsp.data.projectId}/assets/${a.id}`,
           {
             name: "Episode 1 (final)",
             meta: { text: "Updated content..." }
           }
         );
+
         // Example: read asset details
-        const { data: assetRead } = await api.get<ApiRsp<AssetReadResponse>>(`projects/${rsp.data.projectId}/assets/${a.id}`);
+        const { data: assetRead } = await api.get<ApiRsp<AssetReadResponse>>(
+          `projects/${rsp.data.projectId}/assets/${a.id}`
+        );
         if (!assetRead.ok) throw new Error(assetRead.error);
         console.log("asset meta:", assetRead.data.meta);
+
         // Example: delete asset
-        await api.delete<void>(`projects/${rsp.data.projectId}/assets/${a.id}`);
-      });
+        await api.delete<void>(
+          `projects/${rsp.data.projectId}/assets/${a.id}`
+        );
+      }
     } catch (e: any) {
-      setError(e.message || "Unknown error");
+      if (e instanceof Error) {
+        setError(e.message);
+      } else if (typeof e === "string") {
+        setError(e);
+      } else {
+        try {
+          setError(JSON.stringify(e));
+        } catch {
+          setError("Unknown error");
+        }
+      }
     } finally {
       setCreating(false);
     }
