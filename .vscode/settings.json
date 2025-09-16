@@ -1,4 +1,28 @@
 {
-    "typescript.tsdk": "node_modules\\typescript\\lib",
-    "liveServer.settings.multiRootWorkspaceName": "Creator-s-Forge"
+  // Use the workspace version of TypeScript (important for monorepos)
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  // Run ESLint on save
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always",
+    "source.organizeImports": "always"
+  },
+
+  // Default formatter = Prettier
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // Format on save
+  "editor.formatOnSave": true,
+
+  // ESLint plugin config
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+
+  // Make VS Code use your flat config eslint.config.mjs
+  "eslint.useFlatConfig": true,
+
+  // Auto-detect and use Prettier config
+  "prettier.requireConfig": true,
+
+  // TypeScript in Vue/React projects benefits from "prefer tsserver"
+  "typescript.enablePromptUseWorkspaceTsdk": true
 }
