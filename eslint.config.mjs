@@ -8,17 +8,26 @@ import importPlugin from 'eslint-plugin-import';
 import unusedImports from 'eslint-plugin-unused-imports';
 import { fileURLToPath, URL } from 'node:url';
 
+// Must be a string (not a URL object)
 const TS_ROOT = fileURLToPath(new URL('.', import.meta.url));
 
 export default [
-  // Ignore build artifacts + legacy config
-  { ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/*.d.ts', '.eslintrc.cjs'] },
+  // Ignore build artfacts + legacy config files
+  {
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/build/**',
+      '**/*.d.ts',
+      '.eslintrc.*', // ignore any old-style configs if present
+    ],
+  },
 
-  // Base JS
+  // Base JS rules
   js.configs.recommended,
 
-  // --- React app (browser, TS) ---
-  // Type-aware TS presets ONLY for app TS/TSX files
+  // --- React app (browser, TypeScript) ---
+  // Apply the type-aware TS presets ONLY to app TS/TSX files
   ...tseslint.configs.recommendedTypeChecked.map((cfg) => ({
     ...cfg,
     files: ['web/src/**/*.{ts,tsx}'],
@@ -27,7 +36,7 @@ export default [
       parser: tseslint.parser,
       parserOptions: {
         project: 'web/tsconfig.json',
-        tsconfigRootDir: TS_ROOT, // must be a string
+        tsconfigRootDir: TS_ROOT, // string path (Windows-friendly)
         sourceType: 'module',
         ecmaFeatures: { jsx: true },
       },
@@ -46,21 +55,28 @@ export default [
     files: ['web/src/**/*.{ts,tsx}'],
     settings: { react: { version: 'detect' } },
     rules: {
+      // TypeScript safety
       '@typescript-eslint/consistent-type-imports': ['warn', { fixStyle: 'inline-type-imports' }],
       '@typescript-eslint/no-unsafe-argument': 'error',
       '@typescript-eslint/no-explicit-any': ['warn', { ignoreRestArgs: false }],
+      // React / Hooks
       'react/react-in-jsx-scope': 'off',
       'react/jsx-uses-react': 'off',
       ...reactHooks.configs.recommended.rules,
+      // Unused imports/vars (prefer plugin with autofix)
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-      'import/order': ['warn', { 'newlines-between': 'always', alphabetize: { order: 'asc', caseInsensitive: true } }],
+      // Import ordering polish
+      'import/order': [
+        'warn',
+        { 'newlines-between': 'always', alphabetize: { order: 'asc', caseInsensitive: true } },
+      ],
     },
   },
 
-  // --- Node-side (typed) TS configs: Vite + *.config + scripts TS ---
+  // --- Node-side (typed TS): Vite config + *.config + TS scripts ---
   ...tseslint.configs.recommendedTypeChecked.map((cfg) => ({
     ...cfg,
     files: ['web/vite.config.ts', '*.config.{ts,cts,mts}', 'scripts/**/*.{ts,cts,mts}'],
@@ -68,8 +84,8 @@ export default [
       ...(cfg.languageOptions ?? {}),
       parser: tseslint.parser,
       parserOptions: {
-        project: 'tsconfig.node.json',
-        tsconfigRootDir: TS_ROOT, // string
+        project: 'tsconfig.node.json', // your node-side tsconfig that includes web/vite.config.ts
+        tsconfigRootDir: TS_ROOT,
         sourceType: 'module',
       },
       globals: { ...globals.node },
@@ -89,10 +105,12 @@ export default [
     },
   },
 
-  // --- Node-side (JS) plain scripts: give Node globals, no TS parsing ---
+  // --- Node-side (plain JS): give Node globals, no TS parser ---
   {
     files: ['scripts/**/*.{js,mjs,cjs}', 'server/**/*.{js,mjs,cjs}'],
     languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
       globals: { ...globals.node },
     },
     rules: {
