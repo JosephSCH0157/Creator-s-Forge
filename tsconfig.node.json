@@ -5,9 +5,10 @@
     "moduleResolution": "Bundler",
     "target": "ES2020",
     "lib": ["ESNext"],
-    "types": ["node"],          // <-- adds Node core module types (url, path, etc.)
+    "types": ["node"],
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["vite.config.ts"]
 }
