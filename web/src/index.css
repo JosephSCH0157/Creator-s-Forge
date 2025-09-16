@@ -88,6 +88,10 @@
   border: 1px solid var(--bd);
   border-radius: 12px;
   padding: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+.tongs-sidebar {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 
 .tongs-sidebar-new {
