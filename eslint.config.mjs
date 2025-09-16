@@ -11,7 +11,6 @@ import { fileURLToPath, URL } from 'node:url';
 const TS_ROOT = fileURLToPath(new URL('.', import.meta.url));
 import path from 'node:path';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Must be a string (not a URL object)
 // Use __dirname for robust path resolution
