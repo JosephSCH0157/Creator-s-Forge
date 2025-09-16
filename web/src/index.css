@@ -28,7 +28,24 @@
   justify-content: center;
   padding: 8px 12px;
   color: var(--ink);
+  position: relative;
+}
+
+.tongs-root::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   background: url('/forge_wall.png') center/cover no-repeat;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+.tongs-main,
+.tongs-topbar {
+  position: relative;
+  z-index: 1;
 }
 .tongs-topbar {
   display: flex;
