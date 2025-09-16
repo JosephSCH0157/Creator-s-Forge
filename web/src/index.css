@@ -1,3 +1,10 @@
+/* Ledger page styles */
+.ledger-container {
+  padding: 24px;
+}
+.error-text {
+  color: red;
+}
 :html, body, #root {
   height: 100%;
   margin: 0;
