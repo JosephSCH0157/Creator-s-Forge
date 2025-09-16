@@ -1,3 +1,143 @@
+/* Tongs page styles */
+.tongs-root {
+  display: grid;
+  grid-template-rows: 48px 1fr;
+  height: 100vh;
+  background: #0b0f14;
+  color: #e8f0f7;
+}
+.tongs-topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-bottom: 1px solid #233242;
+  background: #111827;
+  color: #fff;
+}
+.tongs-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.tongs-back-btn {
+  color: #fff;
+  background: transparent;
+  border: 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tongs-topbar-desc {
+  margin-left: auto;
+  opacity: 0.8;
+  font-size: 12px;
+}
+.tongs-main {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 0;
+  min-height: 0;
+}
+.tongs-sidebar {
+  border-right: 1px solid #223243;
+  padding: 12px;
+  overflow: auto;
+}
+.tongs-sidebar-new {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.tongs-input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #233242;
+  background: #0e141b;
+  color: #e5eef7;
+}
+.tongs-phase {
+  margin-bottom: 10px;
+}
+.tongs-phase-label {
+  opacity: 0.7;
+  font-size: 12px;
+  margin: 6px 0;
+}
+.tongs-project-link {
+  display: block;
+  color: #e5eef7;
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #233242;
+  margin-bottom: 6px;
+}
+.tongs-detail {
+  padding: 16px;
+  overflow: auto;
+}
+.tongs-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tongs-detail-title {
+  margin: 0;
+}
+.tongs-phase-badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #14202b;
+  border: 1px solid #223243;
+  font-size: 12px;
+}
+.tongs-detail-back {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+.tongs-detail-back-link {
+  color: #9ecbff;
+}
+.tongs-script-card {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid #223243;
+  border-radius: 12px;
+}
+.tongs-script-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tongs-script-actions {
+  display: flex;
+  gap: 8px;
+}
+.tongs-script-current {
+  opacity: 0.8;
+  margin-top: 8px;
+}
+.tongs-script-none {
+  opacity: 0.6;
+  margin-top: 8px;
+}
+.tongs-recordings-card {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid #223243;
+  border-radius: 12px;
+}
+.tongs-recordings-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 8px;
+}
+.tongs-recording-item {
+  padding: 6px 0;
+  border-bottom: 1px solid #18232f;
+}
 /* Anvil page styles */
 .anvil-container {
   padding: 24px;

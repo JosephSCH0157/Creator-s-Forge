@@ -4,12 +4,16 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 /** === Core types (inline, keep simple for now) === */
 type Phase = "idea" | "script" | "recorded" | "edited" | "published";
 
+type AssetMeta = {
+  text?: string;
+  [key: string]: unknown;
+};
 type Asset = {
   id: string;
   kind: "script" | "video" | "image" | "doc";
   name: string;
   createdAt: number;
-  meta?: any; // e.g., { text?: string }
+  meta?: AssetMeta;
 };
 
 type Project = {
@@ -30,7 +34,7 @@ const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 
 function load(): Project[] {
   try {
-    return JSON.parse(localStorage.getItem(STORE) || "[]");
+    return JSON.parse(localStorage.getItem(STORE) || "[]") as Project[];
   } catch {
     return [];
   }
@@ -55,7 +59,7 @@ export default function Tongs() {
     const RSP_PREFIX = "RSP:";
     const ch = new BroadcastChannel(CH_NAME);
 
-    const send = (id: string, payload: any) =>
+    const send = (id: string, payload: unknown) =>
       ch.postMessage({ kind: RSP_PREFIX, id, payload });
 
     ch.onmessage = (ev) => {
@@ -63,8 +67,8 @@ export default function Tongs() {
       if (msg.kind !== REQ_PREFIX) return;
 
       const { id, payload } = msg;
-      const fail = (error: string) => send(id, { ok: false, error });
-      const ok = (data?: any) => send(id, { ok: true, data });
+  const fail = (error: string) => send(id, { ok: false, error });
+  const ok = (data?: unknown) => send(id, { ok: true, data });
 
       try {
         switch (payload.type) {
@@ -171,7 +175,7 @@ export default function Tongs() {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
               const p = { ...prev[idx] };
-              p.assets = p.assets.map((a) => (a.id === assetId ? { ...a, ...patch } : a));
+              p.assets = p.assets.map((a) => (a.id === assetId ? { ...a, ...(patch as Partial<Asset>) } : a));
               p.updatedAt = now();
               const next = [...prev];
               next[idx] = p;
@@ -274,8 +278,18 @@ export default function Tongs() {
           default:
             fail("unsupported_type");
         }
-      } catch (e: any) {
-        fail(String(e?.message || e));
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          fail(String(e.message));
+        } else if (typeof e === "string") {
+          fail(e);
+        } else {
+          try {
+            fail(JSON.stringify(e));
+          } catch {
+            fail("Unknown error");
+          }
+        }
       }
     };
 
@@ -296,7 +310,7 @@ export default function Tongs() {
     };
     setProjects([p, ...projects]);
     setTitle("");
-    navigate(`/tools/tongs/${p.id}`);
+  void navigate(`/tools/tongs/${p.id}`);
   };
 
   const current = useMemo(
@@ -305,65 +319,40 @@ export default function Tongs() {
   );
 
   return (
-    <div style={{ display: "grid", gridTemplateRows: "48px 1fr", height: "100vh", background: "#0b0f14", color: "#e8f0f7" }}>
+  <div className="tongs-root">
       {/* Top bar */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          padding: "0 16px",
-          borderBottom: "1px solid #233242",
-          background: "#111827",
-          color: "#fff",
-        }}
-      >
-        <img src="/tongs.png" alt="" style={{ width: 24, height: 24, objectFit: "contain" }} />
+      <div className="tongs-topbar">
+  <img src="/tongs.png" alt="" className="tongs-logo" />
         <button
           onClick={() => navigate("/forge")}
-          style={{ color: "#fff", background: "transparent", border: 0, fontWeight: 600, cursor: "pointer" }}
+          className="tongs-back-btn"
         >
           Back to Podcaster’s Forge
         </button>
-        <div style={{ marginLeft: "auto", opacity: 0.8, fontSize: 12 }}>Tongs · Backbone (read/write bus)</div>
+  <div className="tongs-topbar-desc">Tongs · Backbone (read/write bus)</div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 0, minHeight: 0 }}>
+  <div className="tongs-main">
         {/* Left: projects */}
-        <aside style={{ borderRight: "1px solid #223243", padding: 12, overflow: "auto" }}>
-          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+  <aside className="tongs-sidebar">
+          <div className="tongs-sidebar-new">
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="New project title"
-              style={{
-                flex: 1,
-                padding: "8px 10px",
-                borderRadius: 8,
-                border: "1px solid #233242",
-                background: "#0e141b",
-                color: "#e5eef7",
-              }}
+              className="tongs-input"
             />
             <button onClick={createProject}>New</button>
           </div>
 
           {(["idea", "script", "recorded", "edited", "published"] as Phase[]).map((ph) => (
-            <div key={ph} style={{ marginBottom: 10 }}>
-              <div style={{ opacity: 0.7, fontSize: 12, margin: "6px 0" }}>{ph.toUpperCase()}</div>
+            <div key={ph} className="tongs-phase">
+              <div className="tongs-phase-label">{ph.toUpperCase()}</div>
               {(projects.filter((p) => p.phase === ph) || []).map((p) => (
                 <Link
                   key={p.id}
                   to={`/tools/tongs/${p.id}`}
-                  style={{
-                    display: "block",
-                    color: "#e5eef7",
-                    textDecoration: "none",
-                    padding: "8px 10px",
-                    borderRadius: 8,
-                    border: "1px solid #233242",
-                    marginBottom: 6,
-                  }}
+                  className="tongs-project-link"
                 >
                   {p.title}
                 </Link>
@@ -373,36 +362,28 @@ export default function Tongs() {
         </aside>
 
         {/* Right: project detail */}
-        <main style={{ padding: 16, overflow: "auto" }}>
+  <main className="tongs-detail">
           {!current ? (
             <p>Select or create a project.</p>
           ) : (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <h1 style={{ margin: 0 }}>{current.title}</h1>
-                <span
-                  style={{
-                    padding: "4px 8px",
-                    borderRadius: 999,
-                    background: "#14202b",
-                    border: "1px solid #223243",
-                    fontSize: 12,
-                  }}
-                >
+              <div className="tongs-detail-header">
+                <h1 className="tongs-detail-title">{current.title}</h1>
+                <span className="tongs-phase-badge">
                   {current.phase}
                 </span>
-                <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-                  <Link to="/forge" style={{ color: "#9ecbff" }}>
+                <div className="tongs-detail-back">
+                  <Link to="/forge" className="tongs-detail-back-link">
                     Back to Podcaster’s Forge
                   </Link>
                 </div>
               </div>
 
               {/* Script card */}
-              <section style={{ marginTop: 16, padding: 12, border: "1px solid #223243", borderRadius: 12 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <section className="tongs-script-card">
+                <div className="tongs-script-header">
                   <strong>Script</strong>
-                  <div style={{ display: "flex", gap: 8 }}>
+                  <div className="tongs-script-actions">
                     <button
                       onClick={() => {
                         // 1) Navigate to Teleprompter
@@ -422,22 +403,22 @@ export default function Tongs() {
                   </div>
                 </div>
                 {current.scriptId ? (
-                  <p style={{ opacity: 0.8, marginTop: 8 }}>
+                  <p className="tongs-script-current">
                     Current script: {current.assets.find((a) => a.id === current.scriptId)?.name}
                   </p>
                 ) : (
-                  <p style={{ opacity: 0.6, marginTop: 8 }}>No script attached yet.</p>
+                  <p className="tongs-script-none">No script attached yet.</p>
                 )}
               </section>
 
               {/* Recordings */}
-              <section style={{ marginTop: 16, padding: 12, border: "1px solid #223243", borderRadius: 12 }}>
+              <section className="tongs-recordings-card">
                 <strong>Recordings</strong>
-                <ul style={{ listStyle: "none", padding: 0, marginTop: 8 }}>
+                <ul className="tongs-recordings-list">
                   {current.recordingIds.map((id) => {
                     const a = current.assets.find((x) => x.id === id);
                     return (
-                      <li key={id} style={{ padding: "6px 0", borderBottom: "1px solid #18232f" }}>
+                      <li key={id} className="tongs-recording-item">
                         {a?.name || id}
                       </li>
                     );
