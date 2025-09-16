@@ -1,4 +1,3 @@
-
 // web/src/lib/tongs-bus.ts
 // Pure IPC client for Podcaster's Forge. No React. No state.
 // Tools import this and call request({...}) to talk to TONGS.
@@ -88,15 +87,4 @@ export function createTongsBus(timeoutMs = 5000) {
   }
 
   return { request, close };
-}
-}
-export async function saveScript(projectId: string, name: string, text: string) {
-  const bus = createTongsBus();
-  try { return await bus.request<ScriptSaveResponse>({ type: "SCRIPT.SAVE", projectId, name, text }); }
-  finally { bus.close(); }
-}
-export async function getProjectScript(projectId: string) {
-  const bus = createTongsBus();
-  try { return await bus.request<ScriptGetResponse>({ type: "SCRIPT.GET", projectId }); }
-  finally { bus.close(); }
 }
