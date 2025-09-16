@@ -11,20 +11,18 @@
 }
 /* Tongs page styles */
 .tongs-root {
-  display: grid;
-  grid-template-rows: 48px 1fr;
-  height: 100vh;
-  background: #0b0f14;
-  color: #e8f0f7;
+  padding: 0 12px;
 }
 .tongs-topbar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 16px;
-  border-bottom: 1px solid #233242;
-  background: #111827;
-  color: #fff;
+  gap: 10px;
+  background: #0f1621;
+  color: #dfe7f5;
+  border: 1px solid #222a36;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin: 10px 0 12px;
 }
 .tongs-logo {
   width: 48px;
@@ -46,14 +44,15 @@
 }
 .tongs-main {
   display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 0;
-  min-height: 0;
+  grid-template-columns: 320px 1fr; /* ← sidebar + content */
+  gap: 16px;
+  min-height: calc(100vh - 120px);
 }
 .tongs-sidebar {
-  border-right: 1px solid #223243;
+  background: #0b1118;
+  border: 1px solid #1a2330;
+  border-radius: 8px;
   padding: 12px;
-  overflow: auto;
 }
 .tongs-sidebar-new {
   display: flex;
@@ -86,8 +85,10 @@
   margin-bottom: 6px;
 }
 .tongs-detail {
+  background: #0b1118;
+  border: 1px solid #1a2330;
+  border-radius: 8px;
   padding: 16px;
-  overflow: auto;
 }
 .tongs-detail-header {
   display: flex;
