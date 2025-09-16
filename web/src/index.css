@@ -9,20 +9,31 @@
   height: 100vh;
   border: 0;
 }
-/* Tongs page styles */
+
+:root {
+  --bg-1: #0b1118;
+  --bg-2: #0f1621;
+  --bd: #1a2330;
+  --ink: #e6edf6;
+  --muted: #97a6bd;
+  --accent: #7aa2ff;
+  --chip: #1e293b;
+  --chip-bd: #263244;
+}
+
 .tongs-root {
-  padding: 0 12px;
+  padding: 8px 12px;
+  color: var(--ink);
 }
 .tongs-topbar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: #0f1621;
-  color: #dfe7f5;
-  border: 1px solid #222a36;
-  border-radius: 8px;
-  padding: 6px 10px;
-  margin: 10px 0 12px;
+  gap: 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin: 8px 0 14px;
 }
 .tongs-logo {
   width: 48px;
@@ -30,30 +41,33 @@
   object-fit: contain;
   display: block;
 }
-.tongs-back-btn {
-  color: #fff;
-  background: transparent;
-  border: 0;
-  font-weight: 600;
-  cursor: pointer;
+.tongs-topbar-text {
+  line-height: 1.2;
 }
-.tongs-topbar-desc {
-  margin-left: auto;
-  opacity: 0.8;
+.tongs-title {
+  font-size: 18px;
+  margin: 0;
+}
+.tongs-subtitle {
+  margin: 2px 0 0;
   font-size: 12px;
+  color: var(--muted);
 }
+
 .tongs-main {
   display: grid;
-  grid-template-columns: 320px 1fr; /* ← sidebar + content */
+  grid-template-columns: 360px 1fr;
   gap: 16px;
-  min-height: calc(100vh - 120px);
+  min-height: 60vh;
 }
-.tongs-sidebar {
-  background: #0b1118;
-  border: 1px solid #1a2330;
-  border-radius: 8px;
-  padding: 12px;
+.tongs-sidebar,
+.tongs-detail {
+  background: var(--bg-1);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 14px;
 }
+
 .tongs-sidebar-new {
   display: flex;
   gap: 8px;
@@ -61,95 +75,180 @@
 }
 .tongs-input {
   flex: 1;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid #233242;
-  background: #0e141b;
-  color: #e5eef7;
+  background: #0c141f;
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--ink);
 }
-.tongs-phase {
-  margin-bottom: 10px;
+.btn {
+  background: #101826;
+  border: 1px solid var(--bd);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
 }
-.tongs-phase-label {
-  opacity: 0.7;
-  font-size: 12px;
-  margin: 6px 0;
+.btn:hover {
+  background: #142033;
 }
-.tongs-project-link {
-  display: block;
-  color: #e5eef7;
-  text-decoration: none;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid #233242;
+.btn-primary {
+  background: #1f2b40;
+  border-color: #2a3850;
+}
+.btn-primary:hover {
+  background: #263654;
+}
+
+.tongs-section {
+  margin-top: 10px;
+}
+.tongs-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 6px;
 }
-.tongs-detail {
-  background: #0b1118;
-  border: 1px solid #1a2330;
-  border-radius: 8px;
-  padding: 16px;
+.tongs-section-title {
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
+.tongs-chip {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--chip);
+  border: 1px solid var(--chip-bd);
+  color: var(--muted);
+}
+
+.tongs-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+.tongs-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--ink);
+  background: #0d1521;
+}
+.tongs-item:hover {
+  background: #111b2b;
+}
+.tongs-item.is-active {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.tongs-item-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tongs-item-meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.tongs-empty {
+  color: var(--muted);
+  font-size: 12px;
+  padding: 6px 2px;
+}
+
 .tongs-detail-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 .tongs-detail-title {
   margin: 0;
+  font-size: 20px;
 }
-.tongs-phase-badge {
+.tongs-badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #132135;
+  border: 1px solid var(--bd);
+  color: var(--muted);
+}
+.phase-idea {
+  background: #16263c;
+}
+.phase-script {
+  background: #1a2b45;
+}
+.phase-recorded {
+  background: #1f324f;
+}
+.phase-edited {
+  background: #23395a;
+}
+.phase-published {
+  background: #274066;
+}
+
+.tongs-card {
+  background: #0c141f;
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.tongs-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.tongs-actions {
+  display: flex;
+  gap: 8px;
+}
+.tongs-muted {
+  color: var(--muted);
+}
+
+.tongs-pills {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pill {
+  font-size: 12px;
   padding: 4px 8px;
   border-radius: 999px;
-  background: #14202b;
-  border: 1px solid #223243;
+  background: #0f1a2a;
+  border: 1px solid var(--bd);
+}
+
+.tongs-empty-state {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  text-align: center;
+  color: var(--muted);
+}
+.tongs-ghost {
+  font-size: 16px;
+  opacity: 0.9;
+}
+.tongs-hint {
+  margin-top: 6px;
   font-size: 12px;
-}
-.tongs-detail-back {
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
-}
-.tongs-detail-back-link {
-  color: #9ecbff;
-}
-.tongs-script-card {
-  margin-top: 16px;
-  padding: 12px;
-  border: 1px solid #223243;
-  border-radius: 12px;
-}
-.tongs-script-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.tongs-script-actions {
-  display: flex;
-  gap: 8px;
-}
-.tongs-script-current {
-  opacity: 0.8;
-  margin-top: 8px;
-}
-.tongs-script-none {
-  opacity: 0.6;
-  margin-top: 8px;
-}
-.tongs-recordings-card {
-  margin-top: 16px;
-  padding: 12px;
-  border: 1px solid #223243;
-  border-radius: 12px;
-}
-.tongs-recordings-list {
-  list-style: none;
-  padding: 0;
-  margin-top: 8px;
-}
-.tongs-recording-item {
-  padding: 6px 0;
-  border-bottom: 1px solid #18232f;
 }
 /* Anvil page styles */
 .anvil-container {

@@ -1,6 +1,6 @@
 import '@/index.css';
 // routes/Tongs.tsx
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import IMGtongs from '@/assets/IMGtongs.png'; // ← import the image (no leading slash)
@@ -437,65 +437,89 @@ export default function Tongs() {
   );
 
   return (
+    /* Top bar */
     <div className="tongs-root">
       <div className="tongs-topbar">
         <img src={IMGtongs} alt="Tongs" className="tongs-logo" />
-        <div className="tongs-topbar-desc">Tongs · Backbone (read/write bus)</div>
+        <div className="tongs-topbar-text">
+          <h1 className="tongs-title">Tongs</h1>
+          <p className="tongs-subtitle">Backbone — projects, scripts, recordings</p>
+        </div>
       </div>
 
+      {/* Main layout */}
       <div className="tongs-main">
-        {/* Left: projects */}
-        <aside className="tongs-sidebar">
+        {/* Sidebar */}
+        <aside className="tongs-sidebar" aria-label="Projects">
           <div className="tongs-sidebar-new">
             <input
               value={title}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.currentTarget.value)}
+              onChange={(e) => setTitle(e.currentTarget.value)}
               placeholder="New project title"
               className="tongs-input"
+              aria-label="New project title"
             />
-            <button onClick={createProject}>New</button>
+            <button className="btn btn-primary" onClick={createProject}>
+              New
+            </button>
           </div>
 
-          {(['idea', 'script', 'recorded', 'edited', 'published'] as Phase[]).map((ph) => (
-            <div key={ph} className="tongs-phase">
-              <div className="tongs-phase-label">{ph.toUpperCase()}</div>
-              {projects
-                .filter((p) => p.phase === ph)
-                .map((p) => (
-                  <Link key={p.id} to={`${PATHS.tongs}/${p.id}`} className="tongs-project-link">
-                    {p.title}
-                  </Link>
-                ))}
-            </div>
-          ))}
+          <div className="tongs-sections">
+            {(['idea', 'script', 'recorded', 'edited', 'published'] as Phase[]).map((ph) => {
+              const list = projects.filter((p) => p.phase === ph);
+              return (
+                <section key={ph} className="tongs-section">
+                  <header className="tongs-section-head">
+                    <span className="tongs-section-title">{ph.toUpperCase()}</span>
+                    <span className="tongs-chip">{list.length}</span>
+                  </header>
+                  <ul className="tongs-list">
+                    {list.map((p) => (
+                      <li key={p.id}>
+                        <Link
+                          to={`${PATHS.tongs}/${p.id}`}
+                          className={`tongs-item${current?.id === p.id ? ' is-active' : ''}`}
+                          title={p.title}
+                        >
+                          <span className="tongs-item-title">{p.title}</span>
+                          <span className="tongs-item-meta">
+                            {new Date(p.updatedAt).toLocaleDateString()}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                    {list.length === 0 && <li className="tongs-empty">No items in this phase.</li>}
+                  </ul>
+                </section>
+              );
+            })}
+          </div>
         </aside>
 
-        {/* Right: project detail */}
-        <main className="tongs-detail">
+        {/* Detail */}
+        <main className="tongs-detail" aria-label="Project details">
           {!current ? (
-            <p>Select or create a project.</p>
+            <div className="tongs-empty-state">
+              <div className="tongs-ghost">Select or create a project</div>
+              <p className="tongs-hint">
+                Tip: click a phase on the left to filter; use <b>New</b> to start.
+              </p>
+            </div>
           ) : (
             <>
-              <div className="tongs-detail-header">
-                <h1 className="tongs-detail-title">{current.title}</h1>
-                <span className="tongs-phase-badge">{current.phase}</span>
-                <div className="tongs-detail-back">
-                  <Link to={PATHS.forge} className="tongs-detail-back-link">
-                    Back to Podcaster’s Forge
-                  </Link>
-                </div>
-              </div>
+              <header className="tongs-detail-header">
+                <h2 className="tongs-detail-title">{current.title}</h2>
+                <span className={`tongs-badge phase-${current.phase}`}>{current.phase}</span>
+              </header>
 
-              {/* Script card */}
-              <section className="tongs-script-card">
-                <div className="tongs-script-header">
+              <section className="tongs-card">
+                <div className="tongs-card-head">
                   <strong>Script</strong>
-                  <div className="tongs-script-actions">
+                  <div className="tongs-actions">
                     <button
+                      className="btn"
                       onClick={() => {
-                        // 1) Navigate to Teleprompter
                         window.location.href = PATHS.anvil;
-                        // 2) Ask Teleprompter to load this project’s script
                         const ch = new BroadcastChannel('podcasters-forge:v1');
                         ch.postMessage({
                           kind: 'REQ:',
@@ -510,27 +534,32 @@ export default function Tongs() {
                   </div>
                 </div>
                 {current.scriptId ? (
-                  <p className="tongs-script-current">
+                  <p className="tongs-muted">
                     Current script: {current.assets.find((a) => a.id === current.scriptId)?.name}
                   </p>
                 ) : (
-                  <p className="tongs-script-none">No script attached yet.</p>
+                  <p className="tongs-muted">No script attached yet.</p>
                 )}
               </section>
 
-              {/* Recordings */}
-              <section className="tongs-recordings-card">
-                <strong>Recordings</strong>
-                <ul className="tongs-recordings-list">
-                  {current.recordingIds.map((id) => {
-                    const a = current.assets.find((x) => x.id === id);
-                    return (
-                      <li key={id} className="tongs-recording-item">
-                        {a?.name || id}
-                      </li>
-                    );
-                  })}
-                </ul>
+              <section className="tongs-card">
+                <div className="tongs-card-head">
+                  <strong>Recordings</strong>
+                </div>
+                {current.recordingIds.length ? (
+                  <ul className="tongs-pills">
+                    {current.recordingIds.map((id) => {
+                      const a = current.assets.find((x) => x.id === id);
+                      return (
+                        <li key={id} className="pill">
+                          {a?.name ?? id}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <p className="tongs-muted">No recordings yet.</p>
+                )}
               </section>
             </>
           )}
