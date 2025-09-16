@@ -3,7 +3,7 @@ import ReturnHome from "../components/ReturnHome";
 import type { ProjectResponse, AssetListResponse, AssetReadResponse, AssetResponse, ApiRsp } from "../tongs/types";
 import { api } from "../lib/api";
 import { useState } from "react";
-import { PATHS } from "@/routes/paths";
+
 
 export default function Hammer() {
   const [creating, setCreating] = useState(false);

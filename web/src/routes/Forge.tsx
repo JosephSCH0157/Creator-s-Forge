@@ -1,5 +1,5 @@
 import ReturnHome from "../components/ReturnHome";
-import { PATHS } from "@/routes/paths";
+
 
 export default function Forge() {
   return (
