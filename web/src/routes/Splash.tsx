@@ -1,11 +1,4 @@
-import { PATHS } from '@/routes/paths';
-
-const SPOTS = [
-  { to: PATHS.forge,  top: 55, left: 70, label: 'Forge',  hover: 'Home' },
-  { to: PATHS.anvil,  top: 80, left: 50, label: 'Anvil',  hover: 'Teleprompter' },
-  // ...
-];
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import SplashWithEmbers from "./SplashWithEmbers";
 import CFWordmark from "../components/CFWordmark";
@@ -37,7 +30,7 @@ function Hotspot({ s }: { s: Spot }) {
       className="hotspot"
       style={{ top: `${s.top}%`, left: `${s.left}%` }}
       aria-label={s.hover}
-      data-hover={s.hover}   // <-- required for ::after hover label
+      data-hover={s.hover}
     >
       {s.label}
     </Link>
@@ -46,7 +39,7 @@ function Hotspot({ s }: { s: Spot }) {
 
 export default function SplashRoute() {
   return (
-    <div className="splash-root">   {/* use splash-root, not splash-wrap */}
+    <div className="splash-root">
       <div className="splash-stage">
         <SplashWithEmbers
           src="/forge.png"
@@ -56,7 +49,7 @@ export default function SplashRoute() {
         />
       </div>
 
-  <CFWordmark className="splash-wordmark brand-glow" />
+      <CFWordmark className="splash-wordmark brand-glow" />
 
       {SPOTS.map((s) => (
         <Hotspot key={`${s.left}-${s.top}-${s.to}`} s={s} />
