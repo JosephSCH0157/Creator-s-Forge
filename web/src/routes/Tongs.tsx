@@ -196,7 +196,9 @@ export default function Tongs() {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
               const p = { ...prev[idx] };
-              p.assets = p.assets.map((a) => (a.id === assetId ? { ...a, ...(patch as Partial<Asset>) } : a));
+              p.assets = p.assets.map((a) =>
+                a.id === assetId ? { ...a, ...patch } : a
+              );
               p.updatedAt = now();
               const next = [...prev];
               next[idx] = p;
@@ -205,7 +207,6 @@ export default function Tongs() {
             ok(id, true);
             break;
           }
-
           case "ASSET.DELETE": {
             const { projectId, assetId } = payload;
             setProjects((prev) => {
@@ -213,7 +214,10 @@ export default function Tongs() {
               if (idx < 0) return prev;
               const p = { ...prev[idx] };
               p.assets = p.assets.filter((a) => a.id !== assetId);
+              // Remove scriptId if the deleted asset was the script
               if (p.scriptId === assetId) p.scriptId = undefined;
+              // Remove from recordingIds if present
+              p.recordingIds = p.recordingIds.filter((id) => id !== assetId);
               p.updatedAt = now();
               const next = [...prev];
               next[idx] = p;
@@ -222,7 +226,6 @@ export default function Tongs() {
             ok(id, true);
             break;
           }
-
           case "SCRIPT.INDEX": {
             const scripts = projects
               .flatMap((p) => {
@@ -250,12 +253,18 @@ export default function Tongs() {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
               const p = { ...prev[idx] };
+              const safeText =
+                typeof text === "string"
+                  ? text
+                  : text !== undefined
+                  ? JSON.stringify(text)
+                  : "";
               const a: Asset = {
                 id: uid(),
                 kind: "script",
                 name: typeof name === "string" ? name : "Untitled",
                 createdAt: now(),
-                meta: { text: typeof text === "string" ? text : String(text ?? "") },
+                meta: { text: safeText },
               };
               p.assets = [a, ...p.assets];
               p.scriptId = a.id;
@@ -289,7 +298,7 @@ export default function Tongs() {
           default:
             // Exhaustive guard: if you add a new union member above and forget to handle it here,
             // TS will flag this cast.
-            assertNever(payload as never);
+            assertNever(payload);
         }
       } catch (e: unknown) {
         if (e instanceof Error) fail(id, e.message);
@@ -319,9 +328,9 @@ export default function Tongs() {
       assets: [],
       recordingIds: [],
     };
-    setProjects([p, ...projects]);
-    setTitle("");
-    navigate(`${PATHS.tongs}/${p.id}`);
+  setProjects([p, ...projects]);
+  setTitle("");
+  void navigate(`${PATHS.tongs}/${p.id}`);
   };
 
   const current = useMemo(
