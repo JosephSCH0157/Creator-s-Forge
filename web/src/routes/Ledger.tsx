@@ -1,3 +1,10 @@
+import type { NavLinkProps } from "react-router-dom";
+  const linkClass: NavLinkProps["className"] = ({ isActive, isPending }) =>
+    [
+      "px-2 py-1 rounded no-underline",
+      isActive ? "text-white bg-gray-900" : "text-black",
+      isPending ? "opacity-70" : "",
+    ].join(" ");
 
 import ReturnHome from "../components/ReturnHome";
 import type { ProjectResponse, AssetListResponse, AssetReadResponse, ApiRsp } from "../tongs/types";
