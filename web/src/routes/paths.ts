@@ -2,7 +2,7 @@
 export const PATHS = {
   root: '/',
   forge: '/forge',
-  anvil: '/tools/anvil',
+  anvil: '/teleprompter_pro.html',
   tongs: '/tools/tongs',
   hammer: '/tools/hammer',
   quench: '/tools/quench',
