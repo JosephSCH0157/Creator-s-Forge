@@ -78,8 +78,11 @@ export default function Tongs() {
   const [projects, setProjects] = useState<Project[]>(() => load());
   const [title, setTitle] = useState("");
 
-  // persist on change
-  useEffect(() => save(projects), [projects]);
+  // persist on change (debounced)
+  useEffect(() => {
+    const handle = setTimeout(() => save(projects), 200);
+    return () => clearTimeout(handle);
+  }, [projects]);
 
   /** ===== BroadcastChannel IPC ===== */
   useEffect(() => {
@@ -330,7 +333,7 @@ export default function Tongs() {
     };
   setProjects([p, ...projects]);
   setTitle("");
-  void navigate(`${PATHS.tongs}/${p.id}`);
+  navigate(`${PATHS.tongs}/${p.id}`);
   };
 
   const current = useMemo(
