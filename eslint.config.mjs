@@ -6,16 +6,19 @@ import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import importPlugin from 'eslint-plugin-import';
 import unusedImports from 'eslint-plugin-unused-imports';
+import { fileURLToPath, URL } from 'node:url';
+
+const TS_ROOT = fileURLToPath(new URL('.', import.meta.url));
 
 export default [
-  // Ignore build artifacts & generated files
-  { ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/*.d.ts'] },
+  // Ignore build artifacts + legacy config
+  { ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/*.d.ts', '.eslintrc.cjs'] },
 
-  // Base JS (only JS rules, no TS here)
+  // Base JS
   js.configs.recommended,
 
   // --- React app (browser, TS) ---
-  // Apply TS presets *only* to app TS/TSX files
+  // Type-aware TS presets ONLY for app TS/TSX files
   ...tseslint.configs.recommendedTypeChecked.map((cfg) => ({
     ...cfg,
     files: ['web/src/**/*.{ts,tsx}'],
@@ -24,7 +27,7 @@ export default [
       parser: tseslint.parser,
       parserOptions: {
         project: 'web/tsconfig.json',
-        tsconfigRootDir: new URL('.', import.meta.url),
+        tsconfigRootDir: TS_ROOT, // must be a string
         sourceType: 'module',
         ecmaFeatures: { jsx: true },
       },
@@ -57,8 +60,7 @@ export default [
     },
   },
 
-  // --- Node-side configs (Vite, scripts, TS) ---
-  // TS presets only for node/config TS files
+  // --- Node-side (typed) TS configs: Vite + *.config + scripts TS ---
   ...tseslint.configs.recommendedTypeChecked.map((cfg) => ({
     ...cfg,
     files: ['web/vite.config.ts', '*.config.{ts,cts,mts}', 'scripts/**/*.{ts,cts,mts}'],
@@ -67,7 +69,7 @@ export default [
       parser: tseslint.parser,
       parserOptions: {
         project: 'tsconfig.node.json',
-        tsconfigRootDir: new URL('.', import.meta.url),
+        tsconfigRootDir: TS_ROOT, // string
         sourceType: 'module',
       },
       globals: { ...globals.node },
@@ -84,6 +86,17 @@ export default [
     rules: {
       'no-console': 'off',
       'unused-imports/no-unused-imports': 'error',
+    },
+  },
+
+  // --- Node-side (JS) plain scripts: give Node globals, no TS parsing ---
+  {
+    files: ['scripts/**/*.{js,mjs,cjs}', 'server/**/*.{js,mjs,cjs}'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+    rules: {
+      'no-console': 'off',
     },
   },
 ];
