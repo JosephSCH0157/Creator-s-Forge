@@ -6,7 +6,9 @@ import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import importPlugin from 'eslint-plugin-import';
 import unusedImports from 'eslint-plugin-unused-imports';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, URL } from 'node:url';
+
+const TS_ROOT = fileURLToPath(new URL('.', import.meta.url));
 import path from 'node:path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -38,8 +40,8 @@ export default [
       ...(cfg.languageOptions ?? {}),
       parser: tseslint.parser,
       parserOptions: {
-        project: path.join(__dirname, 'tsconfig.json'),
-        tsconfigRootDir: __dirname,
+        project: './web/tsconfig.json',
+        tsconfigRootDir: TS_ROOT,
         sourceType: 'module',
         ecmaFeatures: { jsx: true },
       },
@@ -87,7 +89,7 @@ export default [
       ...(cfg.languageOptions ?? {}),
       parser: tseslint.parser,
       parserOptions: {
-        project: 'tsconfig.node.json', // your node-side tsconfig that includes web/vite.config.ts
+        project: './tsconfig.node.json',
         tsconfigRootDir: TS_ROOT,
         sourceType: 'module',
       },
