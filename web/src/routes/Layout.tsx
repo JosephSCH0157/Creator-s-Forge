@@ -1,9 +1,9 @@
 
-import { NavLink, linkClass } from "@/ui/nav";
-import { PATHS } from "@/routes/paths";
 import { Outlet } from "react-router-dom";
 
 import ReturnHome from '@/components/ReturnHome';
+import { PATHS } from "@/routes/paths";
+import { NavLink, linkClass } from "@/ui/nav";
 
 export default function Layout() {
 

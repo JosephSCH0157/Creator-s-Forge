@@ -1,5 +1,5 @@
+import React, { type JSX, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import React, { JSX, useEffect, useState } from "react";
 
 const API = "http://127.0.0.1:5177";
 

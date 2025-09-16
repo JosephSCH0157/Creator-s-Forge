@@ -1,8 +1,9 @@
 // web/src/App.jsx
 
 import { Routes, Route, Link } from 'react-router-dom';
-import Splash from './routes/Splash';
+
 import Anvil from './routes/Anvil';
+import Splash from './routes/Splash';
 import Tongs from './routes/Tongs';
 
 export default function App() {

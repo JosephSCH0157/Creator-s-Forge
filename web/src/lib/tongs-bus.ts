@@ -2,7 +2,7 @@
 // Pure IPC client for Podcaster's Forge. No React. No state.
 // Tools import this and call request({...}) to talk to TONGS (the server).
 
-import type { BusRequest, ApiRsp, ProjectResponse, AssetListResponse, AssetReadResponse, AssetResponse, ScriptGetResponse, ScriptIndexResponse, ScriptSaveResponse } from "../tongs/types";
+import type { BusRequest, ApiRsp, ScriptGetResponse, ScriptIndexResponse, ScriptSaveResponse } from "../tongs/types";
 
 const CH_NAME = "podcasters-forge:v1";
 const REQ = "REQ:";

@@ -2,15 +2,16 @@
 
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from '@/routes/Layout';
-import Splash from '@/routes/Splash';
-import Forge from '@/routes/Forge';
+
 import Anvil from '@/routes/Anvil';
+import Forge from '@/routes/Forge';
 import Hammer from '@/routes/Hammer';
-import Quench from '@/routes/Quench';
+import Layout from '@/routes/Layout';
 import Ledger from '@/routes/Ledger';
-import Stock from '@/routes/Stock';
 import { PATHS } from '@/routes/paths';
+import Quench from '@/routes/Quench';
+import Splash from '@/routes/Splash';
+import Stock from '@/routes/Stock';
 
 createRoot(document.getElementById('root')!).render(
   <BrowserRouter>

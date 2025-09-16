@@ -1,7 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import SplashWithEmbers from "./SplashWithEmbers";
+
 import CFWordmark from "../components/CFWordmark";
+
+import SplashWithEmbers from "./SplashWithEmbers";
+
 import "./splash.css";
 import { PATHS } from "@/routes/paths";
 

@@ -1,7 +1,4 @@
 import ReturnHome from "../components/ReturnHome";
-import { PATHS } from "@/routes/paths";
-import type { Project } from "../tongs/types";
-import { createTongsBus } from "../lib/tongs-bus";
 
 interface PlaceholderProps {
   name: string;
