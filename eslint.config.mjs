@@ -9,7 +9,6 @@ import unusedImports from 'eslint-plugin-unused-imports';
 import { fileURLToPath, URL } from 'node:url';
 
 const TS_ROOT = fileURLToPath(new URL('.', import.meta.url));
-import path from 'node:path';
 
 
 // Must be a string (not a URL object)
