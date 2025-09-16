@@ -55,7 +55,7 @@ export default function Hammer() {
           `projects/${rsp.data.projectId}/assets/${a.id}`
         );
       }
-    } catch (e: any) {
+  } catch (e: unknown) {
       if (e instanceof Error) {
         setError(e.message);
       } else if (typeof e === "string") {
