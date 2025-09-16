@@ -13,7 +13,8 @@
      "build": "npm --prefix web run build",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
-    "lint": "eslint .",
+  "lint": "eslint .",
+  "lint:fix": "eslint . --fix",
     "setup": "npm ci"
   },
   "devDependencies": {
