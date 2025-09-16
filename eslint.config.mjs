@@ -35,7 +35,7 @@ export default [
     'react/prop-types': 'off',
     ...reactHooks.configs.recommended.rules
   }
-}
+},
 
   // Server (Node) override
   {
