@@ -3,6 +3,7 @@ import ReturnHome from "../components/ReturnHome";
 import type { ProjectResponse, AssetListResponse, AssetReadResponse, AssetResponse, ApiRsp } from "../tongs/types";
 import { api } from "../lib/api";
 import { useState } from "react";
+import { PATHS } from "@/routes/paths";
 
 export default function Hammer() {
   const [creating, setCreating] = useState(false);
@@ -72,14 +73,14 @@ export default function Hammer() {
   }
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="hammer-container">
       <h1>Hammer</h1>
       <ReturnHome />
       <button onClick={handleCreate} disabled={creating}>
         {creating ? "Creating..." : "Create Hammer Project"}
       </button>
       {projectId && <div>Created Project ID: {projectId}</div>}
-      {error && <div style={{ color: 'red' }}>{error}</div>}
+      {error && <div className="error-text">{error}</div>}
     </div>
   );
 }

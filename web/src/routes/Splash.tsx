@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import SplashWithEmbers from "./SplashWithEmbers";
 import CFWordmark from "../components/CFWordmark";
 import "./splash.css";
+import { PATHS } from "@/routes/paths";
 
 type Spot = {
   to: string;
@@ -14,13 +15,13 @@ type Spot = {
 };
 
 const SPOTS: Spot[] = [
-  { to: "/forge",        top: 55, left: 70, label: "Forge",     hover: "Home",           icon: "🔥" },
-  { to: "/tools/anvil",  top: 80, left: 50, label: "Anvil",     hover: "Teleprompter",   icon: "⚒️" },
-  { to: "/tools/tongs",  top: 45, left: 25, label: "Tongs",     hover: "File System",    icon: "🗄️" },
-  { to: "/tools/hammer", top: 15, left: 35, label: "Hammer",    hover: "Video Editor",   icon: "🔨" },
-  { to: "/tools/quench", top: 70, left: 80, label: "Quench",    hover: "Uploader",       icon: "💧" },
-  { to: "/tools/ledger", top: 80, left: 65, label: "Ledger",    hover: "Analytics",      icon: "📒" },
-  { to: "/tools/stock",  top: 85, left: 30, label: "Bar Stock", hover: "Ideas",          icon: "🧱" },
+  { to: PATHS.forge,        top: 55, left: 70, label: "Forge",     hover: "Home",           icon: "🔥" },
+  { to: PATHS.anvil,        top: 80, left: 50, label: "Anvil",     hover: "Teleprompter",   icon: "⚒️" },
+  { to: PATHS.tongs,        top: 45, left: 25, label: "Tongs",     hover: "File System",    icon: "🗄️" },
+  { to: PATHS.hammer,       top: 15, left: 35, label: "Hammer",    hover: "Video Editor",   icon: "🔨" },
+  { to: PATHS.quench,       top: 70, left: 80, label: "Quench",    hover: "Uploader",       icon: "💧" },
+  { to: PATHS.ledger,       top: 80, left: 65, label: "Ledger",    hover: "Analytics",      icon: "📒" },
+  { to: PATHS.stock,        top: 85, left: 30, label: "Bar Stock", hover: "Ideas",          icon: "🧱" },
 ];
 
 function Hotspot({ s }: { s: Spot }) {

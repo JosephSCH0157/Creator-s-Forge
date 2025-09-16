@@ -2,9 +2,10 @@
 export const PATHS = {
   root: '/',
   forge: '/forge',
-  anvil: '/anvil',
-  hammer: '/hammer',
-  quench: '/quench',
-  ledger: '/ledger',
-  stock: '/stock',
+  anvil: '/tools/anvil',
+  tongs: '/tools/tongs',
+  hammer: '/tools/hammer',
+  quench: '/tools/quench',
+  ledger: '/tools/ledger',
+  stock: '/tools/stock',
 } as const;

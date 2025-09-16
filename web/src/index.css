@@ -1,3 +1,18 @@
+/* Stock page styles */
+.stock-container {
+  padding: 24px;
+}
+/* Forge page styles */
+.forge-container {
+  padding: 24px;
+}
+/* Hammer page styles */
+.hammer-container {
+  padding: 24px;
+}
+.error-text {
+  color: red;
+}
 /* Ledger page styles */
 .ledger-container {
   padding: 24px;
