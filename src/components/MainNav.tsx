@@ -1,6 +1,6 @@
 // src/components/MainNav.tsx
 import { NavLink } from 'react-router-dom';
-import { PATHS } from '@/routes/paths';
+import { PATHS } from 'web/src/routes/paths';
 
 export default function MainNav() {
   return (
