@@ -30,19 +30,19 @@ export default function Anvil() {
         }
       }
     }
-    createProject();
+  void createProject();
   }, []);
 
   return (
-    <div>
+  <div className="anvil-container">
       <h1>Anvil (Teleprompter)</h1>
       <ReturnHome />
       {projectId && <div>Created Project ID: {projectId}</div>}
-      {error && <div style={{ color: "red" }}>{error}</div>}
+  {error && <div className="error-text">{error}</div>}
       <iframe
         src="/teleprompter_pro_fixed_v1_5_4c.html"
         title="Teleprompter Pro"
-        style={{ width: "100%", height: "100vh", border: 0 }}
+        className="anvil-iframe"
         allow="clipboard-read; clipboard-write; fullscreen"
         allowFullScreen
       />
