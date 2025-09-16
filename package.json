@@ -1,16 +1,16 @@
 {
-  "name": "creators-forge",
+  "name": "podcasters-forge",
   "private": true,
   "workspaces": [
     "web",
     "server"
   ],
   "scripts": {
-    "dev": "npm run -ws --if-present dev",
+     "dev": "npm --prefix web run dev",
   "prestart": "node scripts/dev-db.mjs",
   "start": "concurrently -k --raw -n server,web -c green,cyan \"npm -w server run dev\" \"npm -w web run dev\"",
   "dev-db": "node scripts/dev-db.mjs",
-    "build": "npm run -ws --if-present build",
+     "build": "npm --prefix web run build",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "lint": "eslint .",
