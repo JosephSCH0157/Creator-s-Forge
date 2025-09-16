@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
-import iconTongs from '@/assets/icon-tongs.png';
+import iconTongs from '@/assets/IMGtongs.png';
 import ReturnHome from '@/components/ReturnHome';
 import { PATHS } from '@/routes/paths';
 
