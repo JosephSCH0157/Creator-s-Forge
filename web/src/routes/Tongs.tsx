@@ -1,7 +1,7 @@
 // src/routes/Tongs.tsx
 import '@/index.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import IMGtongs from '@/assets/IMGtongs.png';
 import { PATHS } from '@/routes/paths';
@@ -505,30 +505,41 @@ export default function Tongs() {
             />
           </div>
 
-          {(['idea', 'script', 'recorded', 'edited', 'published'] as Phase[]).map((ph) => {
-            const list = projects.filter((p) => p.phase === ph);
-            return (
-              <section key={ph} className="tongs-section">
-                <header className="tongs-section-head">
-                  <span className="tongs-section-title">{ph.toUpperCase()}</span>
-                  <span className="tongs-chip">{list.length}</span>
-                </header>
-                <ul className="tongs-list">
-                  {list.map((p) => (
-                    <li key={p.id}>
-                      <Link to={`${TONGS_BASE}/${p.id}`} className="tongs-item" title={p.title}>
-                        <span className="tongs-item-title">{p.title}</span>
-                        <span className="tongs-item-meta">
-                          {new Date(p.updatedAt).toLocaleDateString()}
-                        </span>
-                      </Link>
+          {current && (
+            <section className="tongs-section">
+              <header className="tongs-section-head">
+                <span className="tongs-section-title">Scripts</span>
+                <span className="tongs-chip">
+                  {current.assets.filter((a) => a.kind === 'script').length}
+                </span>
+              </header>
+              <ul className="tongs-list">
+                {current.assets
+                  .filter((a) => a.kind === 'script')
+                  .map((a) => (
+                    <li key={a.id}>
+                      <span className="tongs-item-title">{a.name}</span>
+                      <button
+                        className="btn"
+                        style={{ marginLeft: 8 }}
+                        onClick={() => {
+                          openInTeleprompter({
+                            id: a.id,
+                            title: a.name || current.title || 'Untitled',
+                            html: a.meta?.text || '',
+                          });
+                        }}
+                      >
+                        Send to Teleprompter
+                      </button>
                     </li>
                   ))}
-                  {list.length === 0 && <li className="tongs-empty">No items in this phase.</li>}
-                </ul>
-              </section>
-            );
-          })}
+                {current.assets.filter((a) => a.kind === 'script').length === 0 && (
+                  <li className="tongs-empty">No script assets available.</li>
+                )}
+              </ul>
+            </section>
+          )}
         </aside>
 
         <main className="tongs-detail" aria-label="Project details">
