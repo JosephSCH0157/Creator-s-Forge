@@ -296,13 +296,15 @@ export default function Tongs() {
             break;
           }
           case 'SCRIPT.SAVE': {
-            const { projectId, name, text } = payload;
+            const { projectId, name, text } = payload; // no 'as any'
             setProjects((prev) => {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
-              const base = prev[idx];
+
+              const base = prev[idx]!; // non-null
               const safeText =
                 typeof text === 'string' ? text : text !== undefined ? JSON.stringify(text) : '';
+
               const a: Asset = {
                 id: uid(),
                 kind: 'script',
@@ -310,21 +312,24 @@ export default function Tongs() {
                 createdAt: now(),
                 meta: { text: safeText },
               };
-              const updated: Project = {
+
+              const nextProject: Project = {
                 ...base,
                 assets: [a, ...base.assets],
                 scriptId: a.id,
                 phase: base.phase === 'idea' ? 'script' : base.phase,
                 updatedAt: now(),
               };
+
               const next = [...prev];
-              next[idx] = updated;
+              next[idx] = nextProject;
               save(next);
-              ok(id, { asset: a, scripts: updated.assets.filter((x) => x.kind === 'script') });
+              ok(id, { asset: a, scripts: nextProject.assets.filter((x) => x.kind === 'script') });
               return next;
             });
             break;
           }
+
           case 'SEARCH': {
             const q = typeof payload.query === 'string' ? payload.query.toLowerCase() : '';
             const hits = projects
