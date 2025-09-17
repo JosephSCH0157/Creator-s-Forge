@@ -364,8 +364,8 @@ export default function Tongs() {
   }, []);
 
   /** UI helpers **/
-  const TONGS_BASE = (PATHS as any)?.tongs ?? '/tools/tongs';
-
+  const TONGS_BASE = PATHS.tongs ?? '/tools/tongs';
+  // const TONGS_BASE = (PATHS as any)?.tongs ?? '/tools/tongs';
   const createProject = () => {
     const t = title.trim() || 'Untitled Project';
     const p: Project = {
