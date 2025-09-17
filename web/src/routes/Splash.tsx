@@ -27,20 +27,22 @@ const SPOTS: Spot[] = [
 ];
 
 function Hotspot({ s }: { s: Spot }) {
-  const style = {
-    '--hotspot-top': `${s.top}%`,
-    '--hotspot-left': `${s.left}%`,
-  } as React.CSSProperties;
-  const isExternal = s.to.endsWith('.html');
-  if (isExternal) {
+  const common = {
+    className: 'hotspot',
+    style: { top: `${s.top}%`, left: `${s.left}%` },
+    'aria-label': s.hover,
+    'data-hover': s.hover,
+  } as const;
+
+  if (s.to.endsWith('.html')) {
     return (
-      <a href={s.to} className="hotspot" style={style} aria-label={s.hover} data-hover={s.hover}>
+      <a href={s.to} {...common}>
         {s.label}
       </a>
     );
   }
   return (
-    <Link to={s.to} className="hotspot" style={style} aria-label={s.hover} data-hover={s.hover}>
+    <Link to={s.to} reloadDocument {...common}>
       {s.label}
     </Link>
   );
