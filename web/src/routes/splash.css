@@ -23,19 +23,21 @@
 }
 .noselect {
   -webkit-user-select: none; /* Safari */
-  -moz-user-select: none;    /* Firefox */
-  -ms-user-select: none;     /* IE/Edge legacy */
-  user-select: none;         /* Standard */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE/Edge legacy */
+  user-select: none; /* Standard */
 }
 /* keep it readable over any background */
-.cf-brand { text-shadow: 0 1px 6px rgba(0,0,0,.45); }
+.cf-brand {
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}
 /* Splash.css */
 .brand-glow {
-  text-shadow: 0 1px 6px rgba(0,0,0,.45);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
 }
 /* replace this whole block */
 .splash-root {
-  position: relative;         /* was display:flex */
+  position: relative; /* was display:flex */
   width: 100vw;
   height: 100vh;
   background: #111;
@@ -57,7 +59,9 @@
 }
 
 /* keep your glow */
-.brand-glow { text-shadow: 0 1px 6px rgba(0,0,0,.45); }
+.brand-glow {
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}
 .hotspot {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -69,7 +73,10 @@
   text-decoration: none;
   font-size: 14px;
   z-index: 2;
-  transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    color 0.2s ease;
   line-height: 1;
   white-space: nowrap;
 }

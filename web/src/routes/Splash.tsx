@@ -1,41 +1,46 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
 
-import CFWordmark from "../components/CFWordmark";
+import CFWordmark from '../components/CFWordmark';
 
-import SplashWithEmbers from "./SplashWithEmbers";
+import SplashWithEmbers from './SplashWithEmbers';
 
-import "./splash.css";
-import { PATHS } from "@/routes/paths";
+import { PATHS } from '@/routes/paths';
+import './splash.css';
 
 type Spot = {
   to: string;
-  top: number;   // 0–100 (%)
-  left: number;  // 0–100 (%)
+  top: number; // 0–100 (%)
+  left: number; // 0–100 (%)
   label: string; // forge term
   hover: string; // real tool name
   icon?: string; // optional emoji/icon
 };
 
 const SPOTS: Spot[] = [
-  { to: PATHS.forge,        top: 55, left: 70, label: "Forge",     hover: "Home",           icon: "🔥" },
-  { to: PATHS.anvil,        top: 80, left: 50, label: "Anvil",     hover: "Teleprompter",   icon: "⚒️" },
-  { to: PATHS.tongs,        top: 45, left: 25, label: "Tongs",     hover: "File System",    icon: "🗄️" },
-  { to: PATHS.hammer,       top: 15, left: 35, label: "Hammer",    hover: "Video Editor",   icon: "🔨" },
-  { to: PATHS.quench,       top: 70, left: 80, label: "Quench",    hover: "Uploader",       icon: "💧" },
-  { to: PATHS.ledger,       top: 80, left: 65, label: "Ledger",    hover: "Analytics",      icon: "📒" },
-  { to: PATHS.stock,        top: 85, left: 30, label: "Bar Stock", hover: "Ideas",          icon: "🧱" },
+  { to: PATHS.forge, top: 55, left: 70, label: 'Forge', hover: 'Home', icon: '🔥' },
+  { to: PATHS.anvil, top: 80, left: 50, label: 'Anvil', hover: 'Teleprompter', icon: '⚒️' },
+  { to: PATHS.tongs, top: 45, left: 25, label: 'Tongs', hover: 'File System', icon: '🗄️' },
+  { to: PATHS.hammer, top: 15, left: 35, label: 'Hammer', hover: 'Video Editor', icon: '🔨' },
+  { to: PATHS.quench, top: 70, left: 80, label: 'Quench', hover: 'Uploader', icon: '💧' },
+  { to: PATHS.ledger, top: 80, left: 65, label: 'Ledger', hover: 'Analytics', icon: '📒' },
+  { to: PATHS.stock, top: 85, left: 30, label: 'Bar Stock', hover: 'Ideas', icon: '🧱' },
 ];
 
 function Hotspot({ s }: { s: Spot }) {
+  const style = {
+    '--hotspot-top': `${s.top}%`,
+    '--hotspot-left': `${s.left}%`,
+  } as React.CSSProperties;
+  const isExternal = s.to.endsWith('.html');
+  if (isExternal) {
+    return (
+      <a href={s.to} className="hotspot" style={style} aria-label={s.hover} data-hover={s.hover}>
+        {s.label}
+      </a>
+    );
+  }
   return (
-    <Link
-      to={s.to}
-      className="hotspot"
-      style={{ top: `${s.top}%`, left: `${s.left}%` }}
-      aria-label={s.hover}
-      data-hover={s.hover}
-    >
+    <Link to={s.to} className="hotspot" style={style} aria-label={s.hover} data-hover={s.hover}>
       {s.label}
     </Link>
   );
