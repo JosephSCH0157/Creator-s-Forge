@@ -126,13 +126,9 @@ export default function Tongs() {
             const p = projects.find((x) => x.id === payload.projectId);
             if (!p) return fail(id, 'not_found');
             ok(id, p);
-          default: {
-            // Runtime-safe response for unexpected messages
-            fail(id, 'unknown_message');
-            // Uncomment during development if you want type-level exhaustiveness checks:
-            // assertNever(payload as never);
             break;
           }
+          // Removed duplicate default clause to fix parsing error
           case 'PROJECT.UPDATE': {
             const { projectId, patch } = payload;
             setProjects((prev) => {
@@ -352,7 +348,7 @@ export default function Tongs() {
   );
 
   /** Upload handler (non-async onChange) **/
-  function handleScriptUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleScriptUpload(e: React.ChangeEvent<HTMLInputElement>): void {
     const file = e.currentTarget.files?.[0];
     if (!file || !current) return;
 
