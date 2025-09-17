@@ -347,10 +347,12 @@ export default function Tongs() {
             break;
           }
           default: {
-            // runtime-safe default; enable assertNever during dev if you want strict exhaustiveness
-            // assertNever(payload as never);
+            // runtime fallback so the sender gets an error response
             fail(id, 'unknown_message');
-            break;
+
+            // compile-time exhaustiveness: if you add a new message type
+            // and forget to handle it above, this line will fail the build.
+            assertNever(payload);
           }
         }
       } catch (e: unknown) {
