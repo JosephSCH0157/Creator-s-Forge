@@ -225,23 +225,26 @@ export default function Tongs() {
             break;
           }
           case 'ASSET.UPDATE': {
-            const { projectId, assetId, patch } = payload;
+            const { projectId, assetId, patch } = payload; // no 'as any'
             setProjects((prev) => {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
-              const base = prev[idx];
-              const p: Project = {
+
+              const base = prev[idx]!; // non-null
+              const nextProject: Project = {
                 ...base,
                 assets: base.assets.map((a) => (a.id === assetId ? { ...a, ...patch } : a)),
                 updatedAt: now(),
               };
+
               const next = [...prev];
-              next[idx] = p;
+              next[idx] = nextProject;
               return next;
             });
             ok(id, true);
             break;
           }
+
           case 'ASSET.DELETE': {
             const { projectId, assetId } = payload;
             setProjects((prev) => {
