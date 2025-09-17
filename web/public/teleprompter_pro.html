@@ -323,6 +323,45 @@
 </script>
 </head>
 <body>
+  <script>
+    (function () {
+      const ch = new BroadcastChannel('podcasters-forge:v1');
+      const loadBtn = document.getElementById('loadBtn');
+      const dropdown = document.getElementById('script-list');
+
+      if (loadBtn && dropdown) {
+        loadBtn.addEventListener('click', () => {
+          const assetId = dropdown.value;
+          const projectId = new URLSearchParams(location.search).get('projectId') || '';
+          if (!assetId || !projectId) return;
+          ch.postMessage({
+            kind: 'REQ:',
+            id: 'read-' + Date.now(),
+            payload: {
+              type: 'ASSET.READ',
+              projectId,
+              assetId
+            }
+          });
+        });
+      }
+
+      ch.onmessage = function(ev) {
+        const msg = ev.data;
+        if (msg.kind === 'RSP:' && msg.id.startsWith('read-') && msg.payload?.ok) {
+          const asset = msg.payload.data;
+          const html = asset?.meta?.text || '';
+          const editor = document.getElementById('scriptEditor') || document.querySelector('[data-editor], #script');
+          if (editor?.tagName === 'TEXTAREA') {
+            editor.value = html;
+            editor.dispatchEvent(new Event('input', { bubbles: true }));
+          } else if (editor) {
+            editor.innerHTML = html;
+          }
+        }
+      };
+    })();
+  </script>
   <div id="tp-topbar" class="tp-topbar">
   <script>
     window.addEventListener('message', (e) => {
