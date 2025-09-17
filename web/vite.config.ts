@@ -3,9 +3,13 @@ import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin } from 'vite';
 
-// Allow only these parents to embed the app (adjust as needed)
 const CSP = [
-  "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:",
+  "default-src 'self' data: blob:",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self' http://127.0.0.1:5173 ws://127.0.0.1:5173",
   "frame-ancestors 'self' http://127.0.0.1:5173 http://localhost:5173 http://127.0.0.1:5177 http://localhost:5177",
 ].join('; ');
 
