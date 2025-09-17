@@ -1,50 +1,73 @@
   // Improved BroadcastChannel IPC for scripts
   useEffect(() => {
-    const ch = new BroadcastChannel("podcasters-forge:v1");
+    const ch = new BroadcastChannel('podcasters-forge:v1');
+
+    // Reply helpers that Teleprompter understands
+    type OkMsg = { kind: 'OK:'; id: string; payload?: unknown };
+    type ErrMsg = { kind: 'ERR:'; id: string; error: string };
+
+    const ok = (id: string, payload?: unknown) =>
+      ch.postMessage({ kind: 'OK:', id, payload } as OkMsg);
+
+    const fail = (id: string, error: string) =>
+      ch.postMessage({ kind: 'ERR:', id, error } as ErrMsg);
 
     ch.onmessage = (ev: MessageEvent<any>) => {
       const msg = ev.data;
-      if (!msg || !msg.kind?.startsWith("REQ:")) return;
-
-      const reply = (payload: unknown) =>
-        ch.postMessage({ kind: "OK:", id: msg.id, payload } as any);
-
-      const fail = (error: string) =>
-        ch.postMessage({ kind: "ERR:", id: msg.id, error } as any);
+      if (!msg || !msg.kind?.startsWith('REQ:')) return;
 
       try {
         switch (msg.payload.type) {
-          case "SCRIPT.SAVE": {
+          case 'SCRIPT.SAVE': {
             const { projectId, name, text } = msg.payload;
-            if (!projectId || !name) return fail("Missing projectId or name");
-
-            setProjects((prev) => {
-              const idx = prev.findIndex((p) => p.id === projectId);
+            setProjects((prev: Project[]) => {
+              const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
 
               const base = prev[idx];
-              const asset: Asset = {
-                id: crypto.randomUUID(),
-                kind: "script",
-                name,
-                meta: { text },
+              if (
+                !base ||
+                typeof base !== 'object' ||
+                typeof base.id !== 'string' ||
+                typeof base.title !== 'string' ||
+                typeof base.phase !== 'string' ||
+                typeof base.createdAt !== 'number' ||
+                typeof base.updatedAt !== 'number' ||
+                !Array.isArray(base.assets) ||
+                !Array.isArray(base.recordingIds)
+              ) {
+                return prev;
+              }
+
+              const safeText =
+                typeof text === 'string' ? text : text !== undefined ? JSON.stringify(text) : '';
+
+              const a: Asset = {
+                id: uid(),
+                kind: 'script',
+                name: typeof name === 'string' ? name : 'Untitled',
                 createdAt: now(),
+                meta: { text: safeText },
               };
 
-              const next = [...prev];
-              next[idx] = {
+              const nextList = [...prev];
+              const updated: Project = {
                 ...base,
+                assets: [a, ...base.assets],
+                scriptId: a.id,
+                phase: base.phase === 'idea' ? 'script' : base.phase,
                 updatedAt: now(),
-                assets: [asset, ...(base.assets ?? [])],
-                scriptId: asset.id,
               };
-              save(next);
-              // respond with new asset & updated list
-              reply({
-                asset,
-                scripts: next[idx].assets.filter((a) => a.kind === "script"),
+              nextList[idx] = updated;
+
+              // Persist and reply so Teleprompter can refresh immediately
+              save(nextList);
+              ok(id, {
+                asset: a,
+                scripts: updated.assets.filter((x) => x.kind === 'script'),
               });
-              return next;
+
+              return nextList;
             });
             break;
           }
@@ -64,8 +87,10 @@
             break;
           }
 
-          default:
-            fail(`Unknown type: ${(msg.payload as any).type}`);
+          default: {
+            // Exhaustiveness guard for the union
+            assertNever(msg.payload as never);
+          }
         }
       } catch (e: any) {
         fail(e?.message ?? "Unknown error");
