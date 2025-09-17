@@ -80,6 +80,10 @@ const save = (arr: Project[]) => {
 };
 
 export default function Tongs() {
+  // Broadcast live script updates to teleprompter tabs
+  function pushLiveUpdate(html: string) {
+    window.postMessage({ type: 'SCRIPT_HTML', html }, location.origin);
+  }
   const navigate = useNavigate();
   const { projectId } = useParams();
 
@@ -389,6 +393,15 @@ export default function Tongs() {
     [projects, projectId],
   );
 
+  // Open in Teleprompter (static file)
+  function openInTeleprompter(script: { id: string; title: string; html: string }) {
+    localStorage.setItem('cf_current_script_id', script.id);
+    localStorage.setItem('cf_current_script_title', script.title || 'Untitled');
+    localStorage.setItem('cf_current_script_html', script.html || '');
+    const url = `${location.origin}/teleprompter_pro.html?projectId=${encodeURIComponent(script.id)}`;
+    window.open(url, 'teleprompter', 'noopener,noreferrer');
+  }
+
   /** Upload handler (non-async onChange) **/
   function handleScriptUpload(e: React.ChangeEvent<HTMLInputElement>): void {
     const file = e.currentTarget.files?.[0];
@@ -520,10 +533,15 @@ export default function Tongs() {
                     <button
                       className="btn"
                       onClick={() => {
-                        const id = current.id;
-                        window.location.href = `/teleprompter_pro.html?projectId=${encodeURIComponent(
-                          id,
-                        )}`;
+                        // Find the script asset
+                        const scriptAsset = current.scriptId
+                          ? current.assets.find((a) => a.id === current.scriptId)
+                          : null;
+                        openInTeleprompter({
+                          id: current.scriptId || '',
+                          title: scriptAsset?.name || current.title || 'Untitled',
+                          html: scriptAsset?.meta?.text || '',
+                        });
                       }}
                     >
                       Open in Teleprompter

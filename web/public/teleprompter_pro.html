@@ -325,6 +325,46 @@
 </head>
 <body>
   <div id="tp-topbar" class="tp-topbar">
+  <script>
+    window.addEventListener('message', (e) => {
+      if (e.data?.type === 'SCRIPT_HTML') {
+        const html = e.data.html || '';
+        const editor = document.getElementById('scriptEditor') || document.querySelector('[data-editor], #script');
+        if (editor?.tagName === 'TEXTAREA') {
+          editor.value = html;
+          editor.dispatchEvent(new Event('input', { bubbles: true }));
+        } else if (editor) {
+          editor.innerHTML = html;
+        }
+      }
+    });
+  </script>
+  <script>
+    (function bootstrapFromLocalStorage() {
+      try {
+        const html = localStorage.getItem('cf_current_script_html') || '';
+        const title = localStorage.getItem('cf_current_script_title') || 'Untitled';
+
+        // Replace these with whatever your Teleprompter uses:
+        const editor = document.getElementById('scriptEditor');      // e.g., <textarea id="scriptEditor">
+        const titleEl = document.getElementById('scriptTitle');      // optional
+
+        if (titleEl) titleEl.textContent = title;
+
+        // If you store raw HTML in a textarea (common pattern), set .value:
+        if (editor && editor.tagName === 'TEXTAREA') {
+          editor.value = html;
+          editor.dispatchEvent(new Event('input', { bubbles: true }));
+        } else {
+          // Or if your teleprompter uses a contenteditable container:
+          const region = document.querySelector('[data-editor], #script');
+          if (region) region.innerHTML = html;
+        }
+      } catch (e) {
+        console.error('Teleprompter bootstrap failed:', e);
+      }
+    })();
+  </script>
       <a href="/" title="Back to Podcaster’s Forge" class="tp-back-link">
         <img src="/anvil.png" alt="Anvil" class="tp-back-img">
         <strong>Back to Podcaster’s Forge</strong>
