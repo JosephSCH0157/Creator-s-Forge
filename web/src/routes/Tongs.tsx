@@ -123,9 +123,9 @@ export default function Tongs() {
             break;
           }
           case 'PROJECT.READ': {
-            const p = projects.find((x) => x.id === payload.projectId);
-            if (!p) return fail(id, 'not_found');
-            ok(id, p);
+            const proj = projects.find((x) => x.id === payload.projectId);
+            if (!proj) return fail(id, 'not_found');
+            ok(id, proj);
             break;
           }
           // Removed duplicate default clause to fix parsing error
@@ -161,9 +161,11 @@ export default function Tongs() {
             break;
           }
           case 'ASSET.LIST': {
-            const p = projects.find((x) => x.id === payload.projectId);
-            if (!p) return fail(id, 'not_found');
-            const items = payload.kind ? p.assets.filter((a) => a.kind === payload.kind) : p.assets;
+            const proj = projects.find((x) => x.id === payload.projectId);
+            if (!proj) return fail(id, 'not_found');
+            const items = payload.kind
+              ? proj.assets.filter((a) => a.kind === payload.kind)
+              : proj.assets;
             ok(id, items);
             break;
           }
@@ -172,7 +174,8 @@ export default function Tongs() {
             setProjects((prev) => {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
-              const base = prev[idx];
+              const curr = prev[idx];
+              if (!curr) return prev;
               const a: Asset = {
                 id: uid(),
                 kind: (asset?.kind as Asset['kind']) ?? 'doc',
@@ -180,14 +183,14 @@ export default function Tongs() {
                 createdAt: now(),
                 meta: asset?.meta ?? {},
               };
-              const p: Project = {
-                ...base,
-                assets: [a, ...base.assets],
-                scriptId: a.kind === 'script' ? a.id : base.scriptId,
+              const nextProject: Project = {
+                ...curr,
+                assets: [a, ...curr.assets],
+                scriptId: a.kind === 'script' ? a.id : curr.scriptId,
                 updatedAt: now(),
               };
               const next = [...prev];
-              next[idx] = p;
+              next[idx] = nextProject;
               return next;
             });
             ok(id, true);
@@ -207,6 +210,7 @@ export default function Tongs() {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
               const base = prev[idx];
+              if (!base) return prev;
               const p: Project = {
                 ...base,
                 assets: base.assets.map((a) => (a.id === assetId ? { ...a, ...patch } : a)),
@@ -225,6 +229,7 @@ export default function Tongs() {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
               const base = prev[idx];
+              if (!base) return prev;
               const p: Project = {
                 ...base,
                 assets: base.assets.filter((a) => a.id !== assetId),
@@ -272,6 +277,7 @@ export default function Tongs() {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
               const base = prev[idx];
+              if (!base) return prev;
               const safeText =
                 typeof text === 'string' ? text : text !== undefined ? JSON.stringify(text) : '';
               const a: Asset = {
@@ -312,8 +318,12 @@ export default function Tongs() {
             ok(id, hits);
             break;
           }
-          default:
-            assertNever(payload);
+          default: {
+            fail(id, 'unknown_message');
+            // Uncomment to enforce exhaustiveness during dev:
+            // assertNever(payload as never);
+            break;
+          }
         }
       } catch (e: unknown) {
         if (e instanceof Error) fail(id, e.message);
