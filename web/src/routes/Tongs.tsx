@@ -187,11 +187,12 @@ export default function Tongs() {
             break;
           }
           case 'ASSET.CREATE': {
-            const { projectId, asset } = payload;
+            const { projectId, asset } = payload; // no 'as any'
             setProjects((prev) => {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
-              const curr = prev[idx];
+
+              const curr = prev[idx]!; // non-null assertion: we know it exists
               const a: Asset = {
                 id: uid(),
                 kind: (asset?.kind as Asset['kind']) ?? 'doc',
@@ -199,12 +200,14 @@ export default function Tongs() {
                 createdAt: now(),
                 meta: asset?.meta ?? {},
               };
+
               const nextProject: Project = {
                 ...curr,
                 assets: [a, ...curr.assets],
                 scriptId: a.kind === 'script' ? a.id : curr.scriptId,
                 updatedAt: now(),
               };
+
               const next = [...prev];
               next[idx] = nextProject;
               return next;
@@ -212,6 +215,7 @@ export default function Tongs() {
             ok(id, true);
             break;
           }
+
           case 'ASSET.READ': {
             const p = projects.find((x) => x.id === payload.projectId);
             if (!p) return fail(id, 'not_found');
