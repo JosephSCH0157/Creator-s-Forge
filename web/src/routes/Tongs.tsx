@@ -1,26 +1,150 @@
-  // Improved BroadcastChannel IPC for scripts
+// src/routes/Tongs.tsx
+import '@/index.css';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+
+import IMGtongs from '@/assets/IMGtongs.png';
+import { PATHS } from '@/routes/paths';
+
+/** === Core types === */
+type Phase = 'idea' | 'script' | 'recorded' | 'edited' | 'published';
+
+type AssetMeta = { text?: string; [k: string]: unknown };
+type Asset = {
+  id: string;
+  kind: 'script' | 'video' | 'image' | 'doc';
+  name: string;
+  createdAt: number;
+  meta?: AssetMeta;
+};
+
+type Project = {
+  id: string;
+  title: string;
+  phase: Phase;
+  createdAt: number;
+  updatedAt: number;
+  assets: Asset[];
+  scriptId?: string;
+  recordingIds: string[];
+};
+
+/** === Broadcast message types === */
+type ReqPayload =
+  | { type: 'PING' }
+  | { type: 'PROJECT.LIST' }
+  | { type: 'PROJECT.CREATE'; title?: unknown }
+  | { type: 'PROJECT.READ'; projectId: string }
+  | { type: 'PROJECT.UPDATE'; projectId: string; patch: Partial<Project> }
+  | { type: 'PROJECT.DELETE'; projectId: string }
+  | { type: 'ASSET.LIST'; projectId: string; kind?: Asset['kind'] }
+  | { type: 'ASSET.CREATE'; projectId: string; asset: Partial<Asset> }
+  | { type: 'ASSET.READ'; projectId: string; assetId: string }
+  | { type: 'ASSET.UPDATE'; projectId: string; assetId: string; patch: Partial<Asset> }
+  | { type: 'ASSET.DELETE'; projectId: string; assetId: string }
+  | { type: 'SCRIPT.INDEX' }
+  | { type: 'SCRIPT.GET'; projectId: string }
+  | { type: 'SCRIPT.SAVE'; projectId: string; name?: unknown; text?: unknown }
+  | { type: 'SEARCH'; query?: unknown };
+
+type ReqMsg = { kind: 'REQ:'; id: string; payload: ReqPayload };
+
+type RspOk = { ok: true; data?: unknown };
+type RspErr = { ok: false; error: string };
+type RspPayload = RspOk | RspErr;
+type RspMsg = { kind: 'RSP:'; id: string; payload: RspPayload };
+
+const assertNever = (x: never): never => {
+  throw new Error(`Unhandled message type: ${String(x)}`);
+};
+
+/** === Storage helpers === */
+const STORE = 'podcasters-forge:projects:v1';
+const now = () => Date.now();
+const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+function load(): Project[] {
+  try {
+    const arr = JSON.parse(localStorage.getItem(STORE) || '[]') as Project[];
+    // normalize legacy items that may miss arrays
+    return arr.map((p) => ({
+      ...p,
+      assets: Array.isArray(p.assets) ? p.assets : [],
+      recordingIds: Array.isArray(p.recordingIds) ? p.recordingIds : [],
+    }));
+  } catch {
+    return [];
+  }
+}
+function save(arr: Project[]) {
+  localStorage.setItem(STORE, JSON.stringify(arr));
+}
+
+/** === Component === */
+export default function Tongs() {
+  const navigate = useNavigate();
+  const { projectId } = useParams();
+  const [projects, setProjects] = useState<Project[]>(() => load());
+  const [title, setTitle] = useState('');
+
+  // persist on change (debounced to avoid hammering localStorage)
+  useEffect(() => {
+    const handle = setTimeout(() => save(projects), 200);
+    return () => clearTimeout(handle);
+  }, [projects]);
+
+  /** ===== BroadcastChannel IPC (single, clean handler) ===== */
   useEffect(() => {
     const ch = new BroadcastChannel('podcasters-forge:v1');
 
-    // Reply helpers that Teleprompter understands
-    type OkMsg = { kind: 'OK:'; id: string; payload?: unknown };
-    type ErrMsg = { kind: 'ERR:'; id: string; error: string };
+    const send = (id: string, payload: RspPayload) =>
+      ch.postMessage({ kind: 'RSP:', id, payload } as RspMsg);
+    const ok = (id: string, data?: unknown) => send(id, { ok: true, data });
+    const fail = (id: string, error: string) => send(id, { ok: false, error });
 
-    const ok = (id: string, payload?: unknown) =>
-      ch.postMessage({ kind: 'OK:', id, payload } as OkMsg);
-
-    const fail = (id: string, error: string) =>
-      ch.postMessage({ kind: 'ERR:', id, error } as ErrMsg);
-
-    ch.onmessage = (ev: MessageEvent<any>) => {
-      const msg = ev.data;
-      if (!msg || !msg.kind?.startsWith('REQ:')) return;
+    ch.onmessage = (ev: MessageEvent<unknown>) => {
+      const msg = ev.data as Partial<ReqMsg>;
+      if (!msg || msg.kind !== 'REQ:' || typeof msg.id !== 'string' || !msg.payload) return;
+      const { id, payload } = msg;
 
       try {
-        switch (msg.payload.type) {
-          case 'SCRIPT.SAVE': {
-            const { projectId, name, text } = msg.payload;
-            setProjects((prev: Project[]) => {
+        switch (payload.type) {
+          case 'PING': {
+            ok(id, { pong: true });
+            break;
+          }
+
+          case 'PROJECT.LIST': {
+            ok(id, projects);
+            break;
+          }
+
+          case 'PROJECT.CREATE': {
+            const t = typeof payload.title === 'string' ? payload.title.trim() : 'Untitled Project';
+            const p: Project = {
+              id: uid(),
+              title: t || 'Untitled Project',
+              phase: 'idea',
+              createdAt: now(),
+              updatedAt: now(),
+              assets: [],
+              recordingIds: [],
+            };
+            setProjects((prev) => [p, ...prev]);
+            ok(id, { projectId: p.id });
+            break;
+          }
+
+          case 'PROJECT.READ': {
+            const p = projects.find((x) => x.id === payload.projectId);
+            if (!p) return fail(id, 'not_found');
+            ok(id, p);
+            break;
+          }
+
+          case 'PROJECT.UPDATE': {
+            const { projectId, patch } = payload;
+            setProjects((prev) => {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
 
@@ -30,6 +154,59 @@
                 typeof base !== 'object' ||
                 typeof base.id !== 'string' ||
                 typeof base.title !== 'string' ||
+                typeof base.phase !== 'string' ||
+                typeof base.createdAt !== 'number' ||
+                typeof base.updatedAt !== 'number' ||
+                !Array.isArray(base.assets) ||
+                !Array.isArray(base.recordingIds) ||
+                !patch ||
+                typeof patch !== 'object'
+              ) {
+                return prev;
+              }
+
+              const p: Project = {
+                id: base.id,
+                title: typeof patch.title === 'string' ? patch.title : base.title,
+                phase: typeof patch.phase === 'string' ? patch.phase : base.phase,
+                createdAt: base.createdAt,
+                updatedAt: now(),
+                assets: Array.isArray(patch.assets) ? patch.assets : base.assets,
+                recordingIds: Array.isArray(patch.recordingIds)
+                  ? patch.recordingIds
+                  : base.recordingIds,
+                scriptId: typeof patch.scriptId === 'string' ? patch.scriptId : base.scriptId,
+              };
+
+              const next = [...prev];
+              next[idx] = p;
+              return next;
+            });
+            ok(id, { projectId });
+            break;
+          }
+
+          case 'PROJECT.DELETE': {
+            setProjects((prev) => prev.filter((x) => x.id !== payload.projectId));
+            ok(id, { projectId: payload.projectId });
+            break;
+          }
+
+          case 'ASSET.LIST': {
+            const p = projects.find((x) => x.id === payload.projectId);
+            if (!p) return fail(id, 'not_found');
+            const items = payload.kind ? p.assets.filter((a) => a.kind === payload.kind) : p.assets;
+            ok(id, items);
+            break;
+          }
+
+          case 'ASSET.CREATE': {
+            const { projectId, asset } = payload;
+            setProjects((prev) => {
+              const idx = prev.findIndex((x) => x.id === projectId);
+              if (idx < 0) return prev;
+
+              const base = prev[idx];
               if (
                 !base ||
                 typeof base !== 'object' ||
@@ -43,65 +220,7 @@
               ) {
                 return prev;
               }
-              if (!patch || typeof patch !== 'object') return prev;
 
-              case 'SCRIPT.SAVE': {
-                const { projectId, name, text } = payload;
-                setProjects((prev: Project[]) => {
-                  const idx = prev.findIndex((x) => x.id === projectId);
-                  if (idx < 0) return prev;
-
-                  const base = prev[idx];
-                  if (
-                    !base ||
-                    typeof base !== 'object' ||
-                    typeof base.id !== 'string' ||
-                    typeof base.title !== 'string' ||
-                    typeof base.phase !== 'string' ||
-                    typeof base.createdAt !== 'number' ||
-                    typeof base.updatedAt !== 'number' ||
-                    !Array.isArray(base.assets) ||
-                    !Array.isArray(base.recordingIds)
-                  ) {
-                    return prev;
-                  }
-
-                  const safeText =
-                    typeof text === 'string' ? text : text !== undefined ? JSON.stringify(text) : '';
-
-                  const a: Asset = {
-                    id: uid(),
-                    kind: 'script',
-                    name: typeof name === 'string' ? name : 'Untitled',
-                    createdAt: now(),
-                    meta: { text: safeText },
-                  };
-
-                  const next: Project[] = [...prev];
-                  const updated: Project = {
-                    ...base,
-                    assets: [a, ...base.assets],
-                    scriptId: a.id,
-                    phase: base.phase === 'idea' ? 'script' : base.phase,
-                    updatedAt: now(),
-                  };
-                  next[idx] = updated;
-
-                  // persist
-                  save(next);
-
-                  // ✅ tell Teleprompter the new list so its dropdown updates
-                  ok(id, { asset: a, scripts: updated.assets.filter((x) => x.kind === 'script') });
-
-                  return next;
-                });
-                break;
-              }
-                !Array.isArray(base.assets) ||
-                !Array.isArray(base.recordingIds)
-              ) {
-                return prev;
-              }
               const a: Asset = {
                 id: uid(),
                 kind: (asset?.kind as Asset['kind']) ?? 'doc',
@@ -109,13 +228,15 @@
                 createdAt: now(),
                 meta: asset?.meta ?? {},
               };
+
               const p: Project = {
                 ...base,
                 assets: [a, ...base.assets],
                 scriptId: a.kind === 'script' ? a.id : base.scriptId,
                 updatedAt: now(),
               };
-              const next: Project[] = [...prev];
+
+              const next = [...prev];
               next[idx] = p;
               return next;
             });
@@ -134,9 +255,10 @@
 
           case 'ASSET.UPDATE': {
             const { projectId, assetId, patch } = payload;
-            setProjects((prev: Project[]) => {
+            setProjects((prev) => {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
+
               const base = prev[idx];
               if (
                 !base ||
@@ -151,23 +273,27 @@
               ) {
                 return prev;
               }
+
               const p: Project = {
                 ...base,
                 assets: base.assets.map((a) => (a.id === assetId ? { ...a, ...patch } : a)),
                 updatedAt: now(),
               };
-              const next: Project[] = [...prev];
+
+              const next = [...prev];
               next[idx] = p;
               return next;
             });
             ok(id, true);
             break;
           }
+
           case 'ASSET.DELETE': {
             const { projectId, assetId } = payload;
-            setProjects((prev: Project[]) => {
+            setProjects((prev) => {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
+
               const base = prev[idx];
               if (
                 !base ||
@@ -182,6 +308,7 @@
               ) {
                 return prev;
               }
+
               const p: Project = {
                 ...base,
                 assets: base.assets.filter((a) => a.id !== assetId),
@@ -189,13 +316,15 @@
                 recordingIds: base.recordingIds.filter((id) => id !== assetId),
                 updatedAt: now(),
               };
-              const next: Project[] = [...prev];
+
+              const next = [...prev];
               next[idx] = p;
               return next;
             });
             ok(id, true);
             break;
           }
+
           case 'SCRIPT.INDEX': {
             const scripts = projects
               .flatMap((p) => {
@@ -227,9 +356,10 @@
 
           case 'SCRIPT.SAVE': {
             const { projectId, name, text } = payload;
-            setProjects((prev: Project[]) => {
+            setProjects((prev) => {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
+
               const base = prev[idx];
               if (
                 !base ||
@@ -244,8 +374,10 @@
               ) {
                 return prev;
               }
+
               const safeText =
                 typeof text === 'string' ? text : text !== undefined ? JSON.stringify(text) : '';
+
               const a: Asset = {
                 id: uid(),
                 kind: 'script',
@@ -253,15 +385,22 @@
                 createdAt: now(),
                 meta: { text: safeText },
               };
-              const p: Project = {
+
+              const updated: Project = {
                 ...base,
                 assets: [a, ...base.assets],
                 scriptId: a.id,
                 phase: base.phase === 'idea' ? 'script' : base.phase,
                 updatedAt: now(),
               };
-              const next: Project[] = [...prev];
-              next[idx] = p;
+
+              const next = [...prev];
+              next[idx] = updated;
+
+              // persist + reply with fresh list so Teleprompter dropdown updates
+              save(next);
+              ok(id, { asset: a, scripts: updated.assets.filter((x) => x.kind === 'script') });
+
               return next;
             });
             break;
@@ -285,7 +424,8 @@
           }
 
           default:
-            assertNever(payload as never);
+            // Exhaustive guard
+            assertNever(payload);
         }
       } catch (e: unknown) {
         if (e instanceof Error) fail(id, e.message);
@@ -326,7 +466,6 @@
   );
 
   return (
-    /* Top bar */
     <div className="tongs-root">
       <div className="tongs-topbar">
         <img src={IMGtongs} alt="Tongs" className="tongs-logo" />
@@ -336,9 +475,7 @@
         </div>
       </div>
 
-      {/* Main layout */}
       <div className="tongs-main">
-        {/* Sidebar */}
         <aside className="tongs-sidebar" aria-label="Projects">
           <div className="tongs-sidebar-new">
             <input
@@ -366,8 +503,7 @@
                 if (file.name.endsWith('.txt') || file.name.endsWith('.md')) {
                   text = await file.text();
                 } else if (file.name.endsWith('.docx')) {
-                  // For .docx, add mammoth later; temporary message:
-                  alert("DOCX support requires 'mammoth'. See notes below.");
+                  alert("DOCX import requires 'mammoth' – we can add that next.");
                   return;
                 }
 
@@ -382,14 +518,16 @@
                 setProjects((prev) => {
                   const idx = prev.findIndex((x) => x.id === current.id);
                   if (idx < 0) return prev;
-                  const p: Project = {
+
+                  const updated: Project = {
                     ...prev[idx],
                     updatedAt: now(),
                     assets: [a, ...(prev[idx].assets ?? [])],
-                    scriptId: a.id, // make uploaded script current
+                    scriptId: a.id,
                   };
+
                   const next = [...prev];
-                  next[idx] = p;
+                  next[idx] = updated;
                   save(next);
                   return next;
                 });
@@ -429,7 +567,6 @@
           </div>
         </aside>
 
-        {/* Detail */}
         <main className="tongs-detail" aria-label="Project details">
           {!current ? (
             <div className="tongs-empty-state">
@@ -453,7 +590,9 @@
                       className="btn"
                       onClick={() => {
                         const id = current.id;
-                        window.location.href = `/teleprompter_pro.html?projectId=${encodeURIComponent(id)}`;
+                        window.location.href = `/teleprompter_pro.html?projectId=${encodeURIComponent(
+                          id,
+                        )}`;
                       }}
                     >
                       Open in Teleprompter
