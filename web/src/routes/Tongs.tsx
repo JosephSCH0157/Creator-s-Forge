@@ -126,6 +126,11 @@ export default function Tongs() {
             const p = projects.find((x) => x.id === payload.projectId);
             if (!p) return fail(id, 'not_found');
             ok(id, p);
+          default: {
+            // Runtime-safe response for unexpected messages
+            fail(id, 'unknown_message');
+            // Uncomment during development if you want type-level exhaustiveness checks:
+            // assertNever(payload as never);
             break;
           }
           case 'PROJECT.UPDATE': {
@@ -361,7 +366,7 @@ export default function Tongs() {
       }
 
       const a: Asset = {
-        id: crypto.randomUUID(),
+        id: uid(),
         kind: 'script',
         name: file.name.replace(/\.(txt|md|docx)$/i, '') || 'Imported Script',
         meta: { text },
