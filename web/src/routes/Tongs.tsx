@@ -1,111 +1,79 @@
-import '@/index.css';
-// routes/Tongs.tsx
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-
-import IMGtongs from '@/assets/IMGtongs.png'; // ← import the image (no leading slash)
-import { PATHS } from '@/routes/paths';
-
-/** === Core types === */
-type Phase = 'idea' | 'script' | 'recorded' | 'edited' | 'published';
-
-type AssetMeta = { text?: string; [k: string]: unknown };
-type Asset = {
-  id: string;
-  kind: 'script' | 'video' | 'image' | 'doc';
-  name: string;
-  createdAt: number;
-  meta?: AssetMeta;
-};
-
-type Project = {
-  id: string;
-  title: string;
-  phase: Phase;
-  createdAt: number;
-  updatedAt: number;
-  assets: Asset[];
-  scriptId?: string;
-  recordingIds: string[];
-};
-
-/** === Broadcast message types === */
-type ReqPayload =
-  | { type: 'PING' }
-  | { type: 'PROJECT.LIST' }
-  | { type: 'PROJECT.CREATE'; title?: unknown }
-  | { type: 'PROJECT.READ'; projectId: string }
-  | { type: 'PROJECT.UPDATE'; projectId: string; patch: Partial<Project> }
-  | { type: 'PROJECT.DELETE'; projectId: string }
-  | { type: 'ASSET.LIST'; projectId: string; kind?: Asset['kind'] }
-  | { type: 'ASSET.CREATE'; projectId: string; asset: Partial<Asset> }
-  | { type: 'ASSET.READ'; projectId: string; assetId: string }
-  | { type: 'ASSET.UPDATE'; projectId: string; assetId: string; patch: Partial<Asset> }
-  | { type: 'ASSET.DELETE'; projectId: string; assetId: string }
-  | { type: 'SCRIPT.INDEX' }
-  | { type: 'SCRIPT.GET'; projectId: string }
-  | { type: 'SCRIPT.SAVE'; projectId: string; name?: unknown; text?: unknown }
-  | { type: 'SEARCH'; query?: unknown };
-
-type ReqMsg = { kind: 'REQ:'; id: string; payload: ReqPayload };
-type RspOk = { ok: true; data?: unknown };
-type RspErr = { ok: false; error: string };
-type RspPayload = RspOk | RspErr;
-type RspMsg = { kind: 'RSP:'; id: string; payload: RspPayload };
-
-const assertNever = (x: never): never => {
-  throw new Error(`Unhandled message type: ${String(x)}`);
-};
-
-/** === Storage helpers === */
-const STORE = 'podcasters-forge:projects:v1';
-const now = () => Date.now();
-const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
-
-function load(): Project[] {
-  try {
-    return JSON.parse(localStorage.getItem(STORE) || '[]') as Project[];
-  } catch {
-    return [];
-  }
-}
-function save(arr: Project[]) {
-  localStorage.setItem(STORE, JSON.stringify(arr));
-}
-
-/** === Component === */
-export default function Tongs() {
-  const navigate = useNavigate();
-  const { projectId } = useParams();
-  const [projects, setProjects] = useState<Project[]>(() => load());
-  const [title, setTitle] = useState('');
-
-  // persist on change (debounced to avoid hammering localStorage)
+  // Improved BroadcastChannel IPC for scripts
   useEffect(() => {
-    const handle = setTimeout(() => save(projects), 200);
-    return () => clearTimeout(handle);
-  }, [projects]);
+    const ch = new BroadcastChannel("podcasters-forge:v1");
 
-  /** ===== BroadcastChannel IPC ===== */
-  useEffect(() => {
-    const ch = new BroadcastChannel('podcasters-forge:v1');
-    const send = (id: string, payload: RspPayload) =>
-      ch.postMessage({ kind: 'RSP:', id, payload } as RspMsg);
-    const ok = (id: string, data?: unknown) => send(id, { ok: true, data });
-    const fail = (id: string, error: string) => send(id, { ok: false, error });
+    ch.onmessage = (ev: MessageEvent<any>) => {
+      const msg = ev.data;
+      if (!msg || !msg.kind?.startsWith("REQ:")) return;
 
-    ch.onmessage = (ev: MessageEvent<unknown>) => {
-      const msg = ev.data as Partial<ReqMsg>;
-      if (!msg || msg.kind !== 'REQ:' || typeof msg.id !== 'string' || !msg.payload) return;
+      const reply = (payload: unknown) =>
+        ch.postMessage({ kind: "OK:", id: msg.id, payload } as any);
 
-      const { id, payload } = msg;
+      const fail = (error: string) =>
+        ch.postMessage({ kind: "ERR:", id: msg.id, error } as any);
 
       try {
-        switch (payload.type) {
-          case 'PING': {
-            ok(id, { pong: true });
+        switch (msg.payload.type) {
+          case "SCRIPT.SAVE": {
+            const { projectId, name, text } = msg.payload;
+            if (!projectId || !name) return fail("Missing projectId or name");
+
+            setProjects((prev) => {
+              const idx = prev.findIndex((p) => p.id === projectId);
+              if (idx < 0) return prev;
+
+              const base = prev[idx];
+              const asset: Asset = {
+                id: crypto.randomUUID(),
+                kind: "script",
+                name,
+                meta: { text },
+                createdAt: now(),
+              };
+
+              const next = [...prev];
+              next[idx] = {
+                ...base,
+                updatedAt: now(),
+                assets: [asset, ...(base.assets ?? [])],
+                scriptId: asset.id,
+              };
+              save(next);
+              // respond with new asset & updated list
+              reply({
+                asset,
+                scripts: next[idx].assets.filter((a) => a.kind === "script"),
+              });
+              return next;
+            });
             break;
           }
+
+          case "SCRIPT.LIST": {
+            const { projectId } = msg.payload;
+            const p = projects.find((x) => x.id === projectId);
+            reply({ scripts: (p?.assets ?? []).filter((a) => a.kind === "script") });
+            break;
+          }
+
+          case "SCRIPT.GET": {
+            const { projectId } = msg.payload;
+            const p = projects.find((x) => x.id === projectId);
+            const a = p?.assets.find((x) => x.id === p.scriptId);
+            reply({ script: a ?? null });
+            break;
+          }
+
+          default:
+            fail(`Unknown type: ${(msg.payload as any).type}`);
+        }
+      } catch (e: any) {
+        fail(e?.message ?? "Unknown error");
+      }
+    };
+
+    return () => ch.close();
+  }, [projects, setProjects]);
 
           case 'PROJECT.LIST': {
             ok(id, projects);
@@ -462,6 +430,50 @@ export default function Tongs() {
             <button className="btn btn-primary" onClick={createProject}>
               New
             </button>
+          </div>
+
+          {/* Upload script into current project */}
+          <div className="tongs-sidebar-upload">
+            <input
+              type="file"
+              accept=".txt,.md,.docx"
+              onChange={async (e) => {
+                const file = e.currentTarget.files?.[0];
+                if (!file || !current) return;
+
+                let text = '';
+                if (file.name.endsWith('.txt') || file.name.endsWith('.md')) {
+                  text = await file.text();
+                } else if (file.name.endsWith('.docx')) {
+                  // For .docx, add mammoth later; temporary message:
+                  alert("DOCX support requires 'mammoth'. See notes below.");
+                  return;
+                }
+
+                const a: Asset = {
+                  id: crypto.randomUUID(),
+                  kind: 'script',
+                  name: file.name.replace(/\.(txt|md|docx)$/i, '') || 'Imported Script',
+                  meta: { text },
+                  createdAt: now(),
+                };
+
+                setProjects((prev) => {
+                  const idx = prev.findIndex((x) => x.id === current.id);
+                  if (idx < 0) return prev;
+                  const p: Project = {
+                    ...prev[idx],
+                    updatedAt: now(),
+                    assets: [a, ...(prev[idx].assets ?? [])],
+                    scriptId: a.id, // make uploaded script current
+                  };
+                  const next = [...prev];
+                  next[idx] = p;
+                  save(next);
+                  return next;
+                });
+              }}
+            />
           </div>
 
           <div className="tongs-sections">

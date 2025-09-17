@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -122,6 +123,77 @@
     .role-row .slot{justify-self:center;color:var(--muted);font-variant-numeric:tabular-nums}
   </style>
   <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  <script>
+  (function () {
+    const ch = new BroadcastChannel("podcasters-forge:v1");
+    const params = new URLSearchParams(location.search);
+    const projectId = params.get("projectId") || ""; // may be blank if opened from header
+
+    // Populate dropdown at load
+    function refreshList() {
+      if (!projectId) return;
+      ch.postMessage({
+        kind: "REQ:",
+        id: "list-" + Date.now(),
+        payload: { type: "SCRIPT.LIST", projectId }
+      });
+    }
+
+    // Example: hook your existing "Save As" button
+    window.saveScriptAs = function () {
+      const name = prompt("Save script as…", "New Script");
+      if (!name) return;
+      const text = getCurrentScriptText(); // implement: read from your editor
+      ch.postMessage({
+        kind: "REQ:",
+        id: "save-" + Date.now(),
+        payload: { type: "SCRIPT.SAVE", projectId, name, text }
+      });
+    };
+
+    // Handle OK/ERR responses
+    ch.onmessage = function (ev) {
+      const msg = ev.data || {};
+      if (msg.kind === "OK:" && msg.id?.startsWith("save-")) {
+        // Update dropdown with returned scripts
+        if (msg.payload?.scripts) {
+          repopulateDropdown(msg.payload.scripts);
+        } else {
+          refreshList();
+        }
+        toast("Saved."); // optional
+      }
+      if (msg.kind === "OK:" && msg.id?.startsWith("list-")) {
+        repopulateDropdown(msg.payload?.scripts || []);
+      }
+      if (msg.kind === "ERR:") {
+        alert("Save error: " + (msg.error || "Unknown error"));
+      }
+    };
+
+    // call once on load
+    refreshList();
+
+    // helpers you supply:
+    function getCurrentScriptText() {
+      // return the current editor's text content
+      const el = document.querySelector("#editor"); // or your actual editor API
+      return el?.value || el?.textContent || "";
+    }
+    function repopulateDropdown(scripts) {
+      const sel = document.getElementById("script-list");
+      if (!sel) return;
+      sel.innerHTML = "";
+      for (const s of scripts) {
+        const opt = document.createElement("option");
+        opt.value = s.id;
+        opt.textContent = s.name;
+        sel.appendChild(opt);
+      }
+    }
+    function toast(m) { console.log(m); }
+  })();
+</script>
 </head>
 <body>
   <div id="tp-topbar" class="tp-topbar">
