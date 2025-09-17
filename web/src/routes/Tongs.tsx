@@ -30,111 +30,6 @@
                 typeof base !== 'object' ||
                 typeof base.id !== 'string' ||
                 typeof base.title !== 'string' ||
-                typeof base.phase !== 'string' ||
-                typeof base.createdAt !== 'number' ||
-                typeof base.updatedAt !== 'number' ||
-                !Array.isArray(base.assets) ||
-                !Array.isArray(base.recordingIds)
-              ) {
-                return prev;
-              }
-
-              const safeText =
-                typeof text === 'string' ? text : text !== undefined ? JSON.stringify(text) : '';
-
-              const a: Asset = {
-                id: uid(),
-                kind: 'script',
-                name: typeof name === 'string' ? name : 'Untitled',
-                createdAt: now(),
-                meta: { text: safeText },
-              };
-
-              const nextList = [...prev];
-              const updated: Project = {
-                ...base,
-                assets: [a, ...base.assets],
-                scriptId: a.id,
-                phase: base.phase === 'idea' ? 'script' : base.phase,
-                updatedAt: now(),
-              };
-              nextList[idx] = updated;
-
-              // Persist and reply so Teleprompter can refresh immediately
-              save(nextList);
-              ok(id, {
-                asset: a,
-                scripts: updated.assets.filter((x) => x.kind === 'script'),
-              });
-
-              return nextList;
-            });
-            break;
-          }
-
-          case "SCRIPT.LIST": {
-            const { projectId } = msg.payload;
-            const p = projects.find((x) => x.id === projectId);
-            reply({ scripts: (p?.assets ?? []).filter((a) => a.kind === "script") });
-            break;
-          }
-
-          case "SCRIPT.GET": {
-            const { projectId } = msg.payload;
-            const p = projects.find((x) => x.id === projectId);
-            const a = p?.assets.find((x) => x.id === p.scriptId);
-            reply({ script: a ?? null });
-            break;
-          }
-
-          default: {
-            // Exhaustiveness guard for the union
-            assertNever(msg.payload as never);
-          }
-        }
-      } catch (e: any) {
-        fail(e?.message ?? "Unknown error");
-      }
-    };
-
-    return () => ch.close();
-  }, [projects, setProjects]);
-
-          case 'PROJECT.LIST': {
-            ok(id, projects);
-            break;
-          }
-
-          case 'PROJECT.CREATE': {
-            const t = typeof payload.title === 'string' ? payload.title.trim() : 'Untitled Project';
-            const p: Project = {
-              id: uid(),
-              title: t || 'Untitled Project',
-              phase: 'idea',
-              createdAt: now(),
-              updatedAt: now(),
-              assets: [],
-              recordingIds: [],
-            };
-            setProjects((prev) => [p, ...prev]);
-            ok(id, { projectId: p.id });
-            break;
-          }
-
-          case 'PROJECT.READ': {
-            const p = projects.find((x) => x.id === payload.projectId);
-            if (!p) return fail(id, 'not_found');
-            ok(id, p);
-            break;
-          }
-
-          case 'PROJECT.UPDATE': {
-            const { projectId, patch } = payload;
-            setProjects((prev: Project[]) => {
-              const idx = prev.findIndex((x) => x.id === projectId);
-              if (idx < 0) return prev;
-
-              const base = prev[idx];
               if (
                 !base ||
                 typeof base !== 'object' ||
@@ -150,55 +45,58 @@
               }
               if (!patch || typeof patch !== 'object') return prev;
 
-              const p: Project = {
-                id: base.id,
-                title: typeof patch.title === 'string' ? patch.title : base.title,
-                phase: typeof patch.phase === 'string' ? patch.phase : base.phase,
-                createdAt: base.createdAt,
-                updatedAt: now(),
-                assets: Array.isArray(patch.assets) ? patch.assets : base.assets,
-                recordingIds: Array.isArray(patch.recordingIds)
-                  ? patch.recordingIds
-                  : base.recordingIds,
-                scriptId: typeof patch.scriptId === 'string' ? patch.scriptId : base.scriptId,
-              };
+              case 'SCRIPT.SAVE': {
+                const { projectId, name, text } = payload;
+                setProjects((prev: Project[]) => {
+                  const idx = prev.findIndex((x) => x.id === projectId);
+                  if (idx < 0) return prev;
 
-              const next: Project[] = [...prev];
-              next[idx] = p;
-              return next;
-            });
-            ok(id, { projectId });
-            break;
-          }
+                  const base = prev[idx];
+                  if (
+                    !base ||
+                    typeof base !== 'object' ||
+                    typeof base.id !== 'string' ||
+                    typeof base.title !== 'string' ||
+                    typeof base.phase !== 'string' ||
+                    typeof base.createdAt !== 'number' ||
+                    typeof base.updatedAt !== 'number' ||
+                    !Array.isArray(base.assets) ||
+                    !Array.isArray(base.recordingIds)
+                  ) {
+                    return prev;
+                  }
 
-          case 'PROJECT.DELETE': {
-            setProjects((prev) => prev.filter((x) => x.id !== payload.projectId));
-            ok(id, { projectId: payload.projectId });
-            break;
-          }
+                  const safeText =
+                    typeof text === 'string' ? text : text !== undefined ? JSON.stringify(text) : '';
 
-          case 'ASSET.LIST': {
-            const p = projects.find((x) => x.id === payload.projectId);
-            if (!p) return fail(id, 'not_found');
-            const items = payload.kind ? p.assets.filter((a) => a.kind === payload.kind) : p.assets;
-            ok(id, items);
-            break;
-          }
+                  const a: Asset = {
+                    id: uid(),
+                    kind: 'script',
+                    name: typeof name === 'string' ? name : 'Untitled',
+                    createdAt: now(),
+                    meta: { text: safeText },
+                  };
 
-          case 'ASSET.CREATE': {
-            const { projectId, asset } = payload;
-            setProjects((prev: Project[]) => {
-              const idx = prev.findIndex((x) => x.id === projectId);
-              if (idx < 0) return prev;
-              const base = prev[idx];
-              if (
-                !base ||
-                typeof base !== 'object' ||
-                typeof base.id !== 'string' ||
-                typeof base.title !== 'string' ||
-                typeof base.phase !== 'string' ||
-                typeof base.createdAt !== 'number' ||
-                typeof base.updatedAt !== 'number' ||
+                  const next: Project[] = [...prev];
+                  const updated: Project = {
+                    ...base,
+                    assets: [a, ...base.assets],
+                    scriptId: a.id,
+                    phase: base.phase === 'idea' ? 'script' : base.phase,
+                    updatedAt: now(),
+                  };
+                  next[idx] = updated;
+
+                  // persist
+                  save(next);
+
+                  // ✅ tell Teleprompter the new list so its dropdown updates
+                  ok(id, { asset: a, scripts: updated.assets.filter((x) => x.kind === 'script') });
+
+                  return next;
+                });
+                break;
+              }
                 !Array.isArray(base.assets) ||
                 !Array.isArray(base.recordingIds)
               ) {
@@ -387,9 +285,7 @@
           }
 
           default:
-            // Exhaustive guard: if you add a new union member above and forget to handle it here,
-            // TS will flag this cast.
-            assertNever(payload);
+            assertNever(payload as never);
         }
       } catch (e: unknown) {
         if (e instanceof Error) fail(id, e.message);
