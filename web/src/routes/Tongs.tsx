@@ -246,25 +246,28 @@ export default function Tongs() {
           }
 
           case 'ASSET.DELETE': {
-            const { projectId, assetId } = payload;
+            const { projectId, assetId } = payload; // no 'as any'
             setProjects((prev) => {
               const idx = prev.findIndex((x) => x.id === projectId);
               if (idx < 0) return prev;
-              const base = prev[idx];
-              const p: Project = {
+
+              const base = prev[idx]!; // non-null
+              const nextProject: Project = {
                 ...base,
                 assets: base.assets.filter((a) => a.id !== assetId),
                 scriptId: base.scriptId === assetId ? undefined : base.scriptId,
                 recordingIds: base.recordingIds.filter((id) => id !== assetId),
                 updatedAt: now(),
               };
+
               const next = [...prev];
-              next[idx] = p;
+              next[idx] = nextProject;
               return next;
             });
             ok(id, true);
             break;
           }
+
           case 'SCRIPT.INDEX': {
             const scripts = projects
               .flatMap((p) => {
