@@ -124,58 +124,42 @@ export default function Tongs() {
             const p: Project = {
               id: uid(),
               title: t || 'Untitled Project',
-              phase: 'idea',
-              createdAt: now(),
-              updatedAt: now(),
-              assets: [],
-              recordingIds: [],
-            };
-            setProjects((prev) => [p, ...prev]);
-            ok(id, { projectId: p.id });
-            break;
-          }
+              case 'SCRIPT.SAVE': {
+                const { projectId, name, text } = payload;
+                setProjects((prev: Project[]) => {
+                  const idx = prev.findIndex((x) => x.id === projectId);
+                  if (idx < 0) return prev;
 
-          case 'PROJECT.READ': {
-            const p = projects.find((x) => x.id === payload.projectId);
-            if (!p) return fail(id, 'not_found');
-            ok(id, p);
-            break;
-          }
+                  const base = prev[idx];
+                  if (!base) return prev;
 
-          case 'PROJECT.UPDATE': {
-            const { projectId, patch } = payload;
-            setProjects((prev) => {
-              const idx = prev.findIndex((x) => x.id === projectId);
-              if (idx < 0) return prev;
+                  const safeText =
+                    typeof text === 'string' ? text : text !== undefined ? JSON.stringify(text) : '';
 
-              const base = prev[idx];
-              if (
-                !base ||
-                typeof base !== 'object' ||
-                typeof base.id !== 'string' ||
-                typeof base.title !== 'string' ||
-                typeof base.phase !== 'string' ||
-                typeof base.createdAt !== 'number' ||
-                typeof base.updatedAt !== 'number' ||
-                !Array.isArray(base.assets) ||
-                !Array.isArray(base.recordingIds) ||
-                !patch ||
-                typeof patch !== 'object'
-              ) {
-                return prev;
+                  const a: Asset = {
+                    id: uid(),
+                    kind: 'script',
+                    name: typeof name === 'string' ? name : 'Untitled',
+                    createdAt: now(),
+                    meta: { text: safeText },
+                  };
+
+                  const updated: Project = {
+                    ...base,
+                    assets: [a, ...base.assets],
+                    scriptId: a.id,
+                    phase: base.phase === 'idea' ? 'script' : base.phase,
+                    updatedAt: now(),
+                  };
+                  const next: Project[] = [...prev];
+                  next[idx] = updated;
+
+                  save(next);
+                  ok(id, { asset: a, scripts: updated.assets.filter((x) => x.kind === 'script') });
+                  return next;
+                });
+                break;
               }
-
-              const p: Project = {
-                id: base.id,
-                title: typeof patch.title === 'string' ? patch.title : base.title,
-                phase: typeof patch.phase === 'string' ? patch.phase : base.phase,
-                createdAt: base.createdAt,
-                updatedAt: now(),
-                assets: Array.isArray(patch.assets) ? patch.assets : base.assets,
-                recordingIds: Array.isArray(patch.recordingIds)
-                  ? patch.recordingIds
-                  : base.recordingIds,
-                scriptId: typeof patch.scriptId === 'string' ? patch.scriptId : base.scriptId,
               };
 
               const next = [...prev];
@@ -491,49 +475,65 @@ export default function Tongs() {
           </div>
 
           {/* Upload script into current project */}
-          <div className="tongs-sidebar-upload">
-            <input
-              type="file"
-              accept=".txt,.md,.docx"
-              onChange={async (e) => {
-                const file = e.currentTarget.files?.[0];
-                if (!file || !current) return;
+            <div className="tongs-sidebar-upload">
+              <label htmlFor="script-upload" style={{ display: 'block', marginBottom: 4 }}>
+                Upload script (.txt, .md, .docx):
+              </label>
+              <input
+                id="script-upload"
+                type="file"
+                accept=".txt,.md,.docx"
+                onChange={handleScriptUpload}
+              />
+            </div>
+          
+  // Script upload handler
+  function handleScriptUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.currentTarget.files?.[0];
+    if (!file || !current) return;
 
-                let text = '';
-                if (file.name.endsWith('.txt') || file.name.endsWith('.md')) {
-                  text = await file.text();
-                } else if (file.name.endsWith('.docx')) {
-                  alert("DOCX import requires 'mammoth' – we can add that next.");
-                  return;
-                }
+    // Run async work without returning a Promise to React
+    void (async () => {
+      let text = "";
+      if (file.name.endsWith(".txt") || file.name.endsWith(".md")) {
+        text = await file.text();
+      } else if (file.name.endsWith(".docx")) {
+        alert("DOCX import requires the 'mammoth' package — we can add it next.");
+        return;
+      }
 
-                const a: Asset = {
-                  id: crypto.randomUUID(),
-                  kind: 'script',
-                  name: file.name.replace(/\.(txt|md|docx)$/i, '') || 'Imported Script',
-                  meta: { text },
-                  createdAt: now(),
-                };
+      const a: Asset = {
+        id: crypto.randomUUID(),
+        kind: "script",
+        name: file.name.replace(/\.(txt|md|docx)$/i, "") || "Imported Script",
+        meta: { text },
+        createdAt: now(),
+      };
 
-                setProjects((prev) => {
-                  const idx = prev.findIndex((x) => x.id === current.id);
-                  if (idx < 0) return prev;
+      setProjects((prev) => {
+        const idx = prev.findIndex((x) => x.id === current.id);
+        if (idx < 0) return prev;
 
-                  const updated: Project = {
-                    ...prev[idx],
-                    updatedAt: now(),
-                    assets: [a, ...(prev[idx].assets ?? [])],
-                    scriptId: a.id,
-                  };
+        const base = prev[idx]; // Project | undefined
+        if (!base) return prev; // type guard
 
-                  const next = [...prev];
-                  next[idx] = updated;
-                  save(next);
-                  return next;
-                });
-              }}
-            />
-          </div>
+        const updated: Project = {
+          ...base,
+          updatedAt: now(),
+          assets: [a, ...(base.assets ?? [])],
+          scriptId: a.id,
+        };
+
+        const next = [...prev];
+        next[idx] = updated;
+        save(next);
+        return next;
+      });
+    })();
+
+    // Clear the input so the same file can be selected again later
+    e.currentTarget.value = "";
+  }
 
           <div className="tongs-sections">
             {(['idea', 'script', 'recorded', 'edited', 'published'] as Phase[]).map((ph) => {

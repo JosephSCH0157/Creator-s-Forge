@@ -1,3 +1,16 @@
+/* make the label look intentional */
+.tongs-upload-label {
+  display: block;
+  margin: 8px 0 4px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+.tongs-input-file {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+}
 /* Phase chip styles */
 .phase-idea {
   background: #223;
