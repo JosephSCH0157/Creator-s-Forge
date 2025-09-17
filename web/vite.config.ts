@@ -1,23 +1,30 @@
-// Note: Node's `URL` is a global in ESM, but we explicitly import it from "node:url"
-// to make casing/usage clear across environments.
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { fileURLToPath } from 'node:url'
+// vite.config.ts
+import react from '@vitejs/plugin-react';
+import { fileURLToPath } from 'node:url';
+import { defineConfig } from 'vite';
+
+// Adjust to the exact parents that may embed your app:
+const CSP = [
+  "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:",
+  "frame-ancestors 'self' http://127.0.0.1:5173 http://localhost:5173 http://127.0.0.1:5177 http://localhost:5177",
+].join('; ');
 
 export default defineConfig({
-  // you're already running from /web — keep the app as a SPA
   appType: 'spa',
   plugins: [react()],
   resolve: {
     alias: {
-      // Clean, robust alias to /web/src
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   server: {
     host: '127.0.0.1',
     port: 5173,
-    open: '/', // change to '/forge' if you want Forge to auto-open
-    fs: { allow: [fileURLToPath(new URL('..', import.meta.url))] }, // allow repo root
+    open: '/',
+    fs: { allow: [fileURLToPath(new URL('..', import.meta.url))] },
+    headers: { 'Content-Security-Policy': CSP }, // ✅ dev header
   },
-})
+  preview: {
+    headers: { 'Content-Security-Policy': CSP }, // ✅ vite preview header
+  },
+});
