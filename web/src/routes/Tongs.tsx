@@ -548,33 +548,72 @@ export default function Tongs() {
 
               <section className="tongs-card">
                 <div className="tongs-card-head">
-                  <strong>Script</strong>
+                  <strong>Scripts</strong>
                   <div className="tongs-actions">
-                    <button
-                      className="btn"
-                      onClick={() => {
-                        // Find the script asset
-                        const scriptAsset = current.scriptId
-                          ? current.assets.find((a) => a.id === current.scriptId)
-                          : null;
-                        openInTeleprompter({
-                          id: current.scriptId || '',
-                          title: scriptAsset?.name || current.title || 'Untitled',
-                          html: scriptAsset?.meta?.text || '',
-                        });
-                      }}
-                    >
-                      Open in Teleprompter
-                    </button>
+                    {current.assets
+                      .filter((a) => a.kind === 'script')
+                      .map((a) => (
+                        <button
+                          key={a.id}
+                          className="btn"
+                          style={{ marginRight: 8 }}
+                          onClick={() => {
+                            openInTeleprompter({
+                              id: a.id,
+                              title: a.name || current.title || 'Untitled',
+                              html: a.meta?.text || '',
+                            });
+                          }}
+                        >
+                          Open "{a.name}" in Teleprompter
+                        </button>
+                      ))}
                   </div>
                 </div>
-                {current.scriptId ? (
-                  <p className="tongs-muted">
-                    Current script: {current.assets.find((a) => a.id === current.scriptId)?.name}
-                  </p>
+                {current.assets.filter((a) => a.kind === 'script').length > 0 ? (
+                  <ul className="tongs-script-list">
+                    {current.assets
+                      .filter((a) => a.kind === 'script')
+                      .map((a) => (
+                        <li key={a.id}>
+                          <span>{a.name}</span>
+                          {current.scriptId === a.id && (
+                            <span className="tongs-chip">(Current)</span>
+                          )}
+                        </li>
+                      ))}
+                  </ul>
                 ) : (
-                  <p className="tongs-muted">No script attached yet.</p>
+                  <p className="tongs-muted">No script assets yet.</p>
                 )}
+                <div style={{ marginTop: 16 }}>
+                  <label htmlFor="phase-select">Reclassify project phase:</label>
+                  <select
+                    id="phase-select"
+                    value={current.phase}
+                    onChange={(e) => {
+                      const newPhase = e.target.value as Phase;
+                      setProjects((prev) => {
+                        const idx = prev.findIndex((p) => p.id === current.id);
+                        if (idx < 0) return prev;
+                        const updated = { ...prev[idx]!, phase: newPhase, updatedAt: now() };
+                        const next = [...prev];
+                        next[idx] = updated;
+                        save(next);
+                        return next;
+                      });
+                    }}
+                    style={{ marginLeft: 8 }}
+                  >
+                    {(['idea', 'script', 'recorded', 'edited', 'published'] as Phase[]).map(
+                      (ph) => (
+                        <option key={ph} value={ph}>
+                          {ph}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </div>
               </section>
             </>
           )}
