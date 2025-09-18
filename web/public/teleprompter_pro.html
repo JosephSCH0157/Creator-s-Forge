@@ -371,6 +371,7 @@ TPLOG.info('mammoth present?', typeof window.mammoth);
       if (editor.tagName === 'TEXTAREA' || editor.tagName === 'INPUT') {
         editor.value = html;
         editor.dispatchEvent(new Event('input', { bubbles:true }));
+          if (typeof window.renderScript === 'function') window.renderScript(editor.value);
         TPLOG.info('Editor value set (textarea/input)', { bytes: html.length });
       } else {
         editor.innerHTML = html;
@@ -411,6 +412,7 @@ window.addEventListener('message', (event) => {
       if (editor.tagName === 'TEXTAREA' || editor.tagName === 'INPUT') {
         editor.value = html;
         editor.dispatchEvent(new Event('input', { bubbles:true }));
+          if (typeof window.renderScript === 'function') window.renderScript(editor.value);
       } else {
         editor.innerHTML = html;
       }
@@ -459,6 +461,7 @@ document.getElementById('uploadFile')?.addEventListener('change', (e) => {
           if (editor?.tagName === 'TEXTAREA') {
             editor.value = html;
             editor.dispatchEvent(new Event('input', { bubbles: true }));
+              if (typeof window.renderScript === 'function') window.renderScript(editor.value);
           } else if (editor) {
             editor.innerHTML = html;
           }
@@ -475,6 +478,7 @@ document.getElementById('uploadFile')?.addEventListener('change', (e) => {
         if (editor?.tagName === 'TEXTAREA') {
           editor.value = html;
           editor.dispatchEvent(new Event('input', { bubbles: true }));
+            if (typeof window.renderScript === 'function') window.renderScript(editor.value);
         } else if (editor) {
           editor.innerHTML = html;
         }
