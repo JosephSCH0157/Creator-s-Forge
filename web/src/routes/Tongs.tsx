@@ -140,14 +140,6 @@ export default function Tongs() {
     const ok = (id: string, data?: unknown) => send(id, { ok: true, data });
     const fail = (id: string, error: string) => send(id, { ok: false, error });
 
-    ch.onmessage = function (ev) {
-      const msg = ev.data;
-      if (msg.kind === 'RSP:' && msg.payload?.ok) {
-        // For save: msg.id starts with 'save-', msg.payload.data contains { asset, scripts }
-        // For list: msg.id starts with 'list-', msg.payload.data contains scripts array
-        // Populate dropdown here
-      }
-    };
 
     ch.onmessage = (ev: MessageEvent<unknown>) => {
       const msg = ev.data as Partial<ReqMsg>;
