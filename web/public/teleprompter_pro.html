@@ -323,6 +323,110 @@
 </script>
 </head>
 <body>
+<script>
+/** ---------- DevDiag: tiny logger ---------- **/
+const DEV = true; // flip to false to silence logs
+const TPLOG = {
+  mark(n){ try{performance.mark(n);}catch{} },
+  measure(n,s,e){ try{performance.measure(n,s,e);}catch{} },
+  log(){ DEV && console.log('%c[Teleprompter]','color:#a0a',...arguments); },
+  info(){ DEV && console.info('%c[Teleprompter]','color:#a0a',...arguments); },
+  warn(){ DEV && console.warn('%c[Teleprompter]','color:#a0a',...arguments); },
+  error(){ DEV && console.error('%c[Teleprompter]','color:#a0a',...arguments); },
+};
+window.addEventListener('error', (e)=> TPLOG.error('window.error', e.message, e.error));
+window.addEventListener('unhandledrejection', (e)=> TPLOG.error('unhandledrejection', e.reason));
+/** ----------------------------------------- **/
+
+// 1) Report CSP presence (helps confirm headers vs meta)
+(function reportCSP(){
+  try {
+    fetch(location.pathname, { cache: 'no-store' })
+      .then(r => r.headers.get('content-security-policy'))
+      .then(h => TPLOG.info('CSP (response header)', h || '(none)'));
+  } catch {}
+})();
+
+// 2) Mammoth presence (if you use it on this page)
+TPLOG.info('mammoth present?', typeof window.mammoth);
+
+// 3) Bootstrap from localStorage
+(function bootstrapFromLocalStorage(){
+  TPLOG.mark('bootstrap:start');
+  try {
+    const html  = localStorage.getItem('cf_current_script_html') || '';
+    const title = localStorage.getItem('cf_current_script_title') || 'Untitled';
+    const id    = localStorage.getItem('cf_current_script_id') || '(none)';
+
+    TPLOG.log('Bootstrap snapshot', { id, title, htmlBytes: html.length });
+
+    // Adjust these IDs/selectors to your actual elements:
+    const editor = document.getElementById('editor')              // <textarea id="editor">
+                 || document.querySelector('[data-editor], #script'); // fallback contentEditable/region
+    const titleEl = document.getElementById('scriptTitle') || document.querySelector('[data-title]');
+
+    if (titleEl) titleEl.textContent = title;
+
+    if (editor) {
+      if (editor.tagName === 'TEXTAREA' || editor.tagName === 'INPUT') {
+        editor.value = html;
+        editor.dispatchEvent(new Event('input', { bubbles:true }));
+        TPLOG.info('Editor value set (textarea/input)', { bytes: html.length });
+      } else {
+        editor.innerHTML = html;
+        TPLOG.info('Editor innerHTML set (contenteditable/div)', { bytes: html.length });
+      }
+    } else {
+      TPLOG.warn('Editor element not found; creating temporary preview container');
+      const preview = document.createElement('div');
+      preview.id = 'docxPreview';
+      preview.style.cssText = 'border:1px dashed #ccc;padding:.75rem;margin:.5rem 0;';
+      preview.innerHTML = html;
+      document.body.prepend(preview);
+    }
+
+    // If your app exposes window.renderScript(html), call it
+    if (typeof window.renderScript === 'function') {
+      try {
+        window.renderScript(editor?.value ?? editor?.innerHTML ?? html);
+        TPLOG.info('renderScript() invoked');
+      } catch (err) {
+        TPLOG.error('renderScript failed', err);
+      }
+    }
+
+    TPLOG.measure('bootstrap:duration','bootstrap:start');
+  } catch (e) {
+    TPLOG.error('Bootstrap failed', e);
+  }
+})();
+
+// 4) Listen for live updates (optional)
+window.addEventListener('message', (event) => {
+  const { type, html } = event.data || {};
+  if (type === 'SCRIPT_HTML') {
+    TPLOG.log('Live update received', { bytes: (html||'').length });
+    const editor = document.getElementById('editor') || document.querySelector('[data-editor], #script');
+    if (editor) {
+      if (editor.tagName === 'TEXTAREA' || editor.tagName === 'INPUT') {
+        editor.value = html;
+        editor.dispatchEvent(new Event('input', { bubbles:true }));
+      } else {
+        editor.innerHTML = html;
+      }
+    }
+    if (typeof window.renderScript === 'function') {
+      try { window.renderScript(html); } catch (e) { TPLOG.error('renderScript failed', e); }
+    }
+  }
+});
+
+// 5) Optional: log file uploads from this page if present
+document.getElementById('uploadFile')?.addEventListener('change', (e) => {
+  const f = e.currentTarget.files?.[0];
+  TPLOG.log('Upload file change', f ? { name:f.name, size:f.size } : 'no file');
+});
+</script>
   <script>
     (function () {
       const ch = new BroadcastChannel('podcasters-forge:v1');
@@ -383,20 +487,15 @@
         const html = localStorage.getItem('cf_current_script_html') || '';
         const title = localStorage.getItem('cf_current_script_title') || 'Untitled';
 
-        // Replace these with whatever your Teleprompter uses:
-        const editor = document.getElementById('scriptEditor');      // e.g., <textarea id="scriptEditor">
-        const titleEl = document.getElementById('scriptTitle');      // optional
+        const editor = document.getElementById('editor'); // correct id
+        const titleEl = document.getElementById('scriptTitle');
 
         if (titleEl) titleEl.textContent = title;
-
-        // If you store raw HTML in a textarea (common pattern), set .value:
-        if (editor && editor.tagName === 'TEXTAREA') {
+        if (editor) {
           editor.value = html;
-          editor.dispatchEvent(new Event('input', { bubbles: true }));
-        } else {
-          // Or if your teleprompter uses a contenteditable container:
-          const region = document.querySelector('[data-editor], #script');
-          if (region) region.innerHTML = html;
+          if (typeof window.renderScript === 'function') {
+            window.renderScript(editor.value);
+          }
         }
       } catch (e) {
         console.error('Teleprompter bootstrap failed:', e);

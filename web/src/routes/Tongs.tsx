@@ -1,3 +1,32 @@
+/** ---------- DevDiag: tiny logger ---------- **/
+const DEV = true; // flip to false to silence logs
+const TLOG = {
+  mark(name: string) {
+    try {
+      performance.mark(name);
+    } catch {}
+  },
+  measure(name: string, start: string, end?: string) {
+    try {
+      performance.measure(name, start, end);
+    } catch {}
+  },
+  log(...a: unknown[]) {
+    DEV && console.log('%c[Tongs]', 'color:#0aa;', ...a);
+  },
+  info(...a: unknown[]) {
+    DEV && console.info('%c[Tongs]', 'color:#0aa;', ...a);
+  },
+  warn(...a: unknown[]) {
+    DEV && console.warn('%c[Tongs]', 'color:#0aa;', ...a);
+  },
+  error(...a: unknown[]) {
+    DEV && console.error('%c[Tongs]', 'color:#0aa;', ...a);
+  },
+};
+window.addEventListener('error', (e) => TLOG.error('window.error', e.message, e.error));
+window.addEventListener('unhandledrejection', (e) => TLOG.error('unhandledrejection', e.reason));
+/** ----------------------------------------- **/
 // src/routes/Tongs.tsx
 import '@/index.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -404,11 +433,40 @@ export default function Tongs() {
 
   // Open in Teleprompter (static file)
   function openInTeleprompter(script: { id: string; title: string; html: string }) {
-    localStorage.setItem('cf_current_script_id', script.id);
-    localStorage.setItem('cf_current_script_title', script.title || 'Untitled');
-    localStorage.setItem('cf_current_script_html', script.html || '');
+    TLOG.mark('open.tp:start');
+
+    const payload = {
+      id: script.id,
+      title: script.title || 'Untitled',
+      htmlBytes: (script.html || '').length,
+    };
+    TLOG.log('Open in Teleprompter clicked', payload);
+
+    try {
+      localStorage.setItem('cf_current_script_id', script.id);
+      localStorage.setItem('cf_current_script_title', script.title || 'Untitled');
+      localStorage.setItem('cf_current_script_html', script.html || '');
+
+      // sanity read-back
+      const keys = ['cf_current_script_id', 'cf_current_script_title'];
+      const snapshot = Object.fromEntries(keys.map((k) => [k, localStorage.getItem(k)]));
+      TLOG.info('localStorage set →', snapshot, {
+        htmlBytes: (localStorage.getItem('cf_current_script_html') || '').length,
+      });
+    } catch (e) {
+      TLOG.error('localStorage write failed', e);
+    }
+
     const url = `${location.origin}/teleprompter_pro.html?projectId=${encodeURIComponent(script.id)}`;
-    window.open(url, 'teleprompter', 'noopener,noreferrer');
+    TLOG.log('Opening URL:', url);
+
+    const w = window.open(url, 'teleprompter', 'noopener,noreferrer');
+    if (!w) {
+      TLOG.warn('window.open returned null (popup blocked?)');
+      alert('Popup was blocked. Allow popups for this site and try again.');
+    }
+
+    TLOG.measure('open.tp:duration', 'open.tp:start');
   }
 
   function requestScriptList(ch: BroadcastChannel, projectId: string) {
@@ -425,6 +483,11 @@ export default function Tongs() {
   /** Upload handler (non-async onChange) **/
   function handleScriptUpload(e: React.ChangeEvent<HTMLInputElement>): void {
     const file = e.currentTarget.files?.[0];
+    TLOG.log('Upload change', {
+      name: file?.name,
+      size: file?.size,
+      project: current?.id,
+    });
     if (!file || !current) return;
 
     void (async () => {
