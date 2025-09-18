@@ -455,7 +455,7 @@ document.getElementById('uploadFile')?.addEventListener('change', (e) => {
         if (msg.kind === 'RSP:' && msg.id.startsWith('read-') && msg.payload?.ok) {
           const asset = msg.payload.data;
           const html = asset?.meta?.text || '';
-          const editor = document.getElementById('scriptEditor') || document.querySelector('[data-editor], #script');
+          const editor = document.getElementById('editor') || document.querySelector('[data-editor], #script, #editor');
           if (editor?.tagName === 'TEXTAREA') {
             editor.value = html;
             editor.dispatchEvent(new Event('input', { bubbles: true }));
@@ -471,7 +471,7 @@ document.getElementById('uploadFile')?.addEventListener('change', (e) => {
     window.addEventListener('message', (e) => {
       if (e.data?.type === 'SCRIPT_HTML') {
         const html = e.data.html || '';
-        const editor = document.getElementById('scriptEditor') || document.querySelector('[data-editor], #script');
+  const editor = document.getElementById('editor') || document.querySelector('[data-editor], #script, #editor');
         if (editor?.tagName === 'TEXTAREA') {
           editor.value = html;
           editor.dispatchEvent(new Event('input', { bubbles: true }));
