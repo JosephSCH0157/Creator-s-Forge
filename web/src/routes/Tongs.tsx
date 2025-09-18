@@ -586,7 +586,7 @@ export default function Tongs() {
                             });
                           }}
                         >
-                          Open "{a.name}" in Teleprompter
+                          Send to Teleprompter
                         </button>
                       ))}
                   </div>
