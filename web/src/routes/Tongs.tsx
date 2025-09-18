@@ -140,7 +140,6 @@ export default function Tongs() {
     const ok = (id: string, data?: unknown) => send(id, { ok: true, data });
     const fail = (id: string, error: string) => send(id, { ok: false, error });
 
-
     ch.onmessage = (ev: MessageEvent<unknown>) => {
       const msg = ev.data as Partial<ReqMsg>;
       if (!msg || msg.kind !== 'REQ:' || typeof msg.id !== 'string' || !msg.payload) return;
@@ -532,62 +531,59 @@ export default function Tongs() {
 
       <div className="tongs-main">
         <aside className="tongs-sidebar" aria-label="Projects">
-  <div className="tongs-sidebar-new">
-    <input
-      value={title}
-      onChange={(e) => setTitle(e.currentTarget.value)}
-      placeholder="New project title"
-      className="tongs-input"
-      aria-label="New project title"
-    />
-    <button className="btn btn-primary" onClick={createProject}>New</button>
-  </div>
+          <div className="tongs-sidebar-new">
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.currentTarget.value)}
+              placeholder="New project title"
+              className="tongs-input"
+              aria-label="New project title"
+            />
+            <button className="btn btn-primary" onClick={createProject}>
+              New
+            </button>
+          </div>
 
-  <div className="tongs-sidebar-upload">
-    <label htmlFor="script-upload" className="tongs-upload-label">
-      Upload script (.txt, .md, .docx)
-    </label>
-    <input
-      id="script-upload"
-      type="file"
-      accept=".txt,.md,.docx"
-      className="tongs-input-file"
-      onChange={handleScriptUpload}
-      aria-label="Upload a script file for the current project"
-      title="Upload a script file for the current project"
-    />
-  </div>
+          <div className="tongs-sidebar-upload">
+            <label htmlFor="script-upload" className="tongs-upload-label">
+              Upload script (.txt, .md, .docx)
+            </label>
+            <input
+              id="script-upload"
+              type="file"
+              accept=".txt,.md,.docx"
+              className="tongs-input-file"
+              onChange={handleScriptUpload}
+              aria-label="Upload a script file for the current project"
+              title="Upload a script file for the current project"
+            />
+          </div>
 
-  {/* ✅ Phase list should NOT depend on `current` */}
-  {(['idea', 'script', 'recorded', 'edited', 'published'] as Phase[]).map((ph) => {
-    const list = projects.filter((p) => p.phase === ph);
-    return (
-      <section key={ph} className="tongs-section">
-        <header className="tongs-section-head">
-          <span className="tongs-section-title">{ph.toUpperCase()}</span>
-          <span className="tongs-chip">{list.length}</span>
-        </header>
-        <ul className="tongs-list">
-          {list.map((p) => (
-            <li key={p.id}>
-              <Link
-                to={`${TONGS_BASE}/${p.id}`}
-                className="tongs-item"
-                title={p.title}
-              >
-                <span className="tongs-item-title">{p.title}</span>
-                <span className="tongs-item-meta">
-                  {new Date(p.updatedAt).toLocaleDateString()}
-                </span>
-              </Link>
-            </li>
-          ))}
-          {list.length === 0 && <li className="tongs-empty">No items in this phase.</li>}
-        </ul>
-      </section>
-    );
-  })}
-</aside>
+          {/* ✅ Phase list should NOT depend on `current` */}
+          {(['idea', 'script', 'recorded', 'edited', 'published'] as Phase[]).map((ph) => {
+            const list = projects.filter((p) => p.phase === ph);
+            return (
+              <section key={ph} className="tongs-section">
+                <header className="tongs-section-head">
+                  <span className="tongs-section-title">{ph.toUpperCase()}</span>
+                  <span className="tongs-chip">{list.length}</span>
+                </header>
+                <ul className="tongs-list">
+                  {list.map((p) => (
+                    <li key={p.id}>
+                      <Link to={`${TONGS_BASE}/${p.id}`} className="tongs-item" title={p.title}>
+                        <span className="tongs-item-title">{p.title}</span>
+                        <span className="tongs-item-meta">
+                          {new Date(p.updatedAt).toLocaleDateString()}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                  {list.length === 0 && <li className="tongs-empty">No items in this phase.</li>}
+                </ul>
+              </section>
+            );
+          })}
         </aside>
 
         <main className="tongs-detail" aria-label="Project details">
