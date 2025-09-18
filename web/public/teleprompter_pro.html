@@ -1,3 +1,153 @@
+<!-- Teleprompter bootstrap and asset management block -->
+<script>
+(function () {
+  // --- shared helpers ---
+  function getProjectId() {
+    return new URLSearchParams(location.search).get('projectId') || '';
+  }
+  function getCurrentScriptText() {
+    const el = document.querySelector('#editor') || document.querySelector('[data-editor], #script');
+    return el?.value ?? el?.textContent ?? '';
+  }
+  function setEditorHTML(html) {
+    const editor = document.getElementById('editor') || document.querySelector('[data-editor], #script, #editor');
+    if (!editor) return false;
+    if (editor.tagName === 'TEXTAREA' || editor.tagName === 'INPUT') {
+      editor.value = html;
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
+      if (typeof window.renderScript === 'function') window.renderScript(editor.value);
+    } else {
+      editor.innerHTML = html;
+      if (typeof window.renderScript === 'function') window.renderScript(editor.innerHTML);
+    }
+    return true;
+  }
+
+  // --- channel + UI refs ---
+  const ch = new BroadcastChannel('podcasters-forge:v1');
+  const projectId = getProjectId();
+  const saveAsBtn  = document.getElementById('saveAsBtn');
+  const loadBtn    = document.getElementById('loadBtn');
+  const deleteBtn  = document.getElementById('deleteBtn');
+  const dropdown   = document.getElementById('scriptSelect'); // ✅ this is the real select in your HTML
+
+  // --- wire Save As button (it wasn't hooked up) ---
+  if (saveAsBtn) {
+    saveAsBtn.addEventListener('click', () => {
+      if (!projectId) { alert('No project id detected in URL.'); return; }
+      const name = prompt('Save script as…', 'New Script');
+      if (!name) return;
+      const text = getCurrentScriptText();
+      ch.postMessage({
+        kind: 'REQ:',
+        id: 'save-' + Date.now(),
+        payload: { type: 'SCRIPT.SAVE', projectId, name, text }
+      });
+    });
+  }
+
+  // --- populate dropdown with this project's script assets ---
+  function refreshList() {
+    if (!projectId || !dropdown) return;
+    ch.postMessage({
+      kind: 'REQ:',
+      id: 'list-' + Date.now(),
+      payload: { type: 'ASSET.LIST', projectId, kind: 'script' } // ✅ matches Tongs
+    });
+  }
+
+  function repopulateDropdown(items) {
+    if (!dropdown) return;
+    dropdown.innerHTML = '';
+    if (!Array.isArray(items) || items.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = '(no saved scripts)';
+      dropdown.appendChild(opt);
+      return;
+    }
+    for (const s of items) {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name || '(unnamed)';
+      dropdown.appendChild(opt);
+    }
+  }
+
+  // --- Load button (read the selected asset) ---
+  if (loadBtn && dropdown) {
+    loadBtn.addEventListener('click', () => {
+      const assetId = dropdown.value;
+      if (!assetId || !projectId) return;
+      ch.postMessage({
+        kind: 'REQ:',
+        id: 'read-' + Date.now(),
+        payload: { type: 'ASSET.READ', projectId, assetId }
+      });
+    });
+  }
+
+  // --- Delete button (optional; keep if you have it) ---
+  if (deleteBtn && dropdown) {
+    deleteBtn.addEventListener('click', () => {
+      const assetId = dropdown.value;
+      if (!assetId || !projectId) return;
+      if (!confirm('Delete this script?')) return;
+      ch.postMessage({
+        kind: 'REQ:',
+        id: 'del-' + Date.now(),
+        payload: { type: 'ASSET.DELETE', projectId, assetId }
+      });
+    });
+  }
+
+  // --- single onmessage handler that matches Tongs ("RSP:" + payload.ok) ---
+  ch.onmessage = (ev) => {
+    const msg = ev.data || {};
+    // LIST
+    if (msg.kind === 'RSP:' && typeof msg.id === 'string' && msg.id.startsWith('list-')) {
+      if (msg.payload?.ok) {
+        repopulateDropdown(msg.payload.data || []);
+      } else {
+        console.warn('[Teleprompter] list error:', msg.payload?.error);
+      }
+    }
+    // SAVE
+    if (msg.kind === 'RSP:' && typeof msg.id === 'string' && msg.id.startsWith('save-')) {
+      if (msg.payload?.ok) {
+        const scripts = msg.payload.data?.scripts || [];
+        repopulateDropdown(scripts);
+        // select newest (first) if present
+        if (dropdown && scripts[0]) dropdown.value = scripts[0].id;
+        console.log('[Teleprompter] Saved.');
+      } else {
+        alert('Save error: ' + (msg.payload?.error || 'Unknown error'));
+      }
+    }
+    // READ
+    if (msg.kind === 'RSP:' && typeof msg.id === 'string' && msg.id.startsWith('read-')) {
+      if (msg.payload?.ok) {
+        const asset = msg.payload.data;
+        const html = asset?.meta?.text || '';
+        setEditorHTML(html);
+      } else {
+        alert('Read error: ' + (msg.payload?.error || 'Unknown error'));
+      }
+    }
+    // DELETE
+    if (msg.kind === 'RSP:' && typeof msg.id === 'string' && msg.id.startsWith('del-')) {
+      if (msg.payload?.ok) {
+        refreshList();
+      } else {
+        alert('Delete error: ' + (msg.payload?.error || 'Unknown error'));
+      }
+    }
+  };
+
+  // kick off initial population
+  refreshList();
+})();
+</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -489,26 +639,37 @@ document.getElementById('uploadFile')?.addEventListener('change', (e) => {
       }
     });
   </script>
+  <!-- Bootstrap script moved to end of body and wrapped for DOMContentLoaded -->
   <script>
-    (function bootstrapFromLocalStorage() {
-      try {
-        const html = localStorage.getItem('cf_current_script_html') || '';
-        const title = localStorage.getItem('cf_current_script_title') || 'Untitled';
+  window.addEventListener('DOMContentLoaded', () => {
+    try {
+      const html  = localStorage.getItem('cf_current_script_html') || '';
+      const title = localStorage.getItem('cf_current_script_title') || 'Untitled';
 
-        const editor = document.getElementById('editor'); // correct id
-        const titleEl = document.getElementById('scriptTitle');
+      const editor = document.getElementById('editor')
+                   || document.querySelector('[data-editor], #script, #editor');
 
-        if (titleEl) titleEl.textContent = title;
-        if (editor) {
+      const titleEl = document.getElementById('scriptTitle')
+                   || document.querySelector('[data-title]');
+
+      if (titleEl) titleEl.textContent = title;
+
+      if (editor) {
+        if (editor.tagName === 'TEXTAREA' || editor.tagName === 'INPUT') {
           editor.value = html;
-          if (typeof window.renderScript === 'function') {
-            window.renderScript(editor.value);
-          }
+          editor.dispatchEvent(new Event('input', { bubbles:true }));
+          if (typeof window.renderScript === 'function') window.renderScript(editor.value);
+        } else {
+          editor.innerHTML = html;
+          if (typeof window.renderScript === 'function') window.renderScript(editor.innerHTML);
         }
-      } catch (e) {
-        console.error('Teleprompter bootstrap failed:', e);
+      } else {
+        console.warn('[Teleprompter] Editor not found even after DOMContentLoaded');
       }
-    })();
+    } catch (e) {
+      console.error('Teleprompter bootstrap failed:', e);
+    }
+  });
   </script>
       <a href="/" title="Back to Podcaster’s Forge" class="tp-back-link">
         <img src="/anvil.png" alt="Anvil" class="tp-back-img">
