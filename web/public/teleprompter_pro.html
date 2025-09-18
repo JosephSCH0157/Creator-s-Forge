@@ -375,6 +375,7 @@ TPLOG.info('mammoth present?', typeof window.mammoth);
         TPLOG.info('Editor value set (textarea/input)', { bytes: html.length });
       } else {
         editor.innerHTML = html;
+          if (typeof window.renderScript === 'function') window.renderScript(editor.innerHTML);
         TPLOG.info('Editor innerHTML set (contenteditable/div)', { bytes: html.length });
       }
     } else {
@@ -415,6 +416,7 @@ window.addEventListener('message', (event) => {
           if (typeof window.renderScript === 'function') window.renderScript(editor.value);
       } else {
         editor.innerHTML = html;
+          if (typeof window.renderScript === 'function') window.renderScript(editor.innerHTML);
       }
     }
     if (typeof window.renderScript === 'function') {
@@ -464,6 +466,7 @@ document.getElementById('uploadFile')?.addEventListener('change', (e) => {
               if (typeof window.renderScript === 'function') window.renderScript(editor.value);
           } else if (editor) {
             editor.innerHTML = html;
+              if (typeof window.renderScript === 'function') window.renderScript(editor.innerHTML);
           }
         }
       };
@@ -481,6 +484,7 @@ document.getElementById('uploadFile')?.addEventListener('change', (e) => {
             if (typeof window.renderScript === 'function') window.renderScript(editor.value);
         } else if (editor) {
           editor.innerHTML = html;
+            if (typeof window.renderScript === 'function') window.renderScript(editor.innerHTML);
         }
       }
     });
