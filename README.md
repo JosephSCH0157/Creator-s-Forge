@@ -54,7 +54,39 @@ The project is open, extensible, and intended to evolve with its user base. Whet
 │ │ └── lib/
 │ └── test/
 └── web/ # Frontend code (UI for modules)
-├── public/
+🎙️ Teleprompter Tag System (Standardized)
+
+To keep all podcast scripts consistent and scroll-ready, every file follows this single tag system:
+
+Speaker Tags
+
+[s1] ... [/s1] → Joe
+
+[s2] ... [/s2] → Brad
+
+(Always close the tag. Never add : Name after the tag.)
+
+Notes / Cues
+
+[note] ... [/note] → stage direction, tone, pacing, delivery, music cues, etc.
+
+Notes must be on their own line (not embedded inside speaker tags).
+
+Inline Styles
+
+No inline color, italics, or extra formatting.
+
+If emphasis is needed → describe it in a [note] block instead.
+
+Rules
+
+Every spoken line starts with [s1] or [s2].
+
+Every note uses [note]...[/note] on its own line.
+
+No duplicate or stray tags.
+
+Keep scripts human-readable and teleprompter-friendly.├── public/
 └── src/
 ├── components/
 ├── pages/
